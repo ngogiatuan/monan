@@ -9,7 +9,7 @@ const HomeScreen = () => {
         alignItems: 'center',
         backgroundColor: 'white',
       }}>
-      <Text>HomeScreen</Text>
+      <Text>HomeScreen after edit</Text>
     </View>
   );
 };
