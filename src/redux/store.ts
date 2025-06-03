@@ -4,6 +4,8 @@ import {userReducer} from './slice/user.slice';
 import persistReducer from 'redux-persist/es/persistReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import autoMergeLevel2 from 'redux-persist/es/stateReconciler/autoMergeLevel2';
+import {combineReducers} from 'redux';
+import helperReducer from './helperSlice';
 
 const persistConfigUser: PersistConfig<ReturnType<typeof userReducer>> = {
   key: 'user',
@@ -11,10 +13,13 @@ const persistConfigUser: PersistConfig<ReturnType<typeof userReducer>> = {
   stateReconciler: autoMergeLevel2,
 };
 
+const rootReducer = combineReducers({    
+  user: persistReducer(persistConfigUser, userReducer),
+  helper: helperReducer,
+});
+
 export const store = configureStore({
-  reducer: {
-    user: persistReducer(persistConfigUser, userReducer),
-  },
+  reducer: rootReducer,
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: false,
