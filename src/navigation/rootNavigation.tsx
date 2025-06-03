@@ -2,19 +2,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { nav } from './navigationName';
 import BottomTab from './bottomNavigation';
-import HelperScreen from '../screens/HelperScreen';
+import AddDishScreen from '../screens/AddDish/AddDishScreen';
+import SettingsScreen from '../screens/Setting/SettingsScreen';
+import NotificationScreen from '../screens/Notification/NotificationScreen';
 
 
 const Stack = createNativeStackNavigator();
 const RootNavigation = () => {
     return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Onboarding" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name={nav.home} component={BottomTab} />
-        <Stack.Screen name="Helper" component={HelperScreen} options={{title: 'Hướng dẫn nấu ăn'}} />
-        {/* <Stack.Screen name="Details" component={DetailsScreen} /> */}
+      <Stack.Navigator initialRouteName="AddDish" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="AddDish" component={AddDishScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Notification" component={NotificationScreen} />
       </Stack.Navigator>
-      </NavigationContainer>
+    </NavigationContainer>
     );
-  };
+};
 export default RootNavigation;

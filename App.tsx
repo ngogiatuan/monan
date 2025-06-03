@@ -7,9 +7,9 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-import AddDishScreen from './src/screens/AddDishScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-import NotificationScreen from './src/screens/NotificationScreen';
+import AddDishScreen from './src/screens/AddDish/AddDishScreen';
+import SettingsScreen from './src/screens/Setting/SettingsScreen';
+import NotificationScreen from './src/screens/Notification/NotificationScreen';
 
 const Stack = createStackNavigator();
 
