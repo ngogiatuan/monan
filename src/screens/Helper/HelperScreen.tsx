@@ -1,11 +1,21 @@
 import React from 'react';
 import {View, Text, FlatList, Image, StyleSheet} from 'react-native';
-import {useSelector} from 'react-redux';
-import {RootState} from '../redux/store';
+
+// Thay thế dữ liệu mẫu cho hướng dẫn nấu ăn
+const steps = [
+  {
+    id: 1,
+    description: 'Chuẩn bị nguyên liệu: thịt, rau, gia vị...',
+    image: '', // hoặc có thể để link ảnh nếu muốn
+  },
+  {
+    id: 2,
+    description: 'Sơ chế nguyên liệu và bắt đầu nấu.',
+    image: '',
+  },
+];
 
 const HelperScreen = () => {
-  const steps = useSelector((state: RootState) => state.helper.steps);
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Hướng dẫn nấu ăn</Text>
@@ -15,9 +25,9 @@ const HelperScreen = () => {
         renderItem={({item, index}) => (
           <View style={styles.stepContainer}>
             <Text style={styles.stepTitle}>Bước {index + 1}</Text>
-            {item.image && (
+            {item.image ? (
               <Image source={{uri: item.image}} style={styles.image} />
-            )}
+            ) : null}
             <Text style={styles.description}>{item.description}</Text>
           </View>
         )}
