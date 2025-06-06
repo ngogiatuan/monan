@@ -9,6 +9,7 @@ interface ButtonNavigationProps {
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  children?: React.ReactNode; // thêm dòng này
 }
 
 const ButtonNavigation = ({
@@ -19,6 +20,7 @@ const ButtonNavigation = ({
   disabled = false,
   style,
   textStyle,
+  children, // thêm dòng này
 }: ButtonNavigationProps) => {
   return (
     <TouchableOpacity
@@ -34,6 +36,7 @@ const ButtonNavigation = ({
       <Text style={[styles.text, { color: disabled ? '#bbb' : color }, textStyle]}>
         {title}
       </Text>
+      {children /* icon truyền vào sẽ nằm bên phải */}
     </TouchableOpacity>
   );
 };

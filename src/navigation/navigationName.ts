@@ -4,7 +4,13 @@ export const nav = {
     deleteAccount: 'DeleteAccount',
     language: 'Language',
     recipe: 'Recipe',
-    rank: 'Ranking', // thêm dòng này
+    rank: 'Ranking',
+    authen: 'AuthenScreen',
+    login: 'LoginScreen',
+    register: 'RegisterScreen',
+    forgot: 'ForgotPasswordScreen',
+    validate: 'ValidateEmailScreen',
+    resetPassword: 'ResetPasswordScreen', // thêm dòng này
 }
 export const tab = {
     search: 'SearchScreen'
