@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
+import { UserContext } from '../../context/UserContext'; // tạo context nếu chưa có
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const { setUser } = useContext(UserContext); // context lưu thông tin user
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+
+  const handleLogin = () => {
+    if (!email.endsWith('@gmail.com')) {
+      setEmailError('Tên đăng nhập không tồn tại (phải là email @gmail.com)');
+      return;
+    }
+    setEmailError('');
+    // Giả lập user, avatar, điểm
+    setUser({
+      name: 'Bessie Cooper',
+      avatar: require('../../assert/image/avatar.png'), // đổi đúng tên file avatar png bạn có
+      point: 0,
+      email,
+    });
+    navigation.navigate(nav.home as never);
+  };
 
   return (
     <ImageBackground
@@ -26,17 +45,25 @@ const LoginScreen = () => {
             style={styles.input}
             placeholder="Nhập email..."
             value={email}
-            onChangeText={setEmail}
+            onChangeText={text => {
+              setEmail(text);
+              setEmailError('');
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {emailError ? (
+            <Text style={styles.errorText}>{emailError}</Text>
+          ) : null}
           <Text style={styles.label}>Mật khẩu</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: '#222' }]}
             placeholder="Nhập mật khẩu"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            placeholderTextColor="#888"
+            selectionColor="#222"
           />
           <TouchableOpacity
             style={{ alignSelf: 'flex-end', marginBottom: 12 }}
@@ -44,7 +71,7 @@ const LoginScreen = () => {
           >
             <Text style={styles.forgot}>Quên mật khẩu?</Text>
           </TouchableOpacity>
-          <ButtonNavigation title="Đăng nhập" />
+          <ButtonNavigation title="Đăng nhập" onPress={handleLogin} />
           <View style={styles.orContainer}>
             <View style={styles.line} />
             <Text style={styles.orText}>Hoặc</Text>
@@ -190,6 +217,12 @@ const styles = StyleSheet.create({
     height: 20,
     marginLeft: 12,
     alignSelf: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 4,
+    marginLeft: 2,
   },
 });
 

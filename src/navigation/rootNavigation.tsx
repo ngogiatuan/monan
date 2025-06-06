@@ -17,6 +17,7 @@ import RegisterScreen from '../screens/Register/RegisterScreen';
 import ForgotPasswordScreen from '../screens/Forgot/ForgotPasswordScreen';
 import ValidateEmailScreen from '../screens/Validate/ValidateEmailScreen';
 import ResetPasswordScreen from '../screens/ResetPassword/ResetPasswordScreen';
+import HomeScreen from '../screens/homeScreen/HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -48,6 +49,7 @@ const RootNavigation = () => {
         <Stack.Screen name={nav.forgot} component={ForgotPasswordScreen} />
         <Stack.Screen name={nav.validate} component={ValidateEmailScreen} />
         <Stack.Screen name={nav.resetPassword} component={ResetPasswordScreen} />
+        <Stack.Screen name={nav.home} component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

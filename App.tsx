@@ -6,13 +6,16 @@ import {PersistGate} from 'redux-persist/integration/react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import RootNavigation from './src/navigation/rootNavigation';
+import { UserProvider } from './src/context/UserContext';
 
 const App = () => {
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor} loading={null}>
         <SafeAreaView style={{flex: 1}}>
-          <RootNavigation />
+          <UserProvider>
+            <RootNavigation />
+          </UserProvider>
         </SafeAreaView>
       </PersistGate>
     </Provider>

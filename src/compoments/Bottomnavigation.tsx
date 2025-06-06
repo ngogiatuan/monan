@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   iconActive: {
-    tintColor: '#ff9800',
+      tintColor: '#FF6600', // cam đậm như mẫu
   },
   label: {
     fontSize: 12,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   labelActive: {
-    color: '#ff9800',
+    color: '#FF6600', // cam đậm như mẫu
     fontWeight: 'bold',
   },
 });
