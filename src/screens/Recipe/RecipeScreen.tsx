@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
 import BottomNavigation from '../../compoments/Bottomnavigation';
+import { nav } from '../../navigation/navigationName';
 
 const RecipeScreen = () => {
   const [tab, setTab] = useState<'my' | 'saved'>('saved');
+  const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -31,7 +35,10 @@ const RecipeScreen = () => {
           <View style={styles.savedContainer}>
             <Image source={require('../../assert/image/fire.png')} style={styles.fureIcon} />
             <Text style={styles.savedText}>Bạn chưa sở hữu Quest nào</Text>
-            <TouchableOpacity style={styles.exploreBtn}>
+            <TouchableOpacity
+              style={styles.exploreBtn}
+              onPress={() => navigation.navigate(nav.discovery)}
+            >
               <Text style={styles.exploreText}>Khám phá ngay {'>'}</Text>
             </TouchableOpacity>
           </View>

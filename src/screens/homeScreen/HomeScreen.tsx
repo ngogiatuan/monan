@@ -14,13 +14,15 @@ import {
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
+import { useNavigation } from '@react-navigation/native';
+import { nav } from '../../navigation/navigationName';
 
 const { width } = Dimensions.get('window');
 
 const trendingData = [
   {
     id: '1',
-    image: require('../../assert/image/product.png'),
+    image: require('../../assert/image/fish.png'),
     title: 'Canh chua cá lóc theo chuẩn gu miền Tây',
     time: '20\'',
     rating: 4.8,
@@ -77,6 +79,7 @@ const offerData = [
 ];
 
 const HomeScreen = () => {
+  const navigation = useNavigation<any>();
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <ImageBackground
@@ -178,7 +181,15 @@ const HomeScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
           renderItem={({ item }) => (
-            <View style={styles.productCard}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                if (item.image === require('../../assert/image/fish.png')) {
+                  navigation.navigate(nav.detail);
+                }
+              }}
+              style={styles.productCard}
+            >
               <View style={styles.productImgWrap}>
                 <Image source={item.image} style={styles.productImg} />
                 <View style={styles.productMarkCircle}>
@@ -200,7 +211,7 @@ const HomeScreen = () => {
                 </View>
                 <Text style={styles.freeTag}>Miễn phí</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
         />
         <View style={styles.sectionRow}>

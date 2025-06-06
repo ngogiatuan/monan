@@ -10,7 +10,13 @@ export const nav = {
     register: 'RegisterScreen',
     forgot: 'ForgotPasswordScreen',
     validate: 'ValidateEmailScreen',
-    resetPassword: 'ResetPasswordScreen', // thêm dòng này
+    resetPassword: 'ResetPasswordScreen', 
+    discovery:'DiscoveryScreen',// thêm dòng này
+    detail: 'DetailScreen', // thêm dòng này
+    review: 'ReviewScreen', // thêm dòng này
+    tutorialCooking: 'TutorialCookingScreen', // thêm dòng này
+    endCooking: 'EndCookingScreen', // thêm dòng này
+    buy: "BuyScreen",
 }
 export const tab = {
     search: 'SearchScreen'

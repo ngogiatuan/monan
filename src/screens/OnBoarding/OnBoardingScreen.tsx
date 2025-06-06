@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { nav } from '../../navigation/navigationName';
 
 const OnBoardingScreen = () => {
+  const navigation = useNavigation<any>();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigation.replace(nav.authen as never);
+    }, 3500); // 3.5 giây
+
+    return () => clearTimeout(timer);
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
       <Image

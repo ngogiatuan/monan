@@ -1,16 +1,15 @@
 import React from 'react';
-import { TextInput, StyleSheet, ViewStyle, TextStyle, TextInputProps } from 'react-native';
+import { TextInput, StyleSheet, TextStyle, TextInputProps } from 'react-native';
 
 interface InputNavigationProps extends TextInputProps {
-  style?: ViewStyle;
-  inputStyle?: TextStyle;
+  style?: TextStyle | TextStyle[];
 }
 
 const InputNavigation = React.forwardRef<TextInput, InputNavigationProps>(
-  ({ style, inputStyle, ...props }, ref) => (
+  ({ style, ...props }, ref) => (
     <TextInput
       ref={ref}
-      style={[styles.input, inputStyle, style]}
+      style={[styles.input, style]}
       {...props}
     />
   )
