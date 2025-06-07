@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
@@ -25,22 +25,10 @@ import BuyScreen from '../screens/Buy/BuyScreen';
 const Stack = createNativeStackNavigator();
 
 const RootNavigation = () => {
-  const [showOnboarding, setShowOnboarding] = useState(true);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShowOnboarding(false);
-    }, 5000); // 5 giây
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (showOnboarding) {
-    return <OnBoardingScreen />;
-  }
-
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={nav.authen} screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName={nav.onboarding} screenOptions={{ headerShown: false }}>
+        <Stack.Screen name={nav.onboarding} component={OnBoardingScreen} />
         <Stack.Screen name={nav.authen} component={AuthenScreen} />
         <Stack.Screen name={nav.login} component={LoginScreen} />
         <Stack.Screen name={nav.register} component={RegisterScreen} />

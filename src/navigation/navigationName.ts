@@ -1,22 +1,23 @@
 export const nav = {
-    home: 'HomeScreen',
-    profile: "Profile",
+    onboarding: 'OnBoarding',
+    authen: 'Authen',
+    login: 'Login',
+    register: 'Register',
+    profile: 'Profile',
     deleteAccount: 'DeleteAccount',
     language: 'Language',
     recipe: 'Recipe',
-    rank: 'Ranking',
-    authen: 'AuthenScreen',
-    login: 'LoginScreen',
-    register: 'RegisterScreen',
-    forgot: 'ForgotPasswordScreen',
-    validate: 'ValidateEmailScreen',
-    resetPassword: 'ResetPasswordScreen', 
-    discovery:'DiscoveryScreen',// thêm dòng này
-    detail: 'DetailScreen', // thêm dòng này
-    review: 'ReviewScreen', // thêm dòng này
-    tutorialCooking: 'TutorialCookingScreen', // thêm dòng này
-    endCooking: 'EndCookingScreen', // thêm dòng này
-    buy: "BuyScreen",
+    rank: 'Rank',
+    forgot: 'Forgot',
+    validate: 'Validate',
+    resetPassword: 'ResetPassword',
+    home: 'Home',
+    discovery: 'Discovery',
+    detail: 'Detail',
+    review: 'Review',
+    tutorialCooking: 'TutorialCooking',
+    endCooking: 'EndCooking',
+    buy: 'Buy',
 }
 export const tab = {
     search: 'SearchScreen'
