@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Keyboard } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
 import BottomNavigation from '../../compoments/Bottomnavigation';
+import RankingList from '../../compoments/RankingList';
 
 const TABS = [
   { key: 'all', label: 'Tất cả' },
@@ -13,6 +14,25 @@ const RankingScreen = () => {
   const [tab, setTab] = useState('all');
   const [searchMode, setSearchMode] = useState(false);
   const [search, setSearch] = useState('');
+  const [searchSubmitted, setSearchSubmitted] = useState(false);
+
+  const guestRanking = [
+    {
+      id: 'guest',
+      name: 'Guest',
+      avatar: require('../../assert/image/avatar.png'),
+      point: '-',
+      quests: 0,
+      rank: 1,
+    },
+  ];
+
+  // Dữ liệu search: chỉ có guest, filter theo tên (case-insensitive)
+  const filteredRanking = search.trim().length === 0
+    ? []
+    : guestRanking.filter(item =>
+        item.name.toLowerCase().includes(search.trim().toLowerCase())
+      );
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -34,12 +54,19 @@ const RankingScreen = () => {
                 placeholder="Tìm người chơi"
                 placeholderTextColor="#888"
                 value={search}
-                onChangeText={setSearch}
+                onChangeText={text => {
+                  setSearch(text);
+                  setSearchSubmitted(false);
+                }}
                 autoFocus
                 returnKeyType="search"
+                onSubmitEditing={() => setSearchSubmitted(true)}
               />
               {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch('')}>
+                <TouchableOpacity onPress={() => {
+                  setSearch('');
+                  setSearchSubmitted(false);
+                }}>
                   <Image source={require('../../assert/image/cancel.png')} style={styles.cancelIcon} />
                 </TouchableOpacity>
               )}
@@ -49,6 +76,7 @@ const RankingScreen = () => {
               onPress={() => {
                 setSearch('');
                 setSearchMode(false);
+                setSearchSubmitted(false);
                 Keyboard.dismiss();
               }}
             >
@@ -71,9 +99,22 @@ const RankingScreen = () => {
           ))}
         </View>
       )}
-      {/* Content layout placeholder */}
+      {/* Content */}
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
-        {/* Chỉ layout, chưa có danh sách */}
+        {!searchMode ? (
+          <RankingList
+            data={guestRanking}
+            tab={tab}
+          />
+        ) : (
+          // Chỉ render list khi đã bấm enter (searchSubmitted)
+          searchSubmitted
+            ? <RankingList
+                data={filteredRanking}
+                tab="search"
+              />
+            : null
+        )}
       </View>
       <BottomNavigation current="rank" />
     </View>

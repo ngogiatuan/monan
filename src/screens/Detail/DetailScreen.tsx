@@ -78,6 +78,8 @@ const RELATED = [
   },
 ];
 
+const ESTIMATED_TIME = 40; // phút
+
 const DetailScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -146,7 +148,7 @@ const DetailScreen = () => {
                 </View>
                 <View style={styles.infoTextBox}>
                   <Text style={styles.infoLabel} numberOfLines={1} ellipsizeMode="tail">Thời gian dự kiến</Text>
-                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">40 phút</Text>
+                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{ESTIMATED_TIME} phút</Text>
                 </View>
               </View>
               <View style={styles.infoItemBox}>
@@ -248,7 +250,7 @@ const DetailScreen = () => {
         <View style={styles.bottomBtnWrap}>
           <ButtonNavigation
             title="Vào bếp thôi !"
-            onPress={() => navigation.navigate(nav.tutorialCooking)}
+            onPress={() => navigation.navigate(nav.tutorialCooking, { estimatedTime: ESTIMATED_TIME })}
             style={styles.bottomBtn}
           />
         </View>

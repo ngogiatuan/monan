@@ -8,7 +8,7 @@ const OnBoardingScreen = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace(nav.authen);
+      navigation.replace(nav.home); // Đổi sang home thay vì authen
     }, 3500); // 3.5 giây
 
     return () => clearTimeout(timer);

@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert } from 'react-native';
 import { nav } from '../../navigation/navigationName';
 import { useNavigation } from '@react-navigation/native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
+import ButtonNavigation from '../../compoments/ButtonNavigation';
 
 const supportList = [
   { label: 'Cách thức hoạt động', icon: require('../../assert/image/activity.png') },
@@ -12,21 +13,31 @@ const supportList = [
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
+  const [showLogout, setShowLogout] = useState(false);
+
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
         <View style={styles.coverContainer}>
           <Image source={require('../../assert/image/cover.png')} style={styles.coverImg} />
-          <View style={styles.avatarWrapper}>
-            <Image source={require('../../assert/image/avatar.png')} style={styles.avatar} />
-          </View>
+          <TouchableOpacity
+            style={styles.avatarWrapper}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={require('../../assert/image/avatar.png')}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
         </View>
         <View style={styles.infoContainer}>
           <Text style={styles.loginText}>Đăng nhập</Text>
-          <Text style={styles.subText}>
-            Chưa có tài khoản?{' '}
-            <Text style={styles.linkText}>Tạo tài khoản</Text>
-          </Text>
+          <View style={styles.rowInline}>
+            <Text style={styles.subText}>Chưa có tài khoản?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate(nav.authen)}>
+              <Text style={styles.linkText}> Tạo tài khoản</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cài đặt</Text>
@@ -85,11 +96,60 @@ const ProfileScreen = () => {
             <Text style={styles.rowText}>Xóa tài khoản</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutBtn}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={() => setShowLogout(true)}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
       <BottomNavigation current="profile" />
+      {/* Dialog xác nhận đăng xuất */}
+      <Modal
+        visible={showLogout}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogout(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.18)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            padding: 24,
+            width: '80%',
+            alignItems: 'center',
+          }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222', textAlign: 'center' }}>
+              Đăng xuất khỏi tài khoản?
+            </Text>
+            <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
+              Bạn có chắc chắn muốn đăng xuất không?
+            </Text>
+            <ButtonNavigation
+              title="Đăng xuất"
+              backgroundColor="#FF6600"
+              onPress={() => {
+                setShowLogout(false);
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: nav.authen }],
+                });
+              }}
+              style={{ width: '100%', marginBottom: 8 }}
+            />
+            <ButtonNavigation
+              title="Hủy"
+              backgroundColor="#E0E0E0"
+              color="#222"
+              onPress={() => setShowLogout(false)}
+              style={{ width: '100%' }}
+              textStyle={{ color: '#222' }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -124,6 +184,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderColor: '#f0f0f0',
+  },
+  rowInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 0,
   },
   rowText: { fontSize: 16, color: '#222', marginLeft: 12 },
   settingIcon: { width: 22, height: 22 },

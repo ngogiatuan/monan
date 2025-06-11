@@ -13,7 +13,6 @@ import {
   Dimensions,
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
-import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 
@@ -77,9 +76,17 @@ const offerData = [
     button: 'Nhận quà',
   },
 ];
+ 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Chào buổi sáng';
+  if (hour >= 12 && hour < 18) return 'Chào buổi chiều';
+  return 'Chào buổi tối';
+};
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
+  // Giả lập guest: avatar mặc định, tên "Guest"
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <ImageBackground
@@ -90,12 +97,14 @@ const HomeScreen = () => {
       >
         <View style={styles.headerProfileRow}>
           <Image
-            source={require('../../assert/image/user.png')}
+            source={require('../../assert/image/avatar.png')}
             style={styles.headerAvatar}
           />
           <View>
-            <Text style={styles.headerGreeting}>Chào buổi sáng, hôm nay bạn muốn nấu gì?</Text>
-            <Text style={styles.headerName}>Bessie Cooper</Text>
+            <Text style={styles.headerGreeting}>
+              {getGreeting()}, hôm nay bạn muốn nấu gì?
+            </Text>
+            <Text style={styles.headerName}>Guest</Text>
           </View>
         </View>
       </ImageBackground>

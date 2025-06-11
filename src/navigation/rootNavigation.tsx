@@ -51,4 +51,4 @@ const RootNavigation = () => {
     </NavigationContainer>
   );
 };
-export default RootNavigation;
+export default RootNavigation;  

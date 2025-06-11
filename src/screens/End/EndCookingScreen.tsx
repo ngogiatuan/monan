@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 
@@ -20,11 +20,28 @@ const { width } = Dimensions.get('window');
 
 const EndCookingScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
 
   // State cho dialog đánh giá
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+
+  // Lấy thời gian bắt đầu từ params
+  const startTime = route.params?.startTime;
+  // Không cần estimatedTime nữa
+  const [duration, setDuration] = useState<string>('0\'');
+  React.useEffect(() => {
+    if (startTime) {
+      const now = Date.now();
+      let diff = Math.floor((now - startTime) / 1000); // giây
+      let text = '';
+      if (diff < 60) text = `${diff}s`;
+      else if (diff < 3600) text = `${Math.floor(diff / 60)}'${diff % 60 > 0 ? diff % 60 + 's' : ''}`;
+      else text = `${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}'`;
+      setDuration(text);
+    }
+  }, [startTime]);
 
   // Render các ngôi sao (blank star và full star)
   const renderStars = () => {
@@ -74,33 +91,37 @@ const EndCookingScreen = () => {
       {/* Content */}
       <View style={styles.card}>
         <View style={styles.doneRow}>
-          <Image source={require('../../assert/image/check.png')} style={styles.doneIcon} />
+          <View style={styles.doneIconCircle}>
+            <Image source={require('../../assert/image/check.png')} style={styles.doneIconWhite} />
+          </View>
           <Text style={styles.doneText}>Bạn đã hoàn thành món ăn</Text>
         </View>
-        <Text style={styles.sectionLabel}>Bạn đã thực hiện</Text>
+        <Text style={styles.sectionLabel}>Bạn đã hoàn thành</Text>
         <View style={styles.timeRow}>
           <View style={styles.timeBox}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-            <Text style={styles.timeValue}>40'</Text>
             <Text style={styles.timeLabel}>Thời gian bạn làm</Text>
-          </View>
-          <View style={styles.timeBox}>
-            <Image source={require('../../assert/image/date.png')} style={[styles.timeIcon, { tintColor: '#FF8000' }]} />
-            <Text style={[styles.timeValue, { color: '#FF8000' }]}>45'</Text>
-            <Text style={styles.timeLabel}>Thời gian dự kiến</Text>
+            <Text style={styles.timeValue}>{duration}</Text>
+            <View style={styles.timeCheckCircle}>
+              <Image source={require('../../assert/image/check.png')} style={styles.timeCheckIcon} />
+            </View>
           </View>
         </View>
         <Text style={styles.sectionLabel}>Bạn nhận được</Text>
-        <View style={styles.rewardRow}>
-          <Image source={require('../../assert/image/point.png')} style={styles.rewardIcon} />
-          <Text style={styles.rewardValue}>+1500</Text>
+        <View style={styles.rewardRowCenter}>
+          <View style={styles.rewardIconCircle}>
+            <Image source={require('../../assert/image/point.png')} style={styles.rewardIconCenter} />
+          </View>
+          <Text style={styles.rewardValueCenter}>+1500</Text>
         </View>
-        <Text style={styles.rewardNote}>
-          Điểm kinh nghiệm sẽ giúp bạn thăng hạng ở bảng xếp hạng. Chúc mừng bạn!
-        </Text>
+        <View style={styles.rewardNoteContainer}>
+          <Text style={styles.rewardNote}>
+            Điểm kinh nghiệm sẽ giúp bạn thăng hạng ở bảng xếp hạng. Chúc mừng bạn.
+          </Text>
+        </View>
       </View>
-      {/* Button */}
-      <View style={styles.bottomBtnRow}>
+      {/* Button cố định dưới cùng */}
+      <View style={styles.fixedBottomBtnRow}>
         <ButtonNavigation
           title="Tiếp tục"
           onPress={() => setShowRating(true)}
@@ -191,8 +212,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     marginHorizontal: 16,
-    marginTop: -40,
-    padding: 20,
+    marginTop: -32,
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -203,32 +224,40 @@ const styles = StyleSheet.create({
   doneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     borderBottomWidth: 1,
     borderColor: '#E6F8F3',
-    paddingBottom: 12,
+    paddingBottom: 10,
   },
-  doneIcon: {
-    width: 22,
-    height: 22,
-    tintColor: '#00C48C',
+  doneIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#00C48C',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
+  },
+  doneIconWhite: {
+    width: 14,
+    height: 14,
+    tintColor: '#fff',
   },
   doneText: {
     color: '#00C48C',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
   },
   sectionLabel: {
-    color: '#888',
-    fontSize: 13,
+    color: '#222',
+    fontSize: 14,
     fontWeight: 'bold',
-    marginTop: 12,
+    marginTop: 10,
     marginBottom: 6,
   },
   timeRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: 12,
   },
   timeBox: {
@@ -236,54 +265,108 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F6F6F6',
     borderRadius: 12,
-    paddingVertical: 12,
-    marginHorizontal: 4,
+    paddingVertical: 14,
+    marginHorizontal: 0,
+    position: 'relative',
+    minHeight: 90,
+    maxWidth: 320,
+    alignSelf: 'center',
   },
   timeIcon: {
-    width: 20,
-    height: 20,
-    tintColor: '#00C48C',
+    width: 22,
+    height: 22,
     marginBottom: 4,
-  },
-  timeValue: {
-    color: '#00C48C',
-    fontWeight: 'bold',
-    fontSize: 22,
-    marginBottom: 2,
+    tintColor: '#00C48C',
   },
   timeLabel: {
     color: '#888',
     fontSize: 13,
     fontWeight: '400',
+    marginBottom: 1,
+    marginTop: 1,
   },
-  rewardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  rewardIcon: {
-    width: 24,
-    height: 24,
-    tintColor: '#00C48C',
-    marginRight: 8,
-  },
-  rewardValue: {
+  timeValue: {
     color: '#00C48C',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 22,
+    marginBottom: 1,
+    marginTop: 1,
+  },
+  timeCheckCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#00C48C',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+  },
+  timeCheckIcon: {
+    width: 10,
+    height: 10,
+    tintColor: '#fff',
+  },
+  rewardRowCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    marginBottom: 2,
+    gap: 8,
+  },
+  rewardIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E6F8F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 0,
+  },
+  rewardIconCenter: {
+    width: 18,
+    height: 18,
+    tintColor: '#00C48C',
+  },
+  rewardValueCenter: {
+    color: '#222',
+    fontWeight: 'bold',
+    fontSize: 22,
+    marginLeft: 8,
+  },
+  rewardNoteContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    marginBottom: 0,
+    paddingHorizontal: 0,
   },
   rewardNote: {
     color: '#888',
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 12,
     textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 320,
+    width: '100%',
+    includeFontPadding: false,
+    letterSpacing: 0.1,
   },
   bottomBtnRow: {
+    // Xóa style này nếu có, hoặc để trống nếu dùng fixedBottomBtnRow
+    display: 'none',
+  },
+  fixedBottomBtnRow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingBottom: 24,
     paddingTop: 8,
-    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#f2f2f2',
   },
   // Thêm style cho modal nếu chưa có
   modalContainer: {
