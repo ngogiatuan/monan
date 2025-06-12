@@ -18,6 +18,7 @@ export const nav = {
     tutorialCooking: 'TutorialCooking',
     endCooking: 'EndCooking',
     buy: 'Buy',
+    addRecipe: 'AddRecipe',
 }
 export const tab = {
     search: 'SearchScreen'

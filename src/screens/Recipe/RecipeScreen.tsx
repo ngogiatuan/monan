@@ -6,25 +6,8 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
 
-// Dữ liệu mẫu cho "Công thức của tôi"
-const MY_RECIPES = [
-  {
-    id: '1',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-  },
-];
+// Xóa dữ liệu mẫu MY_RECIPES, chỉ để mảng rỗng để test trạng thái empty
+const MY_RECIPES: any[] = [];
 
 const SCREEN_WIDTH = 393;
 const CARD_MAX_WIDTH = 360;
@@ -265,13 +248,19 @@ const RecipeScreen = () => {
       </View>
       <View style={styles.body}>
         {tab === 'my' ? (
-          <FlatList
-            data={MY_RECIPES}
-            keyExtractor={item => item.id}
-            renderItem={renderMyRecipe}
-            contentContainerStyle={{ padding: 16 }}
-            showsVerticalScrollIndicator={false}
-          />
+          MY_RECIPES.length === 0 ? (
+            <View style={styles.savedEmptyWrap}>
+              <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.addRecipe)} />
+            </View>
+          ) : (
+            <FlatList
+              data={MY_RECIPES}
+              keyExtractor={item => item.id}
+              renderItem={renderMyRecipe}
+              contentContainerStyle={{ padding: 16 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )
         ) : (
           <View style={styles.savedEmptyWrap}>
             <RecipeEmpty onExplore={() => navigation.navigate(nav.discovery)} />

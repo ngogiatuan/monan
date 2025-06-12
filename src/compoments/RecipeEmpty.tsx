@@ -1,17 +1,37 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import ButtonNavigation from './ButtonNavigation';
 
 interface RecipeEmptyProps {
-  onExplore: () => void;
+  onAddRecipe?: () => void;
+  onExplore?: () => void;
 }
 
-const RecipeEmpty = ({ onExplore }: RecipeEmptyProps) => (
+const RecipeEmpty = ({ onAddRecipe, onExplore }: RecipeEmptyProps) => (
   <View style={styles.container}>
     <Image source={require('../assert/image/fire.png')} style={styles.icon} />
-    <Text style={styles.text}>Bạn chưa sở hữu Quest nào</Text>
-    <TouchableOpacity style={styles.btn} onPress={onExplore}>
-      <Text style={styles.btnText}>Khám phá ngay {'>'}</Text>
-    </TouchableOpacity>
+    <Text style={styles.text}>
+      {onAddRecipe ? 'Bạn chưa có công thức nào' : 'Bạn chưa sở hữu Quest nào'}
+    </Text>
+    {onAddRecipe ? (
+      <ButtonNavigation
+        title="Thêm công thức của tôi"
+        backgroundColor="#ff6f2c"
+        color="#fff"
+        style={styles.btn}
+        textStyle={styles.btnText}
+        onPress={onAddRecipe}
+      />
+    ) : onExplore ? (
+      <ButtonNavigation
+        title="Khám phá ngay >"
+        backgroundColor="#ff6f2c"
+        color="#fff"
+        style={styles.btn}
+        textStyle={styles.btnText}
+        onPress={onExplore}
+      />
+    ) : null}
   </View>
 );
 
@@ -31,16 +51,19 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   btn: {
-    backgroundColor: '#ff6f2c',
     borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     marginTop: 8,
+    width: 200,
+    alignSelf: 'center',
   },
   btnText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
+    textAlign: 'center',
+    paddingVertical: 12,
   },
 });
 
