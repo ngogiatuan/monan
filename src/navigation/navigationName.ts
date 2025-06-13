@@ -18,7 +18,7 @@ export const nav = {
     tutorialCooking: 'TutorialCooking',
     endCooking: 'EndCooking',
     buy: 'Buy',
-    addRecipe: 'AddRecipeScreen',
+    addRecipe: 'AddRecipeScreen', // Đảm bảo đúng tên route cho AddRecipeScreen
 }
 export const tab = {
     search: 'SearchScreen'

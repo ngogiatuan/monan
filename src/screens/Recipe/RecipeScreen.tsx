@@ -6,7 +6,9 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
 
-// Dữ liệu mẫu cho "Công thức của tôi"
+// Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
+
+// Xóa dữ liệu mẫu MY_RECIPES, chỉ để mảng rỗng để test trạng thái empty
 const MY_RECIPES: any[] = [];
 
 const SCREEN_WIDTH = 393;
@@ -279,18 +281,9 @@ const RecipeScreen = () => {
       </View>
       <View style={styles.body}>
         {tab === 'my' ? (
-          isMyRecipesEmpty ? (
+          MY_RECIPES.length === 0 ? (
             <View style={styles.savedEmptyWrap}>
-              <Image
-                source={require('../../assert/image/fire.png')}
-                style={styles.fireIconEmpty}
-              />
-              <TouchableOpacity
-                style={styles.addMyRecipeBtn}
-                onPress={() => navigation.navigate(nav.addRecipe)}
-              >
-                <Text style={styles.addMyRecipeText}>Thêm công thức của tôi  {'>'}</Text>
-              </TouchableOpacity>
+              <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.addRecipe)} />
             </View>
           ) : (
             <FlatList
