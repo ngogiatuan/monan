@@ -8,7 +8,7 @@ interface RecipeEmptyProps {
 const RecipeEmpty = ({ onExplore }: RecipeEmptyProps) => (
   <View style={styles.container}>
     <Image source={require('../assert/image/fire.png')} style={styles.icon} />
-    <Text style={styles.text}>Bạn chưa sở hữu Quest nào</Text>
+    <Text style={styles.text}>Bạn chưa sở hữu Quest nào </Text>
     <TouchableOpacity style={styles.btn} onPress={onExplore}>
       <Text style={styles.btnText}>Khám phá ngay {'>'}</Text>
     </TouchableOpacity>
@@ -45,3 +45,5 @@ const styles = StyleSheet.create({
 });
 
 export default RecipeEmpty;
+// Đúng interface chỉ nhận onExplore, không nhận onAddRecipe.
+// Nếu muốn dùng cho nhiều mục đích, hãy mở rộng interface, còn hiện tại chỉ dùng onExplore.

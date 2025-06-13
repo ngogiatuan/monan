@@ -146,35 +146,35 @@ const HomeScreen = () => {
               source={require('../../assert/image/Breakfast.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Breakfast</Text>
+            <Text style={styles.categoryText}>Bữa sáng</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Lunch.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Lunch</Text>
+            <Text style={styles.categoryText}>Bữa trưa</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Dinner.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Dinner</Text>
+            <Text style={styles.categoryText}>Bữa tối</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Dessert.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Dessert</Text>
+            <Text style={styles.categoryText}>Tráng miệng</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Lunch.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Lunch</Text>
+            <Text style={styles.categoryText}>Bữa trưa</Text>
           </View>
         </View>
          <View style={styles.sectionRow}>

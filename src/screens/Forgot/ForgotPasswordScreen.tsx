@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Text, TextInput, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
+import InputNavigation from '../../compoments/InputNavigation';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
@@ -17,13 +18,14 @@ const ForgotPasswordScreen = () => {
       onBack={() => navigation.goBack()}
     >
       <Text style={styles.label}>Email <Text style={{ color: 'red' }}>*</Text></Text>
-      <TextInput
+      <InputNavigation
         style={styles.input}
         placeholder="Nhập email..."
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        placeholderTextColor="#bdbdbd"
       />
       <ButtonNavigation
         title="Tiếp tục"
@@ -41,13 +43,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
     marginBottom: 16,
-    backgroundColor: '#fafafa',
+    fontSize: 14,
+    height: 36,
+    minHeight: 36,
+    maxHeight: 36,
   },
 });
 
