@@ -6,25 +6,10 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
 
-// Dữ liệu mẫu cho "Công thức của tôi"
-const MY_RECIPES = [
-  {
-    id: '1',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-  },
-];
+// Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
+
+// Xóa dữ liệu mẫu MY_RECIPES, chỉ để mảng rỗng để test trạng thái empty
+const MY_RECIPES: any[] = [];
 
 const SCREEN_WIDTH = 393;
 const CARD_MAX_WIDTH = 360;
@@ -210,6 +195,34 @@ const styles = StyleSheet.create({
     height: 18,
     tintColor: '#bbb',
   },
+  fireIconEmpty: {
+    width: 80,
+    height: 80,
+    marginBottom: 24,
+    alignSelf: 'center',
+  },
+  addMyRecipeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff6f2c',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    alignSelf: 'center',
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  addMyRecipeIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff',
+    marginRight: 8,
+  },
+  addMyRecipeText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
 });
 
 const RecipeScreen = () => {
@@ -244,6 +257,9 @@ const RecipeScreen = () => {
     </View>
   );
 
+  // Kiểm tra danh sách công thức của tôi có rỗng không
+  const isMyRecipesEmpty = MY_RECIPES.length === 0;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
@@ -265,13 +281,19 @@ const RecipeScreen = () => {
       </View>
       <View style={styles.body}>
         {tab === 'my' ? (
-          <FlatList
-            data={MY_RECIPES}
-            keyExtractor={item => item.id}
-            renderItem={renderMyRecipe}
-            contentContainerStyle={{ padding: 16 }}
-            showsVerticalScrollIndicator={false}
-          />
+          MY_RECIPES.length === 0 ? (
+            <View style={styles.savedEmptyWrap}>
+              <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.recipe)} />
+            </View>
+          ) : (
+            <FlatList
+              data={MY_RECIPES}
+              keyExtractor={item => item.id}
+              renderItem={renderMyRecipe}
+              contentContainerStyle={{ padding: 16 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )
         ) : (
           <View style={styles.savedEmptyWrap}>
             <RecipeEmpty onExplore={() => navigation.navigate(nav.discovery)} />
