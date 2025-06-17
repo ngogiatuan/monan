@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Keyboard } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RankingList from '../../compoments/RankingList';
+import { UserContext } from '../../context/UserContext';
 
 const TABS = [
   { key: 'all', label: 'Tất cả' },
@@ -15,7 +16,9 @@ const RankingScreen = () => {
   const [searchMode, setSearchMode] = useState(false);
   const [search, setSearch] = useState('');
   const [searchSubmitted, setSearchSubmitted] = useState(false);
+  const { user } = useContext(UserContext);
 
+  // Nếu là guest
   const guestRanking = [
     {
       id: 'guest',
@@ -27,12 +30,33 @@ const RankingScreen = () => {
     },
   ];
 
-  // Dữ liệu search: chỉ có guest, filter theo tên (case-insensitive)
-  const filteredRanking = search.trim().length === 0
-    ? []
-    : guestRanking.filter(item =>
-        item.name.toLowerCase().includes(search.trim().toLowerCase())
-      );
+  // Nếu là user đã đăng nhập
+  const userRanking = [
+    {
+      id: 'user',
+      name: user?.name || '',
+      avatar: user?.avatar || require('../../assert/image/avatar.png'),
+      point: 0,
+      quests: 0,
+      rank: 1,
+    },
+  ];
+
+  // Dữ liệu search: chỉ có guest hoặc user, filter theo tên (case-insensitive)
+  const baseRanking = user ? userRanking : guestRanking;
+  const filteredRanking =
+    search.trim().length === 0
+      ? []
+      : baseRanking.filter(item =>
+          item.name.toLowerCase().includes(search.trim().toLowerCase())
+        );
+
+  // Đề xuất khi đang search và có input nhưng chưa submit
+  const showSuggest =
+    searchMode &&
+    search.trim().length > 0 &&
+    !searchSubmitted &&
+    filteredRanking.length > 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -103,17 +127,37 @@ const RankingScreen = () => {
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {!searchMode ? (
           <RankingList
-            data={guestRanking}
+            data={baseRanking}
             tab={tab}
           />
         ) : (
-          // Chỉ render list khi đã bấm enter (searchSubmitted)
-          searchSubmitted
-            ? <RankingList
+          <>
+            {/* Đề xuất bên dưới ô search khi có input và chưa submit */}
+            {showSuggest && (
+              <View style={styles.suggestBox}>
+                {filteredRanking.map(item => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.suggestItem}
+                    onPress={() => {
+                      setSearch(item.name);
+                      setSearchSubmitted(true);
+                    }}
+                  >
+                    <Image source={item.avatar} style={styles.suggestAvatar} />
+                    <Text style={styles.suggestText}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            {/* Chỉ render list khi đã bấm enter (searchSubmitted) */}
+            {searchSubmitted && filteredRanking.length > 0 ? (
+              <RankingList
                 data={filteredRanking}
                 tab="search"
               />
-            : null
+            ) : null}
+          </>
         )}
       </View>
       <BottomNavigation current="rank" />
@@ -210,6 +254,36 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#ff6f2c',
+  },
+  suggestBox: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginTop: 4,
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 10,
+  },
+  suggestItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  suggestAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 10,
+    backgroundColor: '#eee',
+  },
+  suggestText: {
+    fontSize: 15,
+    color: '#222',
+    fontWeight: 'bold',
   },
 });
 

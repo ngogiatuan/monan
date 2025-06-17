@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import AuthForm from '../../compoments/AuthForm';
+import { getUserByEmailAndPassword } from '../../api/userApi';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -13,19 +14,19 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
 
-  const handleLogin = () => {
-    if (!email.endsWith('@gmail.com')) {
-      setEmailError('Tên đăng nhập không tồn tại (phải là email @gmail.com)');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setEmailError('Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
     setEmailError('');
-    setUser({
-      name: 'Bessie Cooper',
-      avatar: require('../../assert/image/avatar.png'),
-      point: 0,
-      email,
-    });
-    navigation.navigate(nav.home as never);
+    const userData = await getUserByEmailAndPassword(email, password);
+    if (userData) {
+      setUser(userData);
+      navigation.navigate(nav.home as never);
+    } else {
+      setEmailError('Email hoặc mật khẩu không đúng');
+    }
   };
 
   return (

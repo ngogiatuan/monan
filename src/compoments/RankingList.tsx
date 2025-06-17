@@ -36,7 +36,9 @@ const RankingList: React.FC<Props> = ({ data, tab }) => {
           </View>
           <View>
             <Text style={styles.yourPointLabel}>Số điểm của bạn</Text>
-            <Text style={styles.yourPointValue}>-</Text>
+            <Text style={styles.yourPointValue}>
+              {data && data[0] && data[0].point !== undefined && data[0].point !== null ? data[0].point : '-'}
+            </Text>
           </View>
         </View>
       )}

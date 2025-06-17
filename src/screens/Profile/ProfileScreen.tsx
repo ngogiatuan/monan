@@ -4,6 +4,8 @@ import { nav } from '../../navigation/navigationName';
 import { useNavigation } from '@react-navigation/native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
+import { UserContext } from '../../context/UserContext';
+import ProfileInfo from '../../compoments/ProfileInfo';
 
 const supportList = [
   { label: 'Cách thức hoạt động', icon: require('../../assert/image/activity.png') },
@@ -14,36 +16,39 @@ const supportList = [
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [showLogout, setShowLogout] = useState(false);
+  const { user } = React.useContext(UserContext);
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
-        <View style={styles.coverContainer}>
-          <Image source={require('../../assert/image/cover.png')} style={styles.coverImg} />
-          <TouchableOpacity
-            style={styles.avatarWrapper}
-            activeOpacity={0.8}
-          >
-            <Image
-              source={require('../../assert/image/avatar.png')}
-              style={styles.avatar}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.infoContainer}>
-          <Text style={styles.loginText}>Đăng nhập</Text>
-          <View style={styles.rowInline}>
-            <Text style={styles.subText}>Chưa có tài khoản?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate(nav.authen)}>
-              <Text style={styles.linkText}> Tạo tài khoản</Text>
+        <ProfileInfo />
+        {/* Tổng quát: chỉ hiện khi đã đăng nhập */}
+        {user && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tổng quát</Text>
+            <TouchableOpacity style={styles.row}>
+              <Image
+                source={require('../../assert/image/code.png')}
+                style={styles.generalIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.rowText}>Mã ưu đãi</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row}>
+              <Image
+                source={require('../../assert/image/invite.png')}
+                style={styles.generalIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.rowText}>Giới thiệu bạn bè</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        )}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cài đặt</Text>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => navigation.navigate(nav.language)}
+            onPress={() => navigation.navigate(nav.language as string)}
           >
             <Image
               source={require('../../assert/image/language.png')}
@@ -86,7 +91,7 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Bảo mật</Text>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => navigation.navigate(nav.deleteAccount)}
+            onPress={() => navigation.navigate(nav.deleteAccount as string)}
           >
             <Image
               source={require('../../assert/image/deleteaccount.png')}
@@ -211,6 +216,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  generalIcon: { width: 20, height: 20, tintColor: '#00AEEF' },
 });
 
 export default ProfileScreen;

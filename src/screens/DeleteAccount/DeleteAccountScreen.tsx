@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
+import { UserContext } from '../../context/UserContext';
+import { deleteUserByEmail } from '../../api/userApi';
+import { nav } from '../../navigation/navigationName';
 
 const DeleteAccountScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
+  const { user, setUser } = useContext(UserContext);
 
   // So sánh chính xác, loại bỏ khoảng trắng thừa, không phân biệt kiểu unicode tổ hợp, không phân biệt kiểu gõ dấu
   const normalize = (str: string) =>
@@ -16,6 +20,19 @@ const DeleteAccountScreen = ({ navigation }: any) => {
   const isValid =
     normalize(input) === 'Xóa tài khoản' &&
     normalize(input).length === 'Xóa tài khoản'.length;
+
+  // Thêm chức năng xóa tài khoản
+  const handleDelete = async () => {
+    if (!isValid) return;
+    if (user?.email) {
+      await deleteUserByEmail(user.email);
+    }
+    setUser(null); // về trạng thái guest
+    navigation.reset({
+      index: 0,
+      routes: [{ name: nav.profile }],
+    });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -40,6 +57,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[styles.deleteBtn, { backgroundColor: isValid ? '#e53935' : '#eee' }]}
           disabled={!isValid}
+          onPress={handleDelete}
         >
           <Text style={[styles.deleteBtnText, { color: isValid ? '#fff' : '#bbb' }]}>
             Đồng ý, tôi muốn xóa

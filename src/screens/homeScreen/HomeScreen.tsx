@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,6 +15,7 @@ import {
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
+import { UserContext } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -64,16 +65,16 @@ const offerData = [
   {
     id: '1',
     image: require('../../assert/image/gift.png'),
-    title: 'Quà 100K chờ bạn!',
-    desc: 'Hãy giới thiệu tới bạn bè để được nhận quà hấp dẫn từ chúng tôi.',
+    title: 'Nâng cấp Premium ngay',
+    desc: 'Xem ngay tất cả công thức hot nhất hiện nay',
     button: 'Xem ngay',
   },
   {
     id: '2',
     image: require('../../assert/image/gift.png'),
-    title: 'Quà tặng đặc biệt',
-    desc: 'Đăng nhập mỗi ngày để nhận ưu đãi hấp dẫn.',
-    button: 'Nhận quà',
+    title: 'Quà 100k chờ bạn',
+    desc: 'Hãy giới thiệu tới bạn bè để được nhận phần quà trị giá 100k.',
+    button: 'Xem ngay',
   },
 ];
  
@@ -85,10 +86,11 @@ const getGreeting = () => {
 };
 
 const HomeScreen = () => {
+  const { user } = useContext(UserContext);
   const navigation = useNavigation<any>();
-  // Giả lập guest: avatar mặc định, tên "Guest"
+
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <ImageBackground
         source={require('../../assert/image/Header.png')}
         style={styles.banner}
@@ -97,14 +99,14 @@ const HomeScreen = () => {
       >
         <View style={styles.headerProfileRow}>
           <Image
-            source={require('../../assert/image/avatar.png')}
+            source={user?.avatar || require('../../assert/image/avatar.png')}
             style={styles.headerAvatar}
           />
-          <View>
+          <View style={{ marginLeft: 12 }}>
             <Text style={styles.headerGreeting}>
-              {getGreeting()}, hôm nay bạn muốn nấu gì?
+               {getGreeting()}, hôm nay bạn muốn nấu gì?
             </Text>
-            <Text style={styles.headerName}>Guest</Text>
+            <Text style={styles.headerName}>{user?.name || 'Guest'}</Text>
           </View>
         </View>
       </ImageBackground>
@@ -129,7 +131,7 @@ const HomeScreen = () => {
           </View>
           <View style={styles.pointInfo}>
             <Text style={styles.pointLabel}>Điểm xếp hạng</Text>
-            <Text style={styles.pointText}>-</Text>
+            <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
           </View>
         </View>
       </View>
@@ -146,35 +148,35 @@ const HomeScreen = () => {
               source={require('../../assert/image/Breakfast.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Breakfast</Text>
+            <Text style={styles.categoryText}>Bữa sáng</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Lunch.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Lunch</Text>
+            <Text style={styles.categoryText}>Bữa trưa</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Dinner.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Dinner</Text>
+            <Text style={styles.categoryText}>Bữa tối</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Dessert.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Dessert</Text>
+            <Text style={styles.categoryText}>Tráng miệng</Text>
           </View>
           <View style={styles.categoryItem}>
             <Image
               source={require('../../assert/image/Lunch.png')}
               style={styles.categoryIcon}
             />
-            <Text style={styles.categoryText}>Lunch</Text>
+            <Text style={styles.categoryText}>Bữa trưa</Text>
           </View>
         </View>
          <View style={styles.sectionRow}>
@@ -190,15 +192,7 @@ const HomeScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (item.image === require('../../assert/image/fish.png')) {
-                  navigation.navigate(nav.detail);
-                }
-              }}
-              style={styles.productCard}
-            >
+            <View style={styles.productCard}>
               <View style={styles.productImgWrap}>
                 <Image source={item.image} style={styles.productImg} />
                 <View style={styles.productMarkCircle}>
@@ -212,7 +206,17 @@ const HomeScreen = () => {
                   <Text style={styles.timeText}>{item.time}</Text>
                 </View>
               </View>
-              <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
+              {/* Đổi: chỉ bấm vào text mới navigation qua detail */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (item.image === require('../../assert/image/fish.png')) {
+                    navigation.navigate(nav.detail);
+                  }
+                }}
+              >
+                <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
+              </TouchableOpacity>
               <View style={styles.productInfoRow}>
                 <View style={styles.ratingBox}>
                   <Text style={styles.ratingText}>★ {item.rating}</Text>
@@ -220,7 +224,7 @@ const HomeScreen = () => {
                 </View>
                 <Text style={styles.freeTag}>Miễn phí</Text>
               </View>
-            </TouchableOpacity>
+            </View>
           )}
         />
         <View style={styles.sectionRow}>
@@ -676,6 +680,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 0,
     marginTop: 2,
+  },
+  rankContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginLeft: 16,
+  },
+  rankLabel: {
+    fontSize: 15,
+    color: '#888',
+    marginRight: 8,
+  },
+  rankValue: {
+    fontSize: 18,
+    color: '#FF6600',
+    fontWeight: 'bold',
   },
 });
 
