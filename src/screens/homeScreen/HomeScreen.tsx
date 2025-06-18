@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,78 +16,75 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
+import { getAllCategories } from '../../api/categoryApi';
+import { getRecipes } from '../../api/recipeApi';
 
 const { width } = Dimensions.get('window');
-
-const trendingData = [
-  {
-    id: '1',
-    image: require('../../assert/image/fish.png'),
-    title: 'Canh chua cá lóc theo chuẩn gu miền Tây',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-];
-
-const todayData = [
-  {
-    id: '1',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-];
-
-const offerData = [
-  {
-    id: '1',
-    image: require('../../assert/image/gift.png'),
-    title: 'Nâng cấp Premium ngay',
-    desc: 'Xem ngay tất cả công thức hot nhất hiện nay',
-    button: 'Xem ngay',
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/gift.png'),
-    title: 'Quà 100k chờ bạn',
-    desc: 'Hãy giới thiệu tới bạn bè để được nhận phần quà trị giá 100k.',
-    button: 'Xem ngay',
-  },
-];
- 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Chào buổi sáng';
-  if (hour >= 12 && hour < 18) return 'Chào buổi chiều';
-  return 'Chào buổi tối';
-};
 
 const HomeScreen = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation<any>();
+  const [recipes, setRecipes] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const data = await getRecipes(1, 10);
+      setRecipes(data);
+    })();
+  }, []);
+
+  // Map ảnh demo cho từng món (demo, có thể sửa lại khi API có trường image)
+  const getProductImage = (name: string, idx: number) => {
+    if (name.toLowerCase().includes('cá') || name.toLowerCase().includes('bún')) {
+      return require('../../assert/image/fish.png');
+    }
+    if (name.toLowerCase().includes('phở')) {
+      return require('../../assert/image/product.png');
+    }
+    return idx % 2 === 0
+      ? require('../../assert/image/product.png')
+      : require('../../assert/image/fish.png');
+  };
+
+  // Lấy top 5 món thịnh hành từ API
+  const trendingData = recipes.slice(0, 5).map((item, idx) => ({
+    id: item._id,
+    image: getProductImage(item.name, idx),
+    title: item.name,
+    time: item.cookingTime || '',
+    rating: 4.8,
+    reviews: 23,
+    free: true,
+  }));
+
+  // Lấy 5 món cảm hứng hàng ngày từ API
+  const todayData = recipes.slice(5, 10).map((item, idx) => ({
+    id: item._id,
+    image: getProductImage(item.name, idx + 5),
+    title: item.name,
+    time: item.cookingTime || '',
+    rating: 4.8,
+    reviews: 23,
+    free: true,
+  }));
+
+  // Demo offer data (replace with real API if available)
+  const offerData = [
+    {
+      id: '1',
+      image: require('../../assert/image/gift.png'),
+      title: 'Giảm giá 20% cho đơn đầu tiên!',
+      desc: 'Nhanh tay nhận ưu đãi hấp dẫn cho đơn hàng đầu tiên của bạn.',
+      button: 'Nhận ngay',
+    },
+    {
+      id: '2',
+      image: require('../../assert/image/gift.png'),
+      title: 'Tặng kèm món tráng miệng',
+      desc: 'Đặt món hôm nay, nhận ngay món tráng miệng miễn phí.',
+      button: 'Xem chi tiết',
+    },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -339,6 +336,13 @@ const HomeScreen = () => {
       <BottomNavigation current="home" />
     </View>
   );
+};
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Chào buổi sáng';
+  if (hour >= 12 && hour < 18) return 'Chào buổi chiều';
+  return 'Chào buổi tối';
 };
 
 const CARD_WIDTH = 180;
@@ -700,3 +704,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+ 

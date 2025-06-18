@@ -1,34 +1,66 @@
+import axios from 'axios';
 import { IUser } from '../context/UserContext';
 
-// Chỉ giữ user Công Chính để test
-let mockUsers: (IUser & { password: string })[] = [
-  {
-    email: 'congchinhtran99@email.com',
-    password: '123456',
-    name: 'Công Chính',
-    avatar: require('../assert/image/realuser.jpg'),
-    // joined sẽ cập nhật realtime khi đăng nhập
-    point: 100,
-  },
-];
+const API_URL = 'http://103.72.99.132:3000';
 
-// Hàm lấy user và cập nhật joined realtime khi đăng nhập thành công
 export const getUserByEmailAndPassword = async (email: string, password: string): Promise<IUser | null> => {
-  await new Promise(res => setTimeout(res, 200));
-  const user = mockUsers.find(user => user.email === email && user.password === password);
-  if (user) {
-    // Cập nhật joined thành ngày giờ hiện tại (dd/mm/yyyy)
-    const now = new Date();
-    const joined = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-    return { ...user, joined };
+  try {
+    const res = await axios.post(`${API_URL}/api/users/login`, { email, password });
+    console.log('Response from API:', res.data);
+    if (res.data && res.data.token && res.data.email && res.data.full_name) {
+      // Lấy thời gian đăng nhập hiện tại (dd/mm/yyyy)
+      const now = new Date();
+      const joined = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+      return {
+        name: res.data.full_name,
+        email: res.data.email,
+        avatar: require('../assert/image/avatar.png'),
+        joined,
+        point: 0,
+      };
+    }
+    return null;
+  } catch (e) {
+    console.log('Error fetching user:', e);
+    return null;
   }
-  return null;
+};
+
+export const registerUser = async (fullname: string, email: string, password: string): Promise<IUser | null> => {
+  try {
+    // Đăng ký với API mới, trả về { message, email, full_name } nếu thành công
+    const res = await axios.post(`${API_URL}/api/users/register`, {
+      full_name: fullname,
+      email,
+      password,
+    });
+    console.log('Register response:', res.data);
+    if (res.data && res.data.email && res.data.full_name) {
+      // Lấy thời gian đăng ký hiện tại (dd/mm/yyyy)
+      const now = new Date();
+      const joined = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+      return {
+        name: res.data.full_name,
+        email: res.data.email,
+        avatar: require('../assert/image/avatar.png'),
+        joined,
+        point: 0,
+      };
+    }
+    return null;
+  } catch (e) {
+    console.log('Register error:', e?.response?.data || e);
+    return null;
+  }
 };
 
 export const deleteUserByEmail = async (email: string) => {
-  // Xóa user khỏi mockUsers (nếu cần)
-  // Nếu chỉ có 1 user test thì có thể không cần xóa thực sự, chỉ cần setUser(null) ở context là đủ
-  // Nhưng để đúng mock, ta sẽ filter ra khỏi mảng
-  mockUsers = mockUsers.filter(user => user.email !== email);
-  return true;
+  try {
+    await axios.post(`${API_URL}/user/delete`, { email });
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
+
+// ...các hàm khác nếu cần, ví dụ: đổi mật khẩu, lấy thông tin user, v.v.

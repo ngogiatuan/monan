@@ -7,15 +7,22 @@ import AuthForm from '../../compoments/AuthForm';
 
 const ValidateEmailScreen = () => {
   const navigation = useNavigation();
-  const [code, setCode] = useState(['', '', '', '']);
-  const inputs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const [code, setCode] = useState(['', '', '', '', '', '']); // 6 ô nhập mã
+  const inputs = [
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+  ];
 
   const handleChange = (text: string, idx: number) => {
     if (/^\d*$/.test(text)) {
       const newCode = [...code];
       newCode[idx] = text;
       setCode(newCode);
-      if (text && idx < 3) {
+      if (text && idx < 5) {
         // @ts-ignore
         inputs[idx + 1].current.focus();
       }
@@ -57,17 +64,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 24,
-    gap: 12,
+    gap: 6, // nhỏ hơn nữa cho vừa 6 ô
   },
   codeInput: {
-    width: 48,
-    height: 48,
+    width: 35, // nhỏ gọn hơn
+    height: 38, // nhỏ gọn hơn
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 8,
-    fontSize: 20,
+    fontSize: 16,
     backgroundColor: '#fafafa',
-    marginHorizontal: 6,
+    marginHorizontal: 2,
   },
 });
 

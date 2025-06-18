@@ -19,13 +19,17 @@ const LoginScreen = () => {
       setEmailError('Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
+    console.log('[Login] Đang đăng nhập với:', { email, password });
     setEmailError('');
     const userData = await getUserByEmailAndPassword(email, password);
     if (userData) {
       setUser(userData);
       navigation.navigate(nav.home as never);
     } else {
-      setEmailError('Email hoặc mật khẩu không đúng');
+      console.log(userData)
+      // setEmailError('Email hoặc mật khẩu không đúng');
+      console.log('[Login] Đăng nhập thất bại với:', { email, password });
+    
     }
   };
 
