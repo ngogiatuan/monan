@@ -4,6 +4,7 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AuthForm from '../../compoments/AuthForm';
 import axios from 'axios';
+import { nav } from '../../navigation/navigationName';
 
 const API_URL = 'http://103.72.99.132:3000';
 
@@ -12,12 +13,12 @@ const ResetPasswordScreen = () => {
   const route = useRoute<any>();
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Lấy email từ params truyền sang từ ValidateEmailScreen
+  // Lấy email và otp từ params truyền sang từ ValidateEmailScreen
   const email = route.params?.email || '';
+  const otp = route.params?.otp || '';
 
   const handleReset = async () => {
     if (!otp || !password || !repassword) {
@@ -40,7 +41,7 @@ const ResetPasswordScreen = () => {
       if (res.data && res.data.message) {
         setSuccess('Đặt lại mật khẩu thành công! Vui lòng đăng nhập.');
         setTimeout(() => {
-          navigation.navigate('Login' as never);
+          navigation.navigate(nav.login as never);
         }, 1200);
       } else {
         setError('Đặt lại mật khẩu thất bại, vui lòng kiểm tra lại mã OTP hoặc thử lại.');
@@ -103,3 +104,4 @@ const styles = StyleSheet.create({
 });
 
 export default ResetPasswordScreen;
+

@@ -16,7 +16,6 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
-import { getAllCategories } from '../../api/categoryApi';
 import { getRecipes } from '../../api/recipeApi';
 
 const { width } = Dimensions.get('window');
@@ -26,14 +25,29 @@ const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const [recipes, setRecipes] = useState<any[]>([]);
 
+  // Effect để fetch danh sách món ăn (recipes)
   useEffect(() => {
     (async () => {
-      const data = await getRecipes(1, 10);
-      setRecipes(data);
+      try {
+        const data = await getRecipes(1, 10); // Lấy 10 món ăn đầu tiên
+        setRecipes(data);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách món ăn:', error);
+      }
     })();
   }, []);
 
-  // Map ảnh demo cho từng món (demo, có thể sửa lại khi API có trường image)
+  // Hàm tạo lời chào dựa trên thời gian trong ngày
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 11) return 'Chào buổi sáng';
+    if (hour >= 11 && hour < 13) return 'Chào buổi trưa';
+    if (hour >= 13 && hour < 18) return 'Chào buổi chiều';
+    return 'Chào buổi tối';
+  };
+
+  // Hàm trả về ảnh demo cho món ăn dựa trên tên (hoặc index)
+  // Thực tế bạn nên dùng trường 'image' từ API của recipe
   const getProductImage = (name: string, idx: number) => {
     if (name.toLowerCase().includes('cá') || name.toLowerCase().includes('bún')) {
       return require('../../assert/image/fish.png');
@@ -46,7 +60,7 @@ const HomeScreen = () => {
       : require('../../assert/image/fish.png');
   };
 
-  // Lấy top 5 món thịnh hành từ API
+  // Dữ liệu món ăn thịnh hành (top 5)
   const trendingData = recipes.slice(0, 5).map((item, idx) => ({
     id: item._id,
     image: getProductImage(item.name, idx),
@@ -57,7 +71,7 @@ const HomeScreen = () => {
     free: true,
   }));
 
-  // Lấy 5 món cảm hứng hàng ngày từ API
+  // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
   const todayData = recipes.slice(5, 10).map((item, idx) => ({
     id: item._id,
     image: getProductImage(item.name, idx + 5),
@@ -68,7 +82,7 @@ const HomeScreen = () => {
     free: true,
   }));
 
-  // Demo offer data (replace with real API if available)
+  // Dữ liệu ưu đãi demo
   const offerData = [
     {
       id: '1',
@@ -86,266 +100,216 @@ const HomeScreen = () => {
     },
   ];
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <ImageBackground
-        source={require('../../assert/image/Header.png')}
-        style={styles.banner}
-        resizeMode="cover"
-        imageStyle={styles.bannerImg}
-      >
-        <View style={styles.headerProfileRow}>
-          <Image
-            source={user?.avatar || require('../../assert/image/avatar.png')}
-            style={styles.headerAvatar}
-          />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.headerGreeting}>
-               {getGreeting()}, hôm nay bạn muốn nấu gì?
-            </Text>
-            <Text style={styles.headerName}>{user?.name || 'Guest'}</Text>
-          </View>
-        </View>
-      </ImageBackground>
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Image
-            source={require('../../assert/image/blacksearch.png')}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Tìm món ăn/thể loại..."
-            placeholderTextColor="#888"
-          />
-        </View>
-        <View style={styles.pointBox}>
-          <View style={styles.pointIconWrap}>
-            <Image
-              source={require('../../assert/image/point.png')}
-              style={styles.pointIcon}
-            />
-          </View>
-          <View style={styles.pointInfo}>
-            <Text style={styles.pointLabel}>Điểm xếp hạng</Text>
-            <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
-          </View>
-        </View>
-      </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Các loại công thức</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeMore}>Xem thêm</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.categoryRow}>
-          <View style={styles.categoryItem}>
-            <Image
-              source={require('../../assert/image/Breakfast.png')}
-              style={styles.categoryIcon}
-            />
-            <Text style={styles.categoryText}>Bữa sáng</Text>
-          </View>
-          <View style={styles.categoryItem}>
-            <Image
-              source={require('../../assert/image/Lunch.png')}
-              style={styles.categoryIcon}
-            />
-            <Text style={styles.categoryText}>Bữa trưa</Text>
-          </View>
-          <View style={styles.categoryItem}>
-            <Image
-              source={require('../../assert/image/Dinner.png')}
-              style={styles.categoryIcon}
-            />
-            <Text style={styles.categoryText}>Bữa tối</Text>
-          </View>
-          <View style={styles.categoryItem}>
-            <Image
-              source={require('../../assert/image/Dessert.png')}
-              style={styles.categoryIcon}
-            />
-            <Text style={styles.categoryText}>Tráng miệng</Text>
-          </View>
-          <View style={styles.categoryItem}>
-            <Image
-              source={require('../../assert/image/Lunch.png')}
-              style={styles.categoryIcon}
-            />
-            <Text style={styles.categoryText}>Bữa trưa</Text>
-          </View>
-        </View>
-         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Món ăn thịnh hành</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeMore}>Xem thêm</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={trendingData}
-          keyExtractor={item => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <View style={styles.productImgWrap}>
-                <Image source={item.image} style={styles.productImg} />
-                <View style={styles.productMarkCircle}>
-                  <Image
-                    source={require('../../assert/image/mark.png')}
-                    style={styles.productMark}
-                  />
-                </View>
-                <View style={styles.productTimeOverlay}>
-                  <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-                  <Text style={styles.timeText}>{item.time}</Text>
+  const handleGuestAccess = () => {
+    console.log('Khách hàng cần đăng nhập để xem chi tiết.');
+  };
+
+  // Static categories cho "Các loại công thức"
+  const staticCategories = [
+    { key: 'breakfast', name: 'Bữa sáng', icon: require('../../assert/image/Breakfast.png') },
+    { key: 'lunch', name: 'Bữa trưa', icon: require('../../assert/image/Lunch.png') },
+    { key: 'dinner', name: 'Bữa tối', icon: require('../../assert/image/Dinner.png') },
+    { key: 'dessert', name: 'Tráng miệng', icon: require('../../assert/image/Dessert.png') },
+  ];
+
+  // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
+  const homeScreenSections = [
+    { type: 'header_search' },
+    { type: 'categories', title: 'Các loại công thức', data: staticCategories },
+    { type: 'trending_recipes', title: 'Món ăn thịnh hành', data: trendingData },
+    { type: 'today_recipes', title: 'Hôm nay nấu món gì?', data: todayData },
+    { type: 'offers', title: 'Ưu đãi mới', data: offerData },
+    { type: 'daily_inspiration', title: 'Cảm hứng hàng ngày', data: todayData },
+  ];
+
+  const renderSection = ({ item }) => {
+    switch (item.type) {
+      case 'header_search':
+        return (
+          <>
+            <ImageBackground
+              source={require('../../assert/image/Header.png')}
+              style={styles.banner}
+              resizeMode="cover"
+              imageStyle={styles.bannerImg}
+            >
+              <View style={styles.headerProfileRow}>
+                <Image
+                  source={user?.avatar || require('../../assert/image/avatar.png')}
+                  style={styles.headerAvatar}
+                />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={styles.headerGreeting}>
+                    {getGreeting()}, hôm nay bạn muốn nấu gì?
+                  </Text>
+                  <Text style={styles.headerName}>{user?.name || 'Guest'}</Text>
                 </View>
               </View>
-              {/* Đổi: chỉ bấm vào text mới navigation qua detail */}
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (item.image === require('../../assert/image/fish.png')) {
-                    navigation.navigate(nav.detail);
-                  }
-                }}
-              >
-                <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
+            </ImageBackground>
+            <View style={styles.searchRow}>
+              <View style={styles.searchBox}>
+                <Image
+                  source={require('../../assert/image/blacksearch.png')}
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Tìm món ăn/thể loại..."
+                  placeholderTextColor="#888"
+                />
+              </View>
+              <View style={styles.pointBox}>
+                <View style={styles.pointIconWrap}>
+                  <Image
+                    source={require('../../assert/image/point.png')}
+                    style={styles.pointIcon}
+                  />
+                </View>
+                <View style={styles.pointInfo}>
+                  <Text style={styles.pointLabel}>Điểm xếp hạng</Text>
+                  <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        );
+      case 'categories':
+        return (
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{item.title}</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeMore}>Xem thêm</Text>
               </TouchableOpacity>
-              <View style={styles.productInfoRow}>
-                <View style={styles.ratingBox}>
-                  <Text style={styles.ratingText}>★ {item.rating}</Text>
-                  <Text style={styles.reviewText}>· {item.reviews} Reviews</Text>
-                </View>
-                <Text style={styles.freeTag}>Miễn phí</Text>
-              </View>
             </View>
-          )}
-        />
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Hôm nay nấu món gì?</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeMore}>Xem thêm</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={todayData}
-          keyExtractor={item => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <View style={styles.productImgWrap}>
-                <Image source={item.image} style={styles.productImg} />
-                <View style={styles.productMarkCircle}>
-                  <Image
-                    source={require('../../assert/image/mark.png')}
-                    style={styles.productMark}
-                  />
-                </View>
-                <View style={styles.productTimeOverlay}>
-                  <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-                  <Text style={styles.timeText}>{item.time}</Text>
-                </View>
-              </View>
-              <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
-              <View style={styles.productInfoRow}>
-                <Text style={styles.ratingText}>★ {item.rating}</Text>
-                <Text style={styles.freeTag}>Miễn phí</Text>
-              </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
+              {staticCategories.map(catItem => (
+                <TouchableOpacity
+                  style={styles.categoryItem}
+                  key={catItem.key}
+                  disabled={!user}
+                  onPress={() => {
+                    if (user) {
+                      // navigation.navigate(nav.categoryDetail, { categoryKey: catItem.key, categoryName: catItem.name });
+                    } else {
+                      handleGuestAccess();
+                    }
+                  }}
+                >
+                  <Image source={catItem.icon} style={styles.categoryIcon} />
+                  <Text style={styles.categoryText}>{catItem.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        );
+      case 'trending_recipes':
+      case 'today_recipes':
+      case 'daily_inspiration':
+        return (
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{item.title}</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeMore}>Xem thêm</Text>
+              </TouchableOpacity>
             </View>
-          )}
-        />
-        {/* Ưu đãi mới nằm dưới mục hôm nay nấu món gì */}
-        <View style={styles.offerSection}>
-          <Text style={styles.offerSectionTitle}>Ưu đãi mới</Text>
-          <FlatList
-            data={offerData}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
-            renderItem={({ item }) => (
-              <View style={styles.offerCardFullImg}>
-                <Image source={item.image} style={styles.offerImgBanner} />
-                <View style={styles.offerContentFull}>
-                  <View style={styles.offerTextRowFull}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8, marginBottom: item.type === 'daily_inspiration' ? 20 : 0 }}>
+              {item.data.map((recipeItem, idx) => (
+                <View style={styles.productCard} key={recipeItem.id}>
+                  <View style={styles.productImgWrap}>
+                    <Image source={recipeItem.image} style={styles.productImg} />
+                    <View style={styles.productMarkCircle}>
+                      <Image
+                        source={require('../../assert/image/mark.png')}
+                        style={styles.productMark}
+                      />
+                    </View>
+                    <View style={styles.productTimeOverlay}>
+                      <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
+                      <Text style={styles.timeText}>{recipeItem.time}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      if (user) {
+                        navigation.navigate(nav.detail, { recipeId: recipeItem.id });
+                      } else {
+                        handleGuestAccess();
+                      }
+                    }}
+                  >
+                    <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>
+                  </TouchableOpacity>
+                  <View style={styles.productInfoRow}>
+                    <View style={styles.ratingBox}>
+                      <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
+                      {item.type === 'trending_recipes' && <Text style={styles.reviewText}>· {recipeItem.reviews} Reviews</Text>}
+                    </View>
+                    <Text style={styles.freeTag}>Miễn phí</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </>
+        );
+      case 'offers':
+        return (
+          <View style={styles.offerSection}>
+            <Text style={styles.offerSectionTitle}>{item.title}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}>
+              {item.data.map(offerItem => (
+                <View style={styles.offerCardFullImg} key={offerItem.id}>
+                  <Image source={offerItem.image} style={styles.offerImgBanner} />
+                  <View style={styles.offerContentFull}>
+                    <View style={styles.offerTextRowFull}>
+                      <Text
+                        style={styles.offerTitleFull}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {offerItem.title}
+                      </Text>
+                      <TouchableOpacity style={styles.offerBtnFull}>
+                        <Text style={styles.offerBtnTextFull}>{offerItem.button}</Text>
+                      </TouchableOpacity>
+                    </View>
                     <Text
-                      style={styles.offerTitleFull}
-                      numberOfLines={1}
+                      style={styles.offerDescFull}
+                      numberOfLines={2}
                       ellipsizeMode="tail"
                     >
-                      {item.title}
+                      {offerItem.desc}
                     </Text>
-                    <TouchableOpacity style={styles.offerBtnFull}>
-                      <Text style={styles.offerBtnTextFull}>{item.button}</Text>
-                    </TouchableOpacity>
                   </View>
-                  <Text
-                    style={styles.offerDescFull}
-                    numberOfLines={2}
-                    ellipsizeMode="tail"
-                  >
-                    {item.desc}
-                  </Text>
                 </View>
-              </View>
-            )}
-          />
-        </View>
-        {/* Cảm hứng hàng ngày */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Cảm hứng hàng ngày</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeMore}>Xem thêm</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={todayData}
-          keyExtractor={item => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <View style={styles.productImgWrap}>
-                <Image source={item.image} style={styles.productImg} />
-                <View style={styles.productMarkCircle}>
-                  <Image
-                    source={require('../../assert/image/mark.png')}
-                    style={styles.productMark}
-                  />
-                </View>
-                <View style={styles.productTimeOverlay}>
-                  <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-                  <Text style={styles.timeText}>{item.time}</Text>
-                </View>
-              </View>
-              <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
-              <View style={styles.productInfoRow}>
-                <Text style={styles.ratingText}>★ {item.rating}</Text>
-                <Text style={styles.freeTag}>Miễn phí</Text>
-              </View>
-            </View>
-          )}
-        />
-      </ScrollView>
+              ))}
+            </ScrollView>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <FlatList
+        data={homeScreenSections}
+        keyExtractor={(item, index) => item.type + index}
+        showsVerticalScrollIndicator={false}
+        renderItem={renderSection}
+        contentContainerStyle={{ paddingBottom: 0 }}
+        style={{ flex: 1 }}
+      />
       <BottomNavigation current="home" />
     </View>
   );
 };
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Chào buổi sáng';
-  if (hour >= 12 && hour < 18) return 'Chào buổi chiều';
-  return 'Chào buổi tối';
-};
-
-const CARD_WIDTH = 180;
+// Định nghĩa các StyleSheet
+const CARD_WIDTH = 180; // Chiều rộng cố định của thẻ sản phẩm
 
 const styles = StyleSheet.create({
   banner: {
@@ -365,9 +329,9 @@ const styles = StyleSheet.create({
   headerProfileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 18, // giảm xuống để nhích lên so với cạnh dưới
+    marginTop: 18,
     marginLeft: 12,
-    marginBottom: 12, // thêm khoảng cách với cạnh dưới banner
+    marginBottom: 12,
   },
   headerAvatar: {
     width: 40,
@@ -484,25 +448,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 13,
   },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 16,
+  categoryListContainer: {
+    paddingHorizontal: 16,
     marginBottom: 12,
   },
   categoryItem: {
     alignItems: 'center',
-    width: 60,
+    width: 80,
+    marginRight: 10,
   },
   categoryIcon: {
-    width: 44,
-    height: 44,
+    width: 50,
+    height: 50,
     marginBottom: 4,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    resizeMode: 'cover',
   },
   categoryText: {
     fontSize: 12,
     color: '#222',
     textAlign: 'center',
+    marginTop: 4,
   },
   productCard: {
     width: CARD_WIDTH,
@@ -627,7 +594,6 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 2,
   },
-  // --- NEW FULL WIDTH OFFER CARD STYLE ---
   offerCardFullImg: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -704,5 +670,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
- 

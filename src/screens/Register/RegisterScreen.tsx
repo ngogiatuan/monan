@@ -18,6 +18,7 @@ const RegisterScreen = () => {
   const [success, setSuccess] = useState(false);
 
   const handleRegister = async () => {
+    console.log('handleRegister called with:', )
     if (!email || !fullname || !password || !repassword) {
       setError('Vui lòng nhập đầy đủ thông tin');
       return;
@@ -28,14 +29,15 @@ const RegisterScreen = () => {
     }
     setError('');
     const userData = await registerUser(fullname, email, password);
-    if (userData) {
+    console.log('userData', userData);
+    if (userData?.token) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         navigation.navigate(nav.login as never);
       }, 1200);
     } else {
-      setError('Đăng ký thất bại, vui lòng thử lại');
+      setError('Đăng ký thất bại, vui lòng thử lại'+( userData?.message ||  ''));
       console.log('[Register] Đăng ký thất bại với:', { fullname, email, password });
     }
   };

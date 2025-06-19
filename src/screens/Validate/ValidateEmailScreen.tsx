@@ -1,13 +1,21 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
+import axios from 'axios';
+
+const API_URL = 'http://103.72.99.132:3000';
 
 const ValidateEmailScreen = () => {
+  const route = useRoute<any>();
+  const email = route.params?.email || '';
   const navigation = useNavigation();
   const [code, setCode] = useState(['', '', '', '', '', '']); // 6 ô nhập mã
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const inputs = [
     useRef(null),
     useRef(null),
@@ -29,10 +37,40 @@ const ValidateEmailScreen = () => {
     }
   };
 
+  const handleVerify = async () => {
+    setError('');
+    setSuccess('');
+    const otp = code.join('');
+    if (otp.length !== 6) {
+      setError('Vui lòng nhập đủ 6 số OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      // Gọi API xác thực OTP
+    //  const res = await axios.post(`${API_URL}/api/users/changePassword`, { email, otp, newPassword: '' });
+    
+       
+        setTimeout(() => {
+          // Chuyển sang màn hình reset password, truyền email và otp đúng kiểu
+          // Sử dụng navigation.navigate với generic <any> để tránh lỗi TS2345
+          (navigation as any).navigate(nav.resetPassword, { email, otp });
+        }, 600);
+      
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+        'Mã OTP không đúng hoặc đã hết hạn.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthForm
       title="Xác thực email"
-      desc="Bạn vui lòng nhập mã xác thực đã được gửi qua exa****@email.com"
+      desc={`Bạn vui lòng nhập mã xác thực đã được gửi qua ${email}.`}
       showBack
       onBack={() => navigation.goBack()}
     >
@@ -47,13 +85,20 @@ const ValidateEmailScreen = () => {
             keyboardType="number-pad"
             maxLength={1}
             textAlign="center"
+            // Chỉ autoFocus cho ô đầu tiên, các ô sau KHÔNG nên dùng autoFocus để tránh warning/lỗi
             autoFocus={idx === 0}
+            // Fix lỗi warning liên quan đến autoFocus khi dùng nhiều TextInput
+            blurOnSubmit={false}
+            importantForAutofill="no"
           />
         ))}
       </View>
+      {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
+      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title="Tiếp tục"
-        onPress={() => navigation.navigate(nav.resetPassword as never)}
+        title={loading ? "Đang xác thực..." : "Tiếp tục"}
+        onPress={handleVerify}
+        disabled={loading}
       />
     </AuthForm>
   );

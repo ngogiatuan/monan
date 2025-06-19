@@ -43,7 +43,7 @@ const ProfileInfo = () => {
               </View>
               <TouchableOpacity
                 style={styles.actionBtn}
-                onPress={() => navigation.navigate(nav.profile)}
+                onPress={() => navigation.navigate(nav.editProfile)}
               >
                 <Text style={styles.actionBtnText}>Chỉnh sửa</Text>
               </TouchableOpacity>

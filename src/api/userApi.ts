@@ -30,27 +30,28 @@ export const registerUser = async (fullname: string, email: string, password: st
   try {
     // Đăng ký với API mới, trả về { message, email, full_name } nếu thành công
     const res = await axios.post(`${API_URL}/api/users/register`, {
-      full_name: fullname,
+      fullName: fullname,
       email,
       password,
     });
     console.log('Register response:', res.data);
-    if (res.data && res.data.email && res.data.full_name) {
+    if (res.data && res.data.email && res.data.fullName && res.data.token) {
       // Lấy thời gian đăng ký hiện tại (dd/mm/yyyy)
       const now = new Date();
       const joined = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
       return {
-        name: res.data.full_name,
+        name: res.data.fullName,
         email: res.data.email,
         avatar: require('../assert/image/avatar.png'),
         joined,
         point: 0,
+        token: res.data.token, // Lưu token nếu cần
       };
     }
     return null;
   } catch (e) {
     console.log('Register error:', e?.response?.data || e);
-    return null;
+    return e?.response?.data || null;
   }
 };
 

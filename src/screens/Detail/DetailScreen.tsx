@@ -1,330 +1,359 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  FlatList,
-  Dimensions,
-  SafeAreaView,
-} from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 
 const { width } = Dimensions.get('window');
-
-const author = {
-  name: 'Emily Harris',
-  avatar: require('../../assert/image/author.png'),
-};
-
-const user1 = {
-  name: 'Van Dung Tran',
-  avatar: require('../../assert/image/user1.png'),
-  date: '15 May 2024',
-  rating: 5,
-  comment: 'Công thức nấu chuẩn chỉnh luôn.',
-};
-
-const user2 = {
-  name: 'Quang Lam',
-  avatar: require('../../assert/image/user2.png'),
-  date: '25 July 2024',
-  rating: 5,
-  comment: 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
-};
-
-const INGREDIENTS = [
-  '500g cá lóc làm sạch, cắt khúc.',
-  '2 quả cà chua bổ múi cau.',
-  '1/4 trái thơm (dứa) cắt lát mỏng.',
-  '5 trái đậu bắp cắt xéo.',
-  '100g giá đỗ.',
-  '2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.',
-  '100g đậu rồng.',
-  '2 muỗng me chua hoặc 1 vắt me tươi.',
-  '2 củ, 2 tép hành tím, tỏi băm nhỏ.',
-  '3 - 4 nhánh rau thơm, ngò gai thái nhỏ.',
-  'Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.',
-  '1 trái ớt hiểm nếu muốn ăn cay.',
-];
-
-const REVIEWS = [
-  user1,
-  user2,
-];
-
-const RELATED = [
-  {
-    id: '1',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '20\'',
-    rating: 4.8,
-    reviews: 23,
-    free: true,
-  },
-];
-
-const ESTIMATED_TIME = 40; // phút
+const API_URL = 'http://103.72.99.132:3000';
 
 const DetailScreen = () => {
-  const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const recipeId = route.params?.recipeId;
+  const [recipe, setRecipe] = useState<any>(null);
+  const [related, setRelated] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Đảm bảo mỗi lần vào lại màn này đều fetch lại đúng công thức theo id
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+      const fetchRecipe = async () => {
+        try {
+          const res = await axios.get(`${API_URL}/api/recipes?page=1&limit=50`);
+          const allRecipes = res.data?.data || [];
+          const found = allRecipes.find((r: any) => r._id === recipeId);
+          if (isMounted) setRecipe(found || null);
+          setRelated(allRecipes.filter((r: any) => r._id !== recipeId).slice(0, 6));
+        } catch (e) {
+          setRecipe(null);
+          setRelated([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchRecipe();
+      return () => { isMounted = false; };
+    }, [recipeId])
+  );
+
+  if (loading) {
+    return (
+      <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
+        <ActivityIndicator size="large" color="#FF6600" />
+      </View>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
+        <Text>Không tìm thấy món ăn.</Text>
+      </View>
+    );
+  }
+
+  // Demo ảnh món ăn (chưa có trường image)
+  const getDemoImage = (name: string, idx: number) => {
+    if (name.toLowerCase().includes('cá') || name.toLowerCase().includes('bún')) {
+      return require('../../assert/image/fish.png');
+    }
+    if (name.toLowerCase().includes('phở')) {
+      return require('../../assert/image/product.png');
+    }
+    return idx % 2 === 0
+      ? require('../../assert/image/product.png')
+      : require('../../assert/image/fish.png');
+  };
+
+  // Demo comment
+  const comments = [
+    {
+      id: 1,
+      user: {
+        name: 'Van Dung Tran',
+        avatar: require('../../assert/image/user1.png'),
+      },
+      content: 'Công thức nấu chuẩn chỉnh quá',
+      time: '2 ngày trước',
+    },
+    {
+      id: 2,
+      user: {
+        name: 'Quang Lam',
+        avatar: require('../../assert/image/user2.png'),
+      },
+      content: 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
+      time: '5 ngày trước',
+    },
+  ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
-          {/* Header Image */}
-          <View style={styles.headerImgWrap}>
-            <Image
-              source={require('../../assert/image/fish.png')}
-              style={styles.headerImg}
-            />
-            <TouchableOpacity
-              style={styles.headerBackBtn}
-              onPress={() => navigation.goBack()}
-            >
-              <Image
-                source={require('../../assert/image/back.png')}
-                style={styles.headerBackIcon}
-              />
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* Ảnh món ăn với overlay nút back, whitemark, share */}
+      <View style={{ position: 'relative' }}>
+        <Image
+          source={getDemoImage(recipe.name, 0)}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        {/* Overlay nút trên ảnh */}
+        <View style={styles.imageOverlayRow}>
+          <TouchableOpacity onPress={() => navigation.navigate(nav.home)} style={styles.overlayBtn}>
+            <Image source={require('../../assert/image/back.png')} style={styles.overlayIcon} />
+          </TouchableOpacity>
+          <View style={styles.overlayRight}>
+            <TouchableOpacity style={styles.overlayBtn}>
+              <Image source={require('../../assert/image/whitemark.png')} style={styles.overlayIcon} />
             </TouchableOpacity>
-            <View style={styles.headerRightIcons}>
-              <TouchableOpacity style={styles.headerShareBtn}>
-                <Image
-                  source={require('../../assert/image/share.png')}
-                  style={styles.headerShareIcon}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.headerBookmarkBtn}>
-                <Image
-                  source={require('../../assert/image/whitemark.png')}
-                  style={styles.headerBookmarkIcon}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          {/* Title & Author */}
-          <View style={styles.titleWrap}>
-            <Text style={styles.title}>
-              Canh chua cá lóc – Món ngon miền sông nước, chua thanh, ngọt dịu, ăn là nhớ cá quê nhà
-            </Text>
-            <View style={styles.authorRow}>
-              <Image source={author.avatar} style={styles.authorAvatar} />
-              <Text style={styles.authorName}>{author.name}</Text>
-              <Text style={styles.authorLabel}>Tác giả</Text>
-            </View>
-            <View style={styles.tagRow}>
-              <Text style={styles.tag}>Bữa sáng năng lượng</Text>
-              <Text style={styles.tag}>Món ăn thịnh hành</Text>
-            </View>
-          </View>
-          {/* Description */}
-          <View style={styles.descWrap}>
-            <Text style={styles.descText}>
-              Canh chua cá lóc là món ăn truyền thống miền Nam với hương vị chua nhẹ, ngọt thanh và vị đậm đà từ cá lóc. Món này giúp thanh nhiệt, dễ ăn, đặc biệt thích hợp trong những ngày nóng hoặc dùng trong bữa cơm gia đình.
-            </Text>
-            <View style={styles.infoRow}>
-              <View style={styles.infoItemBox}>
-                <View style={styles.infoIconBox}>
-                  <Image source={require('../../assert/image/date.png')} style={styles.infoIconSmall} />
-                </View>
-                <View style={styles.infoTextBox}>
-                  <Text style={styles.infoLabel} numberOfLines={1} ellipsizeMode="tail">Thời gian dự kiến</Text>
-                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{ESTIMATED_TIME} phút</Text>
-                </View>
-              </View>
-              <View style={styles.infoItemBox}>
-                <View style={styles.infoIconBox}>
-                  <Image source={require('../../assert/image/people.png')} style={styles.infoIconSmall} />
-                </View>
-                <View style={styles.infoTextBox}>
-                  <Text style={styles.infoLabel} numberOfLines={1} ellipsizeMode="tail">Khẩu phần ăn</Text>
-                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">2 - 3 người</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          {/* Ingredients */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Nguyên liệu</Text>
-            {INGREDIENTS.map((item, idx) => (
-              <Text key={idx} style={styles.ingredientItem}>• {item}</Text>
-            ))}
-          </View>
-          {/* Đánh giá */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Đánh giá</Text>
-            <View style={styles.ratingRow}>
-              <View style={styles.ratingBox}>
-                <Text style={styles.ratingScore}>5.0</Text>
-                <Image
-                  source={require('../../assert/image/whitestar.png')}
-                  style={styles.ratingStarIcon}
-                />
-              </View>
-              <Text style={styles.ratingLabel}>Xuất sắc</Text>
-              <Text style={styles.ratingReviewCount}>· 23 Reviews</Text>
-            </View>
-            {REVIEWS.map((user, idx) => (
-              <View key={idx} style={styles.reviewItem}>
-                <Image source={user.avatar} style={styles.reviewAvatar} />
-                <View style={{ flex: 1 }}>
-                  <View style={styles.reviewHeader}>
-                    <Text style={styles.reviewName}>{user.name}</Text>
-                    <Text style={styles.reviewDate}>{user.date}</Text>
-                    <View style={styles.reviewScoreBoxBlue}>
-                      <Text style={styles.reviewScoreBlue}>5.0</Text>
-                      <Image
-                        source={require('../../assert/image/bluestar.png')}
-                        style={styles.reviewStarIconBlue}
-                      />
-                    </View>
-                  </View>
-                  <Text style={styles.reviewComment}>{user.comment}</Text>
-                </View>
-              </View>
-            ))}
-            <TouchableOpacity onPress={() => navigation.navigate(nav.review)}>
-              <Text style={styles.seeMore}>Xem thêm</Text>
+            <TouchableOpacity style={styles.overlayBtn}>
+              <Image source={require('../../assert/image/share.png')} style={styles.overlayIcon} />
             </TouchableOpacity>
           </View>
-          {/* Công thức liên quan */}
-          <View style={styles.section}>
-            <View style={styles.sectionRow}>
-              <Text style={styles.sectionTitle}>Công thức liên quan</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeMore}>Xem thêm</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={RELATED}
-              keyExtractor={item => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingLeft: 0, paddingVertical: 8 }}
-              renderItem={({ item }) => (
-                <View style={styles.relatedCard}>
-                  <View style={styles.relatedImgWrap}>
-                    <Image source={item.image} style={styles.relatedImg} />
-                    <View style={styles.relatedMarkCircle}>
-                      <Image
-                        source={require('../../assert/image/mark.png')}
-                        style={styles.relatedMark}
-                      />
-                    </View>
-                    <View style={styles.relatedTimeOverlay}>
-                      <Image source={require('../../assert/image/time.png')} style={styles.relatedTimeIcon} />
-                      <Text style={styles.relatedTimeText}>{item.time}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.relatedTitle} numberOfLines={2}>{item.title}</Text>
-                  <View style={styles.relatedInfoRow}>
-                    <Text style={styles.relatedRating}>★ {item.rating}</Text>
-                    <Text style={styles.relatedReviewCount}>· {item.reviews} Reviews</Text>
-                    <Text style={styles.relatedFreeTag}>Miễn phí</Text>
-                  </View>
-                </View>
-              )}
-            />
-          </View>
-        </ScrollView>
-        {/* Button fixed bottom */}
-        <View style={styles.bottomBtnWrap}>
-          <ButtonNavigation
-            title="Vào bếp thôi !"
-            onPress={() => navigation.navigate(nav.tutorialCooking, { estimatedTime: ESTIMATED_TIME })}
-            style={styles.bottomBtn}
-          />
         </View>
       </View>
-    </SafeAreaView>
+      <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
+        {/* Thông tin món */}
+        <View style={styles.infoSection}>
+          <Text style={styles.title}>{recipe.name}</Text>
+          <View style={styles.authorRow}>
+            <Image source={require('../../assert/image/author.png')} style={styles.authorAvatar} />
+            <Text style={styles.authorName}>{recipe.idUser?.full_name || 'Emily Harris'}</Text>
+            <Text style={styles.authorLabel}>· Tác giả</Text>
+          </View>
+          <View style={styles.tagRow}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Bữa sáng năng lượng</Text>
+            </View>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Món ăn thịnh hành</Text>
+            </View>
+          </View>
+          <Text style={styles.desc}>{recipe.description}</Text>
+          {/* Thời gian dự kiến & Khẩu phần ăn trình bày như mẫu */}
+          <View style={styles.infoRowWrap}>
+            <View style={styles.infoBox}>
+              <Image source={require('../../assert/image/time.png')} style={styles.infoBoxIcon} />
+              <View>
+                <Text style={styles.infoBoxLabel}>Thời gian dự kiến</Text>
+                <Text style={styles.infoBoxValue}>{recipe.cookingTime || 'N/A'}</Text>
+              </View>
+            </View>
+            <View style={styles.infoBox}>
+              <Image source={require('../../assert/image/people.png')} style={styles.infoBoxIcon} />
+              <View>
+                <Text style={styles.infoBoxLabel}>Khẩu phần ăn</Text>
+                <Text style={styles.infoBoxValue}>{recipe.servings || 'N/A'}</Text>
+              </View>
+            </View>
+          </View>
+          {/* Nguyên liệu */}
+          <View style={styles.ingredientSection}>
+            <Text style={styles.ingredientTitle}>Nguyên liệu</Text>
+            <View style={styles.ingredientList}>
+              {(recipe.ingredients && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
+                ? recipe.ingredients
+                : [
+                    '500g cá lóc làm sạch, cắt khúc.',
+                    '2 quả cà chua bổ múi cau.',
+                    '1/4 trái thơm (dứa) cắt lát mỏng.',
+                    '5 trái đậu bắp cắt xéo.',
+                    '2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.',
+                    '100g giá đỗ.',
+                    '2 muỗng me chua hoặc 1 vắt me tươi.',
+                    '2 củ, 2 tép hành tím, tỏi băm nhỏ.',
+                    '3 - 4 nhánh rau thơm, ngò gai thái nhỏ.',
+                    'Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.',
+                    '1 trái ớt hiểm nếu muốn ăn cay.',
+                  ]
+              ).map((item, idx) => (
+                <Text style={styles.ingredientItem} key={idx}>• {item}</Text>
+              ))}
+            </View>
+          </View>
+        </View>
+        {/* Đánh giá (review) */}
+        <View style={styles.reviewSection}>
+          <Text style={styles.reviewTagText}>Đánh giá</Text>
+          <View style={styles.reviewHeaderRow}>
+            <View style={styles.reviewScoreBox}>
+              <Image source={require('../../assert/image/whitestar.png')} style={styles.reviewStarIcon} />
+              <Text style={styles.reviewScoreText}>5.0</Text>
+            </View>
+            <Text style={styles.reviewHighlight}>Xuất sắc</Text>
+            <Text style={styles.reviewDot}>•</Text>
+            <Text style={styles.reviewCount}>23 Reviews</Text>
+          </View>
+
+          <ScrollView  showsHorizontalScrollIndicator={false}>
+            {comments.map((item, index) => (
+              <View key={item?.id} style={styles.commentRow}>
+                <Image source={item.user.avatar} style={styles.commentAvatar} />
+                <View style={{ flex: 1 }}>
+                  <View style={styles.commentNameRow}>
+                    <Text style={styles.commentName}>{item.user.name}</Text>
+                    <View style={{ flex: 1 }} />
+                    <View style={styles.commentStarBox}>
+                      <Image source={require('../../assert/image/bluestar.png')} style={styles.commentStarIcon} />
+                      <Text style={styles.commentStarText}>5.0</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.commentDate}>{item.time}</Text>
+                  <Text style={styles.commentContent}>{item.content}</Text>
+                </View>
+              </View>
+            ) )}
+            </ScrollView>
+        
+          <TouchableOpacity onPress={() => navigation.navigate(nav.review, { recipeId })}>
+            <Text style={styles.seeMoreReview}>Xem thêm</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Công thức liên quan */}
+        <View style={styles.relatedSection}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={styles.relatedTitle}>Công thức liên quan</Text>
+            <TouchableOpacity onPress={() => {/* có thể điều hướng tới trang danh sách công thức nếu muốn */}}>
+              <Text style={styles.seeMoreReview}>Xem thêm</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={related}
+            keyExtractor={item => item._id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 8, paddingLeft: 8, paddingRight: 24 }}
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                style={styles.relatedCard}
+                onPress={() => navigation.replace(nav.detail, { recipeId: item._id })}
+              >
+                <View style={styles.relatedImgWrap}>
+                  <Image
+                    source={getDemoImage(item.name, index)}
+                    style={styles.relatedImg}
+                  />
+                  {/* mark.png góc phải trên cùng */}
+                  <View style={styles.relatedMarkCircle}>
+                    <Image
+                      source={require('../../assert/image/mark.png')}
+                      style={styles.relatedMark}
+                    />
+                  </View>
+                  {/* time.png góc trái dưới cùng + thời gian từ API */}
+                  <View style={styles.relatedTimeOverlay}>
+                    <Image source={require('../../assert/image/time.png')} style={styles.relatedTimeIcon} />
+                    <Text style={styles.relatedTimeText}>{item.cookingTime || ''}</Text>
+                  </View>
+                </View>
+                <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
+                <View style={styles.relatedInfoRow}>
+                  <View style={styles.relatedRatingBox}>
+                    <Image source={require('../../assert/image/bluestar.png')} style={styles.relatedStarIcon} />
+                    <Text style={styles.relatedRatingText}>4.8</Text>
+                    <Text style={styles.relatedReviewText}>23 Reviews</Text>
+                  </View>
+                  <View style={styles.relatedFreeTag}>
+                    <Text style={styles.relatedFreeTagText}>Miễn phí</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </ScrollView>
+      {/* Nút "Vào bếp thôi!" cố định dưới cùng, dùng ButtonNavigation */}
+      <View style={styles.fixedCookBtnWrapper}>
+        <ButtonNavigation
+          title="Vào bếp thôi !"
+          onPress={() => navigation.navigate(nav.tutorialCooking, { recipeId })}
+          backgroundColor="#FF6600"
+          style={styles.cookBtn}
+          textStyle={styles.cookBtnText}
+        />
+      </View>
+    </View>
   );
 };
 
-const CARD_WIDTH = 180;
-
 const styles = StyleSheet.create({
-  headerImgWrap: {
-    width: '100%',
-    height: 220,
-    position: 'relative',
-    backgroundColor: '#eee',
-  },
-  headerImg: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  headerBackBtn: {
+  headerOverlay: {
     position: 'absolute',
-    top: 18,
-    left: 14,
-    backgroundColor: 'rgba(0,0,0,0.18)',
-    borderRadius: 20,
-    padding: 6,
-    zIndex: 2,
-  },
-  headerBackIcon: {
-    width: 20,
-    height: 20,
-    tintColor: '#fff',
-  },
-  headerRightIcons: {
-    position: 'absolute',
-    top: 18,
-    right: 14,
+    top: 0,
+    left: 0,
+    width: width,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 2,
+    height: 56,
+    backgroundColor: 'rgba(255,102,0,0.98)',
+    paddingHorizontal: 8,
+    justifyContent: 'space-between',
   },
-  headerShareBtn: {
-    backgroundColor: 'rgba(0,0,0,0.18)',
-    borderRadius: 20,
-    padding: 6,
-    marginRight: 8,
+  headerBtn: {
+    padding: 8,
+    zIndex: 11,
   },
-  headerShareIcon: {
-    width: 20,
-    height: 20,
+  headerIcon: {
+    width: 24,
+    height: 24,
     tintColor: '#fff',
+    marginHorizontal: 2,
+    resizeMode: 'contain',
   },
-  headerBookmarkBtn: {
-    backgroundColor: 'rgba(0,0,0,0.18)',
-    borderRadius: 20,
-    padding: 6,
+  headerTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+    flex: 1,
+    textAlign: 'center',
+    marginLeft: -24, // để căn giữa khi có 2 nút bên phải
   },
-  headerBookmarkIcon: {
-    width: 20,
-    height: 20,
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  image: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#eee',
+  },
+  imageOverlayRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    zIndex: 10,
+  },
+  overlayBtn: {
+    padding: 8,
+    zIndex: 11,
+  },
+  overlayIcon: {
+    width: 24,
+    height: 24,
     tintColor: '#fff',
+    marginHorizontal: 2,
+    resizeMode: 'contain',
   },
-  titleWrap: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+  overlayRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoSection: {
+    padding: 18,
     backgroundColor: '#fff',
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 22,
     color: '#222',
     marginBottom: 8,
   },
@@ -332,339 +361,395 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    gap: 6,
   },
   authorAvatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    marginRight: 8,
+    marginRight: 6,
+    backgroundColor: '#eee',
   },
   authorName: {
-    fontWeight: 'bold',
     color: '#222',
-    fontSize: 14,
-    marginRight: 6,
-  },
-  authorLabel: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  tagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 0,
-  },
-  tag: {
-    backgroundColor: '#E6FFF6',
-    color: '#00C48C',
-    fontSize: 12,
-    fontWeight: 'bold',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 8,
-    marginTop: 2,
-  },
-  descWrap: {
-    paddingHorizontal: 16,
-    paddingTop: 0,
-    paddingBottom: 10,
-    backgroundColor: '#fff',
-  },
-  descText: {
-    color: '#222',
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    marginBottom: 0,
-    gap: 12,
-  },
-  infoItemBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6F8F3',
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    minWidth: 0,
-    flex: 1,
-    maxWidth: '50%',
-  },
-  infoIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#D1F5EC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  infoIconSmall: {
-    width: 18,
-    height: 18,
-    tintColor: '#00C48C',
-  },
-  infoTextBox: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-  },
-  infoLabel: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '400',
-    marginBottom: 2,
-    flexShrink: 1,
-    flexWrap: 'wrap',
-    lineHeight: 17,
-  },
-  infoValue: {
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: 16,
-    flexShrink: 1,
-    flexWrap: 'wrap',
-    lineHeight: 20,
-  },
-  section: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    marginTop: 10,
-    marginBottom: 0,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#222',
-    marginBottom: 8,
-  },
-  ingredientItem: {
-    color: '#222',
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  ratingBox: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginRight: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingScore: {
-    color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
     marginRight: 4,
   },
-  ratingStarIcon: {
-    width: 16,
-    height: 16,
-    tintColor: '#fff',
-  },
-  ratingLabel: {
-    color: '#4A90E2',
-    fontWeight: 'bold',
+  authorLabel: {
+    color: '#888',
     fontSize: 14,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  tag: {
+    backgroundColor: '#EAF7F3',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     marginRight: 8,
   },
-  ratingReviewCount: {
-    color: '#888',
-    fontSize: 13,
+  tagText: {
+    color: '#1ABC9C',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
-  reviewItem: {
+  desc: {
+    color: '#222',
+    fontSize: 15,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  icon: {
+    width: 18,
+    height: 18,
+    tintColor: '#888',
+    marginRight: 4,
+  },
+  infoLabel: {
+    color: '#888',
+    fontSize: 15,
+    marginRight: 4,
+    fontWeight: 'bold',
+  },
+  infoText: {
+    color: '#888',
+    fontSize: 15,
+    marginRight: 8,
+  },
+  reviewSection: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingBottom: 8,
+  },
+  reviewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 8,
+  },
+  reviewScoreBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1DA1F2',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 8,
+  },
+  reviewStarIcon: {
+    width: 16,
+    height: 16,
+    tintColor: undefined,
+    marginRight: 3,
+    resizeMode: 'contain',
+  },
+  reviewScoreText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  reviewHighlight: {
+    color: '#1DA1F2',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginRight: 4,
+  },
+  reviewDot: {
+    color: '#bbb',
+    fontSize: 16,
+    marginHorizontal: 2,
+  },
+  reviewCount: {
+    color: '#bbb',
+    fontSize: 14,
+  },
+  reviewTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FF8000',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginBottom: 8,
+    marginLeft: 0,
+  },
+  reviewTagText: {
+    color: '#222',
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginBottom: 8,
+    marginLeft: 0,
+  },
+  commentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
+    gap: 8,
   },
-  reviewAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 10,
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    backgroundColor: '#eee',
   },
-  reviewHeader: {
+  commentNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
+    gap: 8,
   },
-  reviewName: {
+  commentName: {
     fontWeight: 'bold',
-    color: '#222',
     fontSize: 14,
+    color: '#222',
     marginRight: 8,
   },
-  reviewDate: {
-    color: '#888',
-    fontSize: 12,
-    marginRight: 8,
-  },
-  reviewScoreBoxBlue: {
+  commentStarBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#4A90E2',
+    borderColor: '#1DA1F2',
     borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 'auto',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     backgroundColor: '#fff',
   },
-  reviewScoreBlue: {
-    color: '#4A90E2',
+  commentStarIcon: {
+    width: 13,
+    height: 13,
+    tintColor: undefined,
+    marginRight: 2,
+    resizeMode: 'contain',
+  },
+  commentStarText: {
+    color: '#1DA1F2',
     fontWeight: 'bold',
     fontSize: 13,
-    marginRight: 4,
   },
-  reviewStarIconBlue: {
-    width: 14,
-    height: 14,
-    tintColor: '#4A90E2',
+  commentDate: {
+    color: '#888',
+    fontSize: 12,
+    marginBottom: 2,
   },
-  reviewComment: {
+  commentContent: {
     color: '#222',
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 2,
   },
-  seeMore: {
+  seeMoreReview: {
     color: '#FF8000',
     fontWeight: 'bold',
     fontSize: 13,
+    marginRight: 2,
     marginTop: 2,
   },
-  sectionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  relatedCard: {
-    width: CARD_WIDTH,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginRight: 12,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-    position: 'relative',
-  },
-  relatedImgWrap: {
-    position: 'relative',
-    width: '100%',
-    height: 100,
-    marginBottom: 8,
-  },
-  relatedImg: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-  },
-  relatedMarkCircle: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  relatedMark: {
-    width: 10,
-    height: 13,
-    tintColor: '#fff',
-    resizeMode: 'contain',
-  },
-  relatedTimeOverlay: {
-    position: 'absolute',
-    left: 8,
-    bottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(34,34,34,0.8)',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    zIndex: 2,
-  },
-  relatedTimeIcon: {
-    width: 13,
-    height: 13,
-    marginRight: 4,
-    tintColor: '#fff',
-  },
-  relatedTimeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  relatedTitle: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#222',
-    marginBottom: 4,
-  },
-  relatedInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  relatedRating: {
-    color: '#4A90E2',
-    fontWeight: 'bold',
-    fontSize: 13,
-    marginRight: 4,
-  },
-  relatedReviewCount: {
-    color: '#888',
-    fontSize: 12,
-    marginRight: 4,
-  },
-  relatedFreeTag: {
-    color: '#00C48C',
-    fontWeight: 'bold',
-    fontSize: 12,
-    backgroundColor: '#E6FFF6',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    overflow: 'hidden',
-  },
-  bottomBtnWrap: {
+  fixedCookBtnWrapper: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 16,
     paddingTop: 8,
-    borderTopWidth: 1,
-    borderColor: '#f2f2f2',
+    paddingHorizontal: 16,
+    borderTopWidth: 0.5,
+    borderColor: '#eee',
   },
-  bottomBtn: {
-    backgroundColor: '#FF6600',
-    borderRadius: 10,
-    paddingVertical: 14,
+  cookBtn: {
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 0,
+  },
+  cookBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
+  },
+  ingredientSection: {
+    marginTop: 10,
+    marginBottom: 12,
+    // bỏ nền xám, chỉ để padding dưới
+    paddingBottom: 8,
+  },
+  ingredientTitle: {
+    fontWeight: 'bold',
+    color: '#222', // màu đen
+    fontSize: 15,
+    marginBottom: 8,
+  },
+  ingredientList: {
+    // paddingLeft: 8,
+  },
+  ingredientItem: {
+    color: '#222',
+    fontSize: 14,
+    marginBottom: 2,
+    lineHeight: 20,
+  },
+  relatedSection: {
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingBottom: 24, // tăng paddingBottom để không bị che khi kéo hết
+  },
+  relatedTitle: {
+    fontWeight: 'bold',
+    fontSize: 17,
+    color: '#222',
+    marginBottom: 8,
+  },
+  relatedCard: {
+    width: 120,
+    marginRight: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+    alignItems: 'center',
+    padding: 8,
+  },
+  relatedImgWrap: {
+    width: 100,
+    height: 70,
+    borderRadius: 8,
+    marginBottom: 6,
+    backgroundColor: '#eee',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  relatedImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  relatedMarkCircle: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.7)', // màu đen trong suốt
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  relatedMark: {
+    width: 16,
+    height: 16,
+    tintColor: '#fff',
+  },
+  relatedTimeOverlay: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  relatedTimeIcon: {
+    width: 14,
+    height: 14,
+    tintColor: '#fff',
+    marginRight: 4,
+  },
+  relatedTimeText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  relatedInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  relatedRatingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  relatedStarIcon: {
+    width: 14,
+    height: 14,
+    tintColor: '#1DA1F2',
+  },
+  relatedRatingText: {
+    color: '#222',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  relatedReviewText: {
+    color: '#888',
+    fontSize: 12,
+  },
+  relatedFreeTag: {
+    backgroundColor: '#EAF7F3',
+    borderRadius: 12,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  relatedFreeTagText: {
+    color: '#1ABC9C',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  infoRowWrap: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    marginBottom: 8,
+    gap: 12,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F6F6F6',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+  },
+  infoBoxIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
+    tintColor: '#00C48C',
+  },
+  infoBoxLabel: {
+    color: '#888',
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  infoBoxValue: {
+    color: '#222',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  relatedName: {
+    fontSize: 15,
+    color: '#222',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 4,
   },
 });
 

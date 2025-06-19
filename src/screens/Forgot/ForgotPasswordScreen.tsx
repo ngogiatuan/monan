@@ -5,10 +5,44 @@ import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import InputNavigation from '../../compoments/InputNavigation';
+import axios from 'axios';
+
+const API_URL = 'http://103.72.99.132:3000';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSendOtp = async () => {
+    setError('');
+    setSuccess('');
+    if (!email) {
+      setError('Vui lòng nhập email');
+      return;
+    }
+    setLoading(true);
+    try {
+      // Gọi API generate-otp (không phải send-otp)
+      const res = await axios.post(`${API_URL}/api/users/generate-otp`, { email });
+      console.log('Response from generate-otp:', res?.data);
+      if (res?.data.message === "Send OTP to Email complete!") {
+        setSuccess('Đã gửi mã OTP về email của bạn.');
+        (navigation as any).navigate(nav.validate, { email });
+      } else {
+        setError(res.data?.message || 'Không gửi được mã OTP, vui lòng thử lại.');
+      }
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+        'Không gửi được mã OTP, vui lòng thử lại.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthForm
@@ -27,9 +61,12 @@ const ForgotPasswordScreen = () => {
         autoCapitalize="none"
         placeholderTextColor="#bdbdbd"
       />
+      {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
+      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title="Tiếp tục"
-        onPress={() => navigation.navigate(nav.validate as never)}
+        title={loading ? "Đang gửi..." : "Tiếp tục"}
+        onPress={handleSendOtp}
+        disabled={loading}
       />
     </AuthForm>
   );
@@ -52,3 +89,4 @@ const styles = StyleSheet.create({
 });
 
 export default ForgotPasswordScreen;
+

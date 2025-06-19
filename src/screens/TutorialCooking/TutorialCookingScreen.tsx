@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Dimensions,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
+const API_URL = 'http://103.72.99.132:3000';
 
 // Component tái sử dụng cho các bước nấu ăn
 const StepCookingViewer = ({
@@ -84,48 +87,83 @@ const StepCookingViewer = ({
   );
 };
 
-// Dữ liệu mẫu cho một công thức
-const STEPS = [
-  {
-    image: require('../../assert/image/step1.png'),
-    title: 'Bước 1: Khâu chuẩn bị nguyên vật liệu',
-    desc: 'Chuẩn bị các nguyên vật liệu sẵn sàng trước khi bắt đầu:\n• 500g cá lóc làm sạch, cắt khúc.\n• 2 quả cà chua bổ múi cau.\n• 1/4 trái thơm (dứa) cắt lát mỏng.\n• 5 trái đậu bắp cắt xéo.\n• 100g giá đỗ.\n• 2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.\n• 100g đậu rồng.\n• 2 muỗng me chua hoặc 1 vắt me tươi.\n• 2 củ, 2 tép hành tím, tỏi băm nhỏ.\n• 3 - 4 nhánh rau thơm, ngò gai thái nhỏ.\n• Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.\n• 1 trái ớt hiểm nếu muốn ăn cay.',
-  },
-  {
-    image: require('../../assert/image/step5.png'),
-    title: 'Bước 2: Chuẩn bị hành ngò các thứ',
-    desc:
-      'Chuẩn bị các nguyên vật liệu sau trước khi bắt đầu:\n' +
-      '500g cá lóc làm sạch, cắt khúc.\n' +
-      '2 quả cà chua bổ múi cau.\n' +
-      '1/4 trái thơm (dứa) cắt lát mỏng.\n' +
-      '5 trái đậu bắp cắt xéo.\n' +
-      '2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.\n' +
-      '100g giá đỗ.\n' +
-      '2 muỗng me chua hoặc 1 vắt me tươi.\n' +
-      '2 củ, 2 tép hành tím, tỏi băm nhỏ.\n' +
-      '3 - 4 nhánh rau thơm, ngò gai thái nhỏ.\n' +
-      'Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.\n' +
-      '1 trái ớt hiểm nếu muốn ăn cay.',
-  },
-];
-
 const TutorialCookingScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const [steps, setSteps] = useState<
+    { image: any; title: string; desc: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  // Lấy recipeId từ params truyền sang từ DetailScreen
+  const recipeId = route.params?.recipeId;
   const [startTime] = useState(Date.now());
-  const estimatedTime = route.params?.estimatedTime || 40; // fallback nếu không có param
+  const estimatedTime = route.params?.estimatedTime || 40;
+
+  useEffect(() => {
+    const fetchInstructions = async () => {
+      setLoading(true);
+      try {
+        // Lấy chi tiết món ăn từ API
+        const res = await axios.get(`${API_URL}/api/recipes?page=1&limit=50`);
+        const allRecipes = res.data?.data || [];
+        const recipe = allRecipes.find((r: any) => r._id === recipeId);
+        let instructions: string[] = [];
+        if (recipe && recipe.instructions) {
+          // Tách từng bước theo số thứ tự hoặc xuống dòng
+          // Ưu tiên tách theo số thứ tự "1.", "2.", ...
+          const regex = /\d+\.\s/g;
+          const parts = recipe.instructions.split(regex).filter(Boolean);
+          if (parts.length > 1) {
+            instructions = parts.map(s => s.trim());
+          } else {
+            // Nếu không có số thứ tự, tách theo xuống dòng
+            instructions = recipe.instructions.split('\n').filter(Boolean);
+          }
+        }
+        // Nếu không có bước nào, tạo 1 bước mặc định
+        if (!instructions.length) {
+          instructions = ['Không có hướng dẫn nấu ăn cho món này.'];
+        }
+        // Tạo mảng steps cho StepCookingViewer
+        const stepsData = instructions.map((desc, idx) => ({
+          image: require('../../assert/image/step1.png'),
+          title: `Bước ${idx + 1}`,
+          desc,
+        }));
+        setSteps(stepsData);
+      } catch (e) {
+        setSteps([
+          {
+            image: require('../../assert/image/step1.png'),
+            title: 'Bước 1',
+            desc: 'Không có hướng dẫn nấu ăn cho món này.',
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInstructions();
+  }, [recipeId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF6600" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <StepCookingViewer
-        steps={STEPS}
+        steps={steps}
         onFinish={() =>
           navigation.navigate(nav.endCooking, { startTime, estimatedTime })
         }
         onBack={() => navigation.goBack()}
       />
-      {/* <BottomNavigation current="" /> */}
     </SafeAreaView>
   );
 };
