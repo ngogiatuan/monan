@@ -1,14 +1,93 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 const EditProfileScreen = () => {
   const { user, setUser } = useContext(UserContext);
   const navigation = useNavigation<any>();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [cover, setCover] = useState<string | null>(null);
+  const [showPickerModal, setShowPickerModal] = useState(false);
+  const [showCoverPickerModal, setShowCoverPickerModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
+
+  const pickImageFromLibrary = () => {
+    setShowPickerModal(false);
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.7 },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setAvatar(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
+
+  const pickImageFromCamera = () => {
+    setShowPickerModal(false);
+    launchCamera(
+      { mediaType: 'photo', quality: 0.7, saveToPhotos: true },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setAvatar(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
+
+  const pickCoverFromLibrary = () => {
+    setShowCoverPickerModal(false);
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.7 },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setCover(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
+
+  const pickCoverFromCamera = () => {
+    setShowCoverPickerModal(false);
+    launchCamera(
+      { mediaType: 'photo', quality: 0.7, saveToPhotos: true },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setCover(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
+
+  const pickAvatarFromLibrary = () => {
+    setShowAvatarPickerModal(false);
+    launchImageLibrary(
+      { mediaType: 'photo', quality: 0.7 },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setAvatarUrl(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
+
+  const pickAvatarFromCamera = () => {
+    setShowAvatarPickerModal(false);
+    launchCamera(
+      { mediaType: 'photo', quality: 0.7, saveToPhotos: true },
+      (response) => {
+        if (response.assets && response.assets.length > 0) {
+          setAvatarUrl(response.assets[0].uri || null);
+        }
+      }
+    );
+  };
 
   // Khi bấm lưu hồ sơ, cập nhật user context nếu có thay đổi
   const handleSave = () => {
@@ -16,7 +95,7 @@ const EditProfileScreen = () => {
       ...user,
       name,
       email,
-      avatar: user?.avatar, // luôn giữ avatar cũ nếu không đổi
+      avatar: avatar || user?.avatar, // luôn giữ avatar cũ nếu không đổi
       joined: user?.joined,
       point: user?.point,
     });
@@ -29,7 +108,7 @@ const EditProfileScreen = () => {
     email !== user?.email;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -41,26 +120,114 @@ const EditProfileScreen = () => {
       {/* Cover image */}
       <View style={styles.bannerWrap}>
         <Image
-          source={require('../../assert/image/cover.png')}
+          source={cover ? { uri: cover } : require('../../assert/image/cover.png')}
           style={styles.bannerImg}
         />
-        <TouchableOpacity style={styles.cameraBtn}>
+        {/* Camera icon ở chính giữa cover */}
+        <TouchableOpacity
+          style={styles.cameraBtnCenter}
+          onPress={() => setShowCoverPickerModal(true)}
+        >
           <Image
             source={require('../../assert/image/camera.png')}
             style={styles.cameraIcon}
           />
         </TouchableOpacity>
       </View>
+    
       {/* Avatar + Thay ảnh: Đặt dưới cover, không dính vào cover */}
       <View style={styles.avatarRow}>
+        
+     
+      </View>
+      {/* Modal chọn ảnh/camera */}
+      <Modal
+        visible={showPickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPickerModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn hình đại diện</Text>
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickImageFromLibrary}>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chọn từ thư viện</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickImageFromCamera}>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chụp ảnh</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowPickerModal(false)}>
+              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* Modal chọn ảnh/camera cho cover */}
+      <Modal
+        visible={showCoverPickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCoverPickerModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn ảnh cover</Text>
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromLibrary}>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chọn từ thư viện</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromCamera}>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chụp ảnh</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowCoverPickerModal(false)}>
+              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* Avatar hiển thị */}
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
         <Image
-          source={user?.avatar || require('../../assert/image/avatar.png')}
-          style={styles.avatar}
+          source={avatarUrl ? { uri: avatarUrl } : require('../../assert/image/avatar.png')}
+          style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#eee' }}
         />
-        <TouchableOpacity style={styles.changeAvatarBtn}>
+        <TouchableOpacity
+          style={styles.changeAvatarBtn}
+          onPress={() => setShowAvatarPickerModal(true)}
+        >
           <Text style={styles.changeAvatarText}>Thay ảnh</Text>
         </TouchableOpacity>
       </View>
+      {/* Modal chọn ảnh/camera cho avatar */}
+      <Modal
+        visible={showAvatarPickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAvatarPickerModal(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.dialogBox}>
+            <Text style={styles.dialogTitle}>Chọn ảnh đại diện</Text>
+            <TouchableOpacity
+              style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
+              onPress={pickAvatarFromLibrary}
+            >
+              <Text style={styles.dialogBtnText}>Chọn từ thư viện</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
+              onPress={pickAvatarFromCamera}
+            >
+              <Text style={styles.dialogBtnText}>Chụp ảnh</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dialogBtn, { backgroundColor: '#eee' }]}
+              onPress={() => setShowAvatarPickerModal(false)}
+            >
+              <Text style={[styles.dialogBtnText, { color: '#888' }]}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {/* Form */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -139,31 +306,46 @@ const styles = StyleSheet.create({
   },
   bannerWrap: {
     width: '100%',
-    height: 160,
-    backgroundColor: '#eee',
+    height: 180,
     position: 'relative',
+    marginBottom: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   bannerImg: {
     width: '100%',
-    height: 160,
+    height: '100%',
+    borderRadius: 0,
     resizeMode: 'cover',
-    position: 'absolute',
-    left: 0,
-    top: 0,
   },
-  cameraBtn: {
+  cameraBtnCenter: {
     position: 'absolute',
-    left: '50%',
     top: '50%',
-    transform: [{ translateX: -24 }, { translateY: -21 }],
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 8,
+    elevation: 2,
     zIndex: 2,
   },
   cameraIcon: {
-    width: 48,
-    height: 42,
-    resizeMode: 'contain',
+    width: 32,
+    height: 32,
+    tintColor: '#ff6f2c',
+  },
+  bigChangeCoverBtn: {
+    alignSelf: 'center',
+    backgroundColor: '#ff6f2c',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+    marginBottom: 16,
+  },
+  bigChangeCoverBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   avatarRow: {
     flexDirection: 'row',
@@ -181,14 +363,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
   },
   changeAvatarBtn: {
-    marginLeft: 16,
-    backgroundColor: '#E9EEF2',
+    marginTop: 10,
+    backgroundColor: '#ff6f2c',
     borderRadius: 8,
-    paddingHorizontal: 18,
     paddingVertical: 8,
+    paddingHorizontal: 24,
   },
   changeAvatarText: {
-    color: '#6B7683',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
   },
@@ -250,6 +432,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 17,
+  },
+  dialogOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  dialogBox: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: 320,
+  },
+  dialogTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  dialogBtn: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dialogBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 

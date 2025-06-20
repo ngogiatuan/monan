@@ -12,11 +12,11 @@ export const getAllCategories = async () => {
 
   try {
 
-    const response = await axios.get(`${API_BASE_URL}/categories`); // Ví dụ: endpoint /categories
+    const response = await axios.get(`${API_BASE_URL}/api/categories`); // Ví dụ: endpoint /categories
+console.log('Response from getAllCategories API:', response.data);
+    if (response.data?.length) { // Tùy thuộc vào cấu trúc response của BE
 
-    if (response.data && response.data.success) { // Tùy thuộc vào cấu trúc response của BE
-
-      return response.data.categories; // Hoặc response.data.data, response.data.items, v.v.
+      return response.data; // Hoặc response.data.data, response.data.items, v.v.
 
     }
 
@@ -31,3 +31,5 @@ export const getAllCategories = async () => {
   }
 
 };
+
+// Đã loại bỏ staticCategories, chỉ giữ lại API call

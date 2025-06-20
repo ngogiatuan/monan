@@ -79,17 +79,17 @@ const ValidateEmailScreen = () => {
           <TextInput
             key={idx}
             ref={inputs[idx]}
-            style={styles.codeInput}
+            style={[styles.codeInput, { color: '#222' }]} // Đảm bảo text nhập là màu đen
             value={v}
             onChangeText={text => handleChange(text, idx)}
             keyboardType="number-pad"
             maxLength={1}
             textAlign="center"
-            // Chỉ autoFocus cho ô đầu tiên, các ô sau KHÔNG nên dùng autoFocus để tránh warning/lỗi
             autoFocus={idx === 0}
-            // Fix lỗi warning liên quan đến autoFocus khi dùng nhiều TextInput
             blurOnSubmit={false}
             importantForAutofill="no"
+            selectionColor="#222"
+            placeholderTextColor="#888"
           />
         ))}
       </View>

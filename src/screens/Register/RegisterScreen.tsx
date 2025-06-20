@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import { UserContext } from '../../context/UserContext';
-import { registerUser } from '../../api/userApi';
+import { registerUser, getUserByEmailAndPassword } from '../../api/userApi';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -29,9 +29,9 @@ const RegisterScreen = () => {
     }
     setError('');
     const userData = await registerUser(fullname, email, password);
-    console.log('userData', userData);
     if (userData?.token) {
       setSuccess(true);
+      // Sau khi đăng ký thành công, chuyển sang LoginScreen để người dùng tự đăng nhập
       setTimeout(() => {
         setSuccess(false);
         navigation.navigate(nav.login as never);
@@ -148,3 +148,4 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
+   

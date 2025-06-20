@@ -224,7 +224,7 @@ const DetailScreen = () => {
             keyExtractor={item => item._id}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 8, paddingLeft: 8, paddingRight: 24 }}
+            contentContainerStyle={{ paddingVertical: 8, paddingLeft: 8, paddingRight: 24, paddingBottom: 70 }}
             renderItem={({ item, index }) => (
               <TouchableOpacity
                 style={styles.relatedCard}
@@ -277,6 +277,8 @@ const DetailScreen = () => {
     </View>
   );
 };
+
+const scrênWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
   headerOverlay: {
@@ -609,7 +611,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   relatedCard: {
-    width: 120,
+    width:260, // 40% chiều rộng
     marginRight: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -618,16 +620,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
     alignItems: 'center',
-    padding: 8,
+    padding: 10
   },
   relatedImgWrap: {
-    width: 100,
-    height: 70,
+    width: 250,
+    height: 250,
     borderRadius: 8,
     marginBottom: 6,
     backgroundColor: '#eee',
-    position: 'relative',
-    overflow: 'hidden',
+
   },
   relatedImg: {
     width: '100%',
@@ -696,6 +697,7 @@ const styles = StyleSheet.create({
   relatedReviewText: {
     color: '#888',
     fontSize: 12,
+    marginLeft: 5,
   },
   relatedFreeTag: {
     backgroundColor: '#EAF7F3',

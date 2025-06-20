@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, TextInput, StyleSheet } from 'react-native';
+import { Text, TextInput, StyleSheet, Modal, View, Image } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AuthForm from '../../compoments/AuthForm';
@@ -15,6 +15,7 @@ const ResetPasswordScreen = () => {
   const [repassword, setRepassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showDialog, setShowDialog] = useState(false);
 
   // Lấy email và otp từ params truyền sang từ ValidateEmailScreen
   const email = route.params?.email || '';
@@ -33,16 +34,15 @@ const ResetPasswordScreen = () => {
     }
     setError('');
     try {
-      const res = await axios.post(`${API_URL}/api/users/reset-password`, {
+      // Gọi API đổi mật khẩu với endpoint /api/users/changePassword
+      const res = await axios.post(`${API_URL}/api/users/changePassword`, {
         email,
         otp,
         newPassword: password,
       });
       if (res.data && res.data.message) {
-        setSuccess('Đặt lại mật khẩu thành công! Vui lòng đăng nhập.');
-        setTimeout(() => {
-          navigation.navigate(nav.login as never);
-        }, 1200);
+        setSuccess('Đặt lại mật khẩu thành công!');
+        setShowDialog(true);
       } else {
         setError('Đặt lại mật khẩu thất bại, vui lòng kiểm tra lại mã OTP hoặc thử lại.');
       }
@@ -56,32 +56,69 @@ const ResetPasswordScreen = () => {
   };
 
   return (
-    <AuthForm
-      title="Đặt lại mật khẩu"
-      desc="Tạo mật khẩu mới cho tài khoản của bạn."
-      showBack
-      onBack={() => navigation.goBack()}
-    >
-      <Text style={styles.label}>Mật khẩu mới <Text style={{ color: 'red' }}>*</Text></Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập mật khẩu mới..."
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Text style={styles.label}>Nhập lại mật khẩu <Text style={{ color: 'red' }}>*</Text></Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập lại mật khẩu..."
-        value={repassword}
-        onChangeText={setRepassword}
-        secureTextEntry
-      />
-      {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
-      <ButtonNavigation title="Tiếp tục" onPress={handleReset} />
-    </AuthForm>
+    <>
+      <AuthForm
+        title="Đặt lại mật khẩu"
+        desc="Tạo mật khẩu mới cho tài khoản của bạn."
+        showBack
+        onBack={() => navigation.goBack()}
+      >
+        <Text style={styles.label}>Mật khẩu mới <Text style={{ color: 'red' }}>*</Text></Text>
+        <TextInput
+          style={[styles.input, { color: '#222' }]}
+          placeholder="Nhập mật khẩu mới..."
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholderTextColor="#888"
+          selectionColor="#222"
+        />
+        <Text style={styles.label}>Nhập lại mật khẩu <Text style={{ color: 'red' }}>*</Text></Text>
+        <TextInput
+          style={[styles.input, { color: '#222' }]}
+          placeholder="Nhập lại mật khẩu..."
+          value={repassword}
+          onChangeText={setRepassword}
+          secureTextEntry
+          placeholderTextColor="#888"
+          selectionColor="#222"
+        />
+        {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
+        {success && !showDialog ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
+        <ButtonNavigation title="Tiếp tục" onPress={handleReset} />
+      </AuthForm>
+      {/* Dialog báo đổi mật khẩu thành công */}
+      <Modal
+        visible={showDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDialog(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.dialogContainer}>
+            <Image
+              source={require('../../assert/image/check.png')}
+              style={styles.dialogIcon}
+            />
+            <Text style={styles.dialogTitle}>Đổi mật khẩu thành công!</Text>
+            <Text style={styles.dialogDesc}>
+              Bạn đã đặt lại mật khẩu mới. Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng.
+            </Text>
+            <ButtonNavigation
+              title="Đăng nhập"
+              backgroundColor="#FF9800"
+              color="#222"
+              onPress={() => {
+                setShowDialog(false);
+                navigation.navigate(nav.login as never);
+              }}
+              style={styles.dialogBtn}
+              textStyle={{ fontWeight: 'bold', fontSize: 16 }}
+            />
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -100,6 +137,48 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 8,
     backgroundColor: '#fafafa',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dialogContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 28,
+    width: 320,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dialogIcon: {
+    width: 56,
+    height: 56,
+    marginBottom: 16,
+    tintColor: '#2ecc40',
+  },
+  dialogTitle: {
+    fontWeight: 'bold',
+    fontSize: 22,
+    color: '#222',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  dialogDesc: {
+    color: '#888',
+    fontSize: 15,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  dialogBtn: {
+    width: '100%',
+    borderRadius: 8,
+    paddingVertical: 14,
+    marginTop: 0,
   },
 });
 

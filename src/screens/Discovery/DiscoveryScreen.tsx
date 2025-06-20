@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import InputNavigation from '../../compoments/InputNavigation';
+import { getRecipes } from '../../api/recipeApi';
 
 const { width } = Dimensions.get('window');
 
@@ -89,21 +90,32 @@ const DiscoveryScreen = () => {
   const [showTypeDialog, setShowTypeDialog] = useState(false);
   const [mealSearch, setMealSearch] = useState('');
   const [typeSearch, setTypeSearch] = useState('');
+  const [recipes, setRecipes] = useState([]);
 
-  const renderItem = ({ item }: { item: typeof DATA[0] }) => (
+ React.useEffect(() => {
+    (async () => {
+         try {
+           const data = await getRecipes(1, 10); // Lấy 10 món ăn đầu tiên
+           setRecipes(data);
+         } catch (error) {
+           console.error('Lỗi khi lấy danh sách món ăn:', error);
+         }
+       })();
+  }, []);
+  const renderItem = ({ item }: { item: any}) => (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => {
-        if (item.id === '1') {
+      //  if (item.id === '1') {
           navigation.navigate(nav.buy as never, { item } as never);
-        }
+     //   }
       }}
-      disabled={item.id !== '1'}
-      style={{ opacity: item.id === '1' ? 1 : 0.7 }}
+    //  disabled={item.id !== '1'}
+    //  style={{ opacity: item.id === '1' ? 1 : 0.7 }}
     >
       <View style={styles.card}>
         <View style={styles.cardImgWrap}>
-          <Image source={item.image} style={styles.cardImg} />
+          <Image source={{uri: item?.imageUrls[0]}} style={styles.cardImg} />
           <View style={styles.cardTimeRight}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
             <Text style={styles.timeText}>{item.time}</Text>
@@ -113,7 +125,7 @@ const DiscoveryScreen = () => {
           <View style={styles.markCircleTitle}>
             <Image source={require('../../assert/image/mark.png')} style={styles.markIconImg} />
           </View>
-          <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>{item?.name}</Text>
           <View style={styles.cardRow}>
             <View style={styles.ratingBox}>
               <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconBlue} />
@@ -146,8 +158,8 @@ const DiscoveryScreen = () => {
         </View>
       </View>
       <FlatList
-        data={DATA}
-        keyExtractor={item => item.id}
+        data={recipes}
+        keyExtractor={item => item?._id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}

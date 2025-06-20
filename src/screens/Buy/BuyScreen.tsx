@@ -46,15 +46,16 @@ const BuyScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const item = route.params?.item;
+  console.log('[BuyScreen] item:', item);
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1);  
   const [promoEnabled, setPromoEnabled] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('momo');
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Tính tổng tiền (giả lập, có thể thêm logic giảm giá nếu cần)
-  const price = 300000;
+  const price = item?.price || 0; // Giả sử giá mặc định là 100000đ
   const discount = 0;
   const total = price - discount;
 
@@ -111,13 +112,13 @@ const BuyScreen = () => {
             <View style={styles.infoCard}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Image
-                  source={item?.image || require('../../assert/image/fish.png')}
+                  source={{uri: item?.imageUrls[0] }}
                   style={styles.foodImg}
                 />
                 <View style={{ marginLeft: 12, flex: 1 }}>
                   <Text style={styles.infoLabel}>Công thức chọn mua</Text>
                   <Text style={styles.infoTitle} numberOfLines={2}>
-                    {item?.title || 'Canh chua cá lóc'}
+                    {item?.name || ''}
                   </Text>
                 </View>
               </View>

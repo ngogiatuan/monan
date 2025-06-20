@@ -9,7 +9,7 @@ interface RecipeEmptyProps {
 
 const RecipeEmpty = ({ onAddRecipe, onExplore }: RecipeEmptyProps) => (
   <View style={styles.container}>
-    <Image source={require('../assert/image/fire.png')} style={styles.icon} />
+    <Image source={require('../assert/image/fire.png')} style={styles.icon} resizeMode='contain' />
     <Text style={styles.text}>
       {onAddRecipe ? 'Bạn chưa có công thức nào' : 'Bạn chưa sở hữu Quest nào'}
     </Text>

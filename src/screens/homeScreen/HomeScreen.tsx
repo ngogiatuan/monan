@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  Alert,
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import { getRecipes } from '../../api/recipeApi';
+import { getAllCategories } from '../../api/categoryApi';
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +26,7 @@ const HomeScreen = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation<any>();
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Effect để fetch danh sách món ăn (recipes)
   useEffect(() => {
@@ -35,7 +38,19 @@ const HomeScreen = () => {
         console.error('Lỗi khi lấy danh sách món ăn:', error);
       }
     })();
+
+     (async () => {
+      try {
+        const data = await getAllCategories(); // Lấy 10 món ăn đầu tiên
+        setCategories(data);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách món ăn:', error);
+        setCategories([]);
+      }
+    })();
   }, []);
+
+  console.log('categories', categories);
 
   // Hàm tạo lời chào dựa trên thời gian trong ngày
   const getGreeting = () => {
@@ -46,40 +61,37 @@ const HomeScreen = () => {
     return 'Chào buổi tối';
   };
 
-  // Hàm trả về ảnh demo cho món ăn dựa trên tên (hoặc index)
-  // Thực tế bạn nên dùng trường 'image' từ API của recipe
-  const getProductImage = (name: string, idx: number) => {
-    if (name.toLowerCase().includes('cá') || name.toLowerCase().includes('bún')) {
-      return require('../../assert/image/fish.png');
+  // Hàm trả về ảnh món ăn từ API (ưu tiên imageUrls[0])
+  const getProductImage = (item: any) => {
+    if (item.imageUrls && item.imageUrls.length > 0) {
+      return { uri: item.imageUrls[0] };
     }
-    if (name.toLowerCase().includes('phở')) {
-      return require('../../assert/image/product.png');
-    }
-    return idx % 2 === 0
-      ? require('../../assert/image/product.png')
-      : require('../../assert/image/fish.png');
+    // Nếu không có ảnh, có thể trả về một ảnh mặc định khác nếu muốn
+    return undefined;
   };
 
   // Dữ liệu món ăn thịnh hành (top 5)
-  const trendingData = recipes.slice(0, 5).map((item, idx) => ({
+  const trendingData = recipes.slice(0, 5).map((item) => ({
     id: item._id,
-    image: getProductImage(item.name, idx),
+    image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
     reviews: 23,
     free: true,
+    price: item.price,
   }));
 
   // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
-  const todayData = recipes.slice(5, 10).map((item, idx) => ({
+  const todayData = recipes.slice(5, 10).map((item) => ({
     id: item._id,
-    image: getProductImage(item.name, idx + 5),
+    image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
     reviews: 23,
     free: true,
+    price: item.price,
   }));
 
   // Dữ liệu ưu đãi demo
@@ -101,21 +113,13 @@ const HomeScreen = () => {
   ];
 
   const handleGuestAccess = () => {
-    console.log('Khách hàng cần đăng nhập để xem chi tiết.');
+    Alert.alert('Khách hàng cần đăng nhập để xem chi tiết.');
   };
-
-  // Static categories cho "Các loại công thức"
-  const staticCategories = [
-    { key: 'breakfast', name: 'Bữa sáng', icon: require('../../assert/image/Breakfast.png') },
-    { key: 'lunch', name: 'Bữa trưa', icon: require('../../assert/image/Lunch.png') },
-    { key: 'dinner', name: 'Bữa tối', icon: require('../../assert/image/Dinner.png') },
-    { key: 'dessert', name: 'Tráng miệng', icon: require('../../assert/image/Dessert.png') },
-  ];
 
   // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
   const homeScreenSections = [
     { type: 'header_search' },
-    { type: 'categories', title: 'Các loại công thức', data: staticCategories },
+    { type: 'categories', title: 'Các loại công thức', data: categories }, // Sử dụng categories từ API
     { type: 'trending_recipes', title: 'Món ăn thịnh hành', data: trendingData },
     { type: 'today_recipes', title: 'Hôm nay nấu món gì?', data: todayData },
     { type: 'offers', title: 'Ưu đãi mới', data: offerData },
@@ -183,10 +187,10 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
-              {staticCategories.map(catItem => (
+              {categories.map(catItem => (
                 <TouchableOpacity
+                key={catItem?._id}
                   style={styles.categoryItem}
-                  key={catItem.key}
                   disabled={!user}
                   onPress={() => {
                     if (user) {
@@ -196,7 +200,7 @@ const HomeScreen = () => {
                     }
                   }}
                 >
-                  <Image source={catItem.icon} style={styles.categoryIcon} />
+                  <Image source={{uri:catItem?.imageUrl}} style={styles.categoryIcon} />
                   <Text style={styles.categoryText}>{catItem.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -218,7 +222,13 @@ const HomeScreen = () => {
               {item.data.map((recipeItem, idx) => (
                 <View style={styles.productCard} key={recipeItem.id}>
                   <View style={styles.productImgWrap}>
-                    <Image source={recipeItem.image} style={styles.productImg} />
+                    {recipeItem.image ? (
+                      <Image source={recipeItem.image} style={styles.productImg} />
+                    ) : (
+                      <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                        <Text style={{ color: '#bbb', fontSize: 12 }}>Không có ảnh</Text>
+                      </View>
+                    )}
                     <View style={styles.productMarkCircle}>
                       <Image
                         source={require('../../assert/image/mark.png')}
@@ -233,7 +243,9 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => {
+                      console.log('uer', user);
                       if (user) {
+
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                       } else {
                         handleGuestAccess();
@@ -249,6 +261,12 @@ const HomeScreen = () => {
                     </View>
                     <Text style={styles.freeTag}>Miễn phí</Text>
                   </View>
+                  {/* Hiển thị giá nếu có */}
+                  {recipeItem.price ? (
+                    <Text style={{ color: '#FF6600', fontWeight: 'bold', fontSize: 13, marginTop: 2 }}>
+                      Giá: {recipeItem.price}đ
+                    </Text>
+                  ) : null}
                 </View>
               ))}
             </ScrollView>

@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { IUser } from '../context/UserContext';
 
-const API_URL = 'http://103.72.99.132:3000';
+const API_URL = 'http://103.72.99.132:3000/api';
 
 export const getUserByEmailAndPassword = async (email: string, password: string): Promise<IUser | null> => {
   try {
-    const res = await axios.post(`${API_URL}/api/users/login`, { email, password });
+    const res = await axios.post(`${API_URL}/users/login`, { email, password });
     console.log('Response from API:', res.data);
     if (res.data && res.data.token && res.data.email && res.data.full_name) {
       // Lấy thời gian đăng nhập hiện tại (dd/mm/yyyy)
@@ -29,7 +29,7 @@ export const getUserByEmailAndPassword = async (email: string, password: string)
 export const registerUser = async (fullname: string, email: string, password: string): Promise<IUser | null> => {
   try {
     // Đăng ký với API mới, trả về { message, email, full_name } nếu thành công
-    const res = await axios.post(`${API_URL}/api/users/register`, {
+    const res = await axios.post(`${API_URL}/users/register`, {
       fullName: fullname,
       email,
       password,

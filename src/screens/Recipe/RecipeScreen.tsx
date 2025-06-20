@@ -19,10 +19,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6f2c',
     height: 60,
     justifyContent: 'flex-end',
-    paddingHorizontal: 16,
+    paddingHorizontal: 30,
     paddingBottom: 10,
     width: SCREEN_WIDTH,
     alignSelf: 'center',
+
   },
   headerTitle: {
     color: '#fff',
