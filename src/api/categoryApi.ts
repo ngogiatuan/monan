@@ -31,5 +31,3 @@ console.log('Response from getAllCategories API:', response.data);
   }
 
 };
-
-// Đã loại bỏ staticCategories, chỉ giữ lại API call

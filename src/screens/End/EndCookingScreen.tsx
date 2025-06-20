@@ -164,7 +164,10 @@ const EndCookingScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={() => setShowRating(false)}
+              onPress={() => {
+                setShowRating(false);
+                navigation.navigate(nav.home);
+              }}
               activeOpacity={0.8}
             >
               <Text style={styles.modalButtonText}>Xác nhận</Text>

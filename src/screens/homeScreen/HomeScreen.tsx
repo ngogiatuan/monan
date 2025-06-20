@@ -195,9 +195,9 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
-              {categories.map(catItem => (
+              {(categories.length > 0 ? categories : staticCategories).map(catItem => (
                 <TouchableOpacity
-                key={catItem?._id}
+                  key={catItem?._id || catItem.key}
                   style={styles.categoryItem}
                   disabled={!user}
                   onPress={() => {
@@ -208,7 +208,16 @@ const HomeScreen = () => {
                     }
                   }}
                 >
-                  <Image source={{uri:catItem?.imageUrl}} style={styles.categoryIcon} />
+                  {catItem.imageUrl || catItem.icon ? (
+                    <Image
+                      source={catItem.imageUrl ? { uri: catItem.imageUrl } : catItem.icon}
+                      style={styles.categoryIcon}
+                    />
+                  ) : (
+                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                      <Text style={{ color: '#bbb', fontSize: 12 }}>?</Text>
+                    </View>
+                  )}
                   <Text style={styles.categoryText}>{catItem.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -251,13 +260,8 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => {
-                      console.log('uer', user);
-                      if (user) {
-
-                        navigation.navigate(nav.detail, { recipeId: recipeItem.id });
-                      } else {
-                        handleGuestAccess();
-                      }
+                      // Cho phép cả guest và user đều xem chi tiết
+                      navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                     }}
                   >
                     <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>

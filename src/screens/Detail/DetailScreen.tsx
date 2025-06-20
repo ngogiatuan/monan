@@ -39,6 +39,15 @@ const DetailScreen = () => {
     }, [recipeId])
   );
 
+  // Hàm lấy ảnh món ăn từ API (ưu tiên imageUrls[0])
+  const getRecipeImage = (recipeObj: any) => {
+    if (recipeObj?.imageUrls && Array.isArray(recipeObj.imageUrls) && recipeObj.imageUrls.length > 0) {
+      return { uri: recipeObj.imageUrls[0] };
+    }
+    // fallback demo nếu không có ảnh
+    return require('../../assert/image/product.png');
+  };
+
   if (loading) {
     return (
       <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
@@ -54,19 +63,6 @@ const DetailScreen = () => {
       </View>
     );
   }
-
-  // Demo ảnh món ăn (chưa có trường image)
-  const getDemoImage = (name: string, idx: number) => {
-    if (name.toLowerCase().includes('cá') || name.toLowerCase().includes('bún')) {
-      return require('../../assert/image/fish.png');
-    }
-    if (name.toLowerCase().includes('phở')) {
-      return require('../../assert/image/product.png');
-    }
-    return idx % 2 === 0
-      ? require('../../assert/image/product.png')
-      : require('../../assert/image/fish.png');
-  };
 
   // Demo comment
   const comments = [
@@ -95,7 +91,7 @@ const DetailScreen = () => {
       {/* Ảnh món ăn với overlay nút back, whitemark, share */}
       <View style={{ position: 'relative' }}>
         <Image
-          source={getDemoImage(recipe.name, 0)}
+          source={getRecipeImage(recipe)}
           style={styles.image}
           resizeMode="cover"
         />
@@ -225,14 +221,14 @@ const DetailScreen = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingVertical: 8, paddingLeft: 8, paddingRight: 24, paddingBottom: 70 }}
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.relatedCard}
                 onPress={() => navigation.replace(nav.detail, { recipeId: item._id })}
               >
                 <View style={styles.relatedImgWrap}>
                   <Image
-                    source={getDemoImage(item.name, index)}
+                    source={getRecipeImage(item)}
                     style={styles.relatedImg}
                   />
                   {/* mark.png góc phải trên cùng */}
@@ -268,7 +264,16 @@ const DetailScreen = () => {
       <View style={styles.fixedCookBtnWrapper}>
         <ButtonNavigation
           title="Vào bếp thôi !"
-          onPress={() => navigation.navigate(nav.tutorialCooking, { recipeId })}
+          onPress={() =>
+            navigation.navigate(nav.tutorialCooking, {
+              recipeId,
+              imageUrl:
+                recipe?.imageUrls && recipe.imageUrls.length > 0
+                  ? recipe.imageUrls[0]
+                  : null,
+              name: recipe?.name || '',
+            })
+          }
           backgroundColor="#FF6600"
           style={styles.cookBtn}
           textStyle={styles.cookBtnText}
@@ -756,3 +761,4 @@ const styles = StyleSheet.create({
 });
 
 export default DetailScreen;
+   

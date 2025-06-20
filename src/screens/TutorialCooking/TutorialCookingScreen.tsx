@@ -101,36 +101,29 @@ const TutorialCookingScreen = () => {
   const estimatedTime = route.params?.estimatedTime || 40;
 
   useEffect(() => {
-    const fetchInstructions = async () => {
+    const fetchSteps = async () => {
       setLoading(true);
       try {
-        // Lấy chi tiết món ăn từ API
-        const res = await axios.get(`${API_URL}/api/recipes?page=1&limit=50`);
-        const allRecipes = res.data?.data || [];
-        const recipe = allRecipes.find((r: any) => r._id === recipeId);
-        let instructions: string[] = [];
-        if (recipe && recipe.instructions) {
-          // Tách từng bước theo số thứ tự hoặc xuống dòng
-          // Ưu tiên tách theo số thứ tự "1.", "2.", ...
-          const regex = /\d+\.\s/g;
-          const parts = recipe.instructions.split(regex).filter(Boolean);
-          if (parts.length > 1) {
-            instructions = parts.map(s => s.trim());
-          } else {
-            // Nếu không có số thứ tự, tách theo xuống dòng
-            instructions = recipe.instructions.split('\n').filter(Boolean);
-          }
-        }
-        // Nếu không có bước nào, tạo 1 bước mặc định
-        if (!instructions.length) {
-          instructions = ['Không có hướng dẫn nấu ăn cho món này.'];
-        }
-        // Tạo mảng steps cho StepCookingViewer
-        const stepsData = instructions.map((desc, idx) => ({
-          image: require('../../assert/image/step1.png'),
+        // Lấy các bước nấu ăn từ API mới
+        const res = await axios.get(`${API_URL}/api/steps/recipe/${recipeId}`);
+        const data = Array.isArray(res.data) ? res.data : [];
+        let stepsData = data.map((stepObj: any, idx: number) => ({
+          image:
+            stepObj.imageUrls && stepObj.imageUrls.length > 0
+              ? { uri: stepObj.imageUrls[0] }
+              : require('../../assert/image/step1.png'),
           title: `Bước ${idx + 1}`,
-          desc,
+          desc: stepObj.tutorial || 'Không có hướng dẫn cho bước này.',
         }));
+        if (!stepsData.length) {
+          stepsData = [
+            {
+              image: require('../../assert/image/step1.png'),
+              title: 'Bước 1',
+              desc: 'Không có hướng dẫn nấu ăn cho món này.',
+            },
+          ];
+        }
         setSteps(stepsData);
       } catch (e) {
         setSteps([
@@ -144,7 +137,7 @@ const TutorialCookingScreen = () => {
         setLoading(false);
       }
     };
-    fetchInstructions();
+    fetchSteps();
   }, [recipeId]);
 
   if (loading) {
