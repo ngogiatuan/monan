@@ -116,10 +116,18 @@ const HomeScreen = () => {
     Alert.alert('Khách hàng cần đăng nhập để xem chi tiết.');
   };
 
+  // Static categories cho "Các loại công thức"
+  const staticCategories = [
+    { key: 'breakfast', name: 'Bữa sáng', icon: require('../../assert/image/Breakfast.png') },
+    { key: 'lunch', name: 'Bữa trưa', icon: require('../../assert/image/Lunch.png') },
+    { key: 'dinner', name: 'Bữa tối', icon: require('../../assert/image/Dinner.png') },
+    { key: 'dessert', name: 'Tráng miệng', icon: require('../../assert/image/Dessert.png') },
+  ];
+
   // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
   const homeScreenSections = [
     { type: 'header_search' },
-    { type: 'categories', title: 'Các loại công thức', data: categories }, // Sử dụng categories từ API
+    { type: 'categories', title: 'Các loại công thức', data: staticCategories },
     { type: 'trending_recipes', title: 'Món ăn thịnh hành', data: trendingData },
     { type: 'today_recipes', title: 'Hôm nay nấu món gì?', data: todayData },
     { type: 'offers', title: 'Ưu đãi mới', data: offerData },
