@@ -49,7 +49,6 @@ const ReviewScreen = () => {
           <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
         </View>
         <Text style={styles.summaryLabel}>Xuất sắc</Text>
-        <Text style={styles.summaryCount}>· 23 Reviews</Text>
       </View>
       {/* Danh sách review */}
       <FlatList
@@ -137,10 +136,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     marginRight: 8,
-  },
-  summaryCount: {
-    color: '#888',
-    fontSize: 13,
   },
   reviewItem: {
     flexDirection: 'row',

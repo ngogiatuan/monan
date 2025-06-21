@@ -242,22 +242,24 @@ const BuyScreen = () => {
         onRequestClose={() => setShowSuccess(false)}
       >
         <View style={styles.successOverlay}>
-          <View style={styles.successModal}>
-            <View style={styles.successIconWrap}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 28, width: '90%', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 10 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>Thành công</Text>
+            <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>Hãy xem công thức và nấu một món thật ngon miệng nhé!</Text>
+            <View style={{ backgroundColor: '#00C48C', borderRadius: 48, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}>
               <Image
                 source={require('../../assert/image/check.png')}
-                style={styles.successIcon}
+                style={{ width: 44, height: 44 }}
               />
             </View>
-            <Text style={styles.successTitle}>Thành công</Text>
-            <Text style={styles.successDesc}>
-              Hãy xem công thức và nấu một món thật ngon miệng nhé!
-            </Text>
             <ButtonNavigation
               title="Xem công thức"
               backgroundColor="#FF6600"
-              onPress={() => setShowSuccess(false)}
-              style={{ marginTop: 12 }}
+              onPress={() => {
+                setShowSuccess(false);
+                navigation.navigate(nav.detail, { recipeId: item?._id });
+              }}
+              style={{ marginTop: 0, borderRadius: 12, width: '100%' }}
+              textStyle={{ fontWeight: 'bold', fontSize: 16 }}
             />
             <ButtonNavigation
               title="Trang chủ"
@@ -267,8 +269,8 @@ const BuyScreen = () => {
                 setShowSuccess(false);
                 navigation.navigate(nav.home);
               }}
-              style={{ marginTop: 8 }}
-              textStyle={{ color: '#222' }}
+              style={{ marginTop: 10, borderRadius: 12, width: '100%' }}
+              textStyle={{ color: '#222', fontWeight: 'bold', fontSize: 16 }}
             />
           </View>
         </View>
@@ -494,7 +496,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 10,
     paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 8, // giảm padding ngang
     marginBottom: 12,
     backgroundColor: '#fff',
   },
@@ -529,9 +531,11 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodLabel: {
-    fontSize: 15,
+    fontSize: 14, // giảm font size
     color: '#222',
     fontWeight: '500',
+    flexShrink: 1, // cho text co lại nếu dài
+    flexWrap: 'wrap',
   },
   // Success modal styles
   successOverlay: {

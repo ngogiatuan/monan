@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Dimensions, Modal } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { nav } from '../../navigation/navigationName';
@@ -15,6 +15,8 @@ const DetailScreen = () => {
   const [recipe, setRecipe] = useState<any>(null);
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
 
   // Đảm bảo mỗi lần vào lại màn này đều fetch lại đúng công thức theo id
   useFocusEffect(
@@ -44,9 +46,18 @@ const DetailScreen = () => {
     if (recipeObj?.imageUrls && Array.isArray(recipeObj.imageUrls) && recipeObj.imageUrls.length > 0) {
       return { uri: recipeObj.imageUrls[0] };
     }
-    // fallback demo nếu không có ảnh
-    return require('../../assert/image/product.png');
+    // fallback nếu không có ảnh
+    return undefined;
   };
+
+  // Hàm lấy danh sách ảnh món ăn
+  const getRecipeImages = (recipeObj: any) => {
+    if (recipeObj?.imageUrls && Array.isArray(recipeObj.imageUrls) && recipeObj.imageUrls.length > 0) {
+      return recipeObj.imageUrls;
+    }
+    return [];
+  };
+  const images = getRecipeImages(recipe);
 
   if (loading) {
     return (
@@ -90,11 +101,19 @@ const DetailScreen = () => {
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Ảnh món ăn với overlay nút back, whitemark, share */}
       <View style={{ position: 'relative' }}>
-        <Image
-          source={getRecipeImage(recipe)}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setShowImageModal(true)}>
+          <Image
+            source={getRecipeImage(recipe)}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          {/* Số lượng ảnh 1/x ở góc phải dưới */}
+          {images.length > 0 && (
+            <View style={{ position: 'absolute', right: 0, bottom: 8, backgroundColor: 'rgba(0,0,0,0.38)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4, minWidth: 44, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 15, fontWeight: 'bold' }}>{currentImageIdx + 1}/{images.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
         {/* Overlay nút trên ảnh */}
         <View style={styles.imageOverlayRow}>
           <TouchableOpacity onPress={() => navigation.navigate(nav.home)} style={styles.overlayBtn}>
@@ -180,7 +199,6 @@ const DetailScreen = () => {
             </View>
             <Text style={styles.reviewHighlight}>Xuất sắc</Text>
             <Text style={styles.reviewDot}>•</Text>
-            <Text style={styles.reviewCount}>23 Reviews</Text>
           </View>
 
           <ScrollView  showsHorizontalScrollIndicator={false}>
@@ -249,7 +267,6 @@ const DetailScreen = () => {
                   <View style={styles.relatedRatingBox}>
                     <Image source={require('../../assert/image/bluestar.png')} style={styles.relatedStarIcon} />
                     <Text style={styles.relatedRatingText}>4.8</Text>
-                    <Text style={styles.relatedReviewText}>23 Reviews</Text>
                   </View>
                   <View style={styles.relatedFreeTag}>
                     <Text style={styles.relatedFreeTagText}>Miễn phí</Text>
@@ -279,6 +296,38 @@ const DetailScreen = () => {
           textStyle={styles.cookBtnText}
         />
       </View>
+
+      {/* Modal xem ảnh full screen, vuốt qua lại */}
+      <Modal visible={showImageModal} transparent animationType="fade" onRequestClose={() => setShowImageModal(false)}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 36, paddingHorizontal: 16 }}>
+            <TouchableOpacity onPress={() => setShowImageModal(false)}>
+              <Text style={{ color: '#fff', fontSize: 28 }}>×</Text>
+            </TouchableOpacity>
+            <Text style={{ color: '#fff', fontSize: 16 }}>{currentImageIdx + 1}/{images.length}</Text>
+            <View style={{ width: 28 }} />
+          </View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            {images.length > 0 && (
+              <Image
+                source={{ uri: images[currentImageIdx] }}
+                style={{ width: '100%', height: 300, resizeMode: 'contain' }}
+              />
+            )}
+          </View>
+          {/* Nút chuyển ảnh nếu có nhiều ảnh */}
+          {images.length > 1 && (
+            <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8 }}>
+              <TouchableOpacity disabled={currentImageIdx === 0} onPress={() => setCurrentImageIdx(idx => Math.max(0, idx - 1))} style={{ padding: 16, opacity: currentImageIdx === 0 ? 0.3 : 1 }}>
+                <Text style={{ color: '#fff', fontSize: 32 }}>{'<'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity disabled={currentImageIdx === images.length - 1} onPress={() => setCurrentImageIdx(idx => Math.min(images.length - 1, idx + 1))} style={{ padding: 16, opacity: currentImageIdx === images.length - 1 ? 0.3 : 1 }}>
+                <Text style={{ color: '#fff', fontSize: 32 }}>{'>'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -761,4 +810,3 @@ const styles = StyleSheet.create({
 });
 
 export default DetailScreen;
-   

@@ -77,9 +77,7 @@ const HomeScreen = () => {
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
-    reviews: 23,
     free: true,
-    price: item.price,
   }));
 
   // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
@@ -89,9 +87,7 @@ const HomeScreen = () => {
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
-    reviews: 23,
     free: true,
-    price: item.price,
   }));
 
   // Dữ liệu ưu đãi demo
@@ -116,18 +112,10 @@ const HomeScreen = () => {
     Alert.alert('Khách hàng cần đăng nhập để xem chi tiết.');
   };
 
-  // Static categories cho "Các loại công thức"
-  const staticCategories = [
-    { key: 'breakfast', name: 'Bữa sáng', icon: require('../../assert/image/Breakfast.png') },
-    { key: 'lunch', name: 'Bữa trưa', icon: require('../../assert/image/Lunch.png') },
-    { key: 'dinner', name: 'Bữa tối', icon: require('../../assert/image/Dinner.png') },
-    { key: 'dessert', name: 'Tráng miệng', icon: require('../../assert/image/Dessert.png') },
-  ];
-
   // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
   const homeScreenSections = [
-    { type: 'header_search' },
-    { type: 'categories', title: 'Các loại công thức', data: staticCategories },
+    // Bỏ header_search khỏi FlatList, sẽ render riêng phía trên
+    { type: 'categories', title: 'Các loại công thức', data: categories },
     { type: 'trending_recipes', title: 'Món ăn thịnh hành', data: trendingData },
     { type: 'today_recipes', title: 'Hôm nay nấu món gì?', data: todayData },
     { type: 'offers', title: 'Ưu đãi mới', data: offerData },
@@ -195,7 +183,7 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
-              {(categories.length > 0 ? categories : staticCategories).map(catItem => (
+              {(categories.length > 0 ? categories : []).map(catItem => (
                 <TouchableOpacity
                   key={catItem?._id || catItem.key}
                   style={styles.categoryItem}
@@ -208,13 +196,13 @@ const HomeScreen = () => {
                     }
                   }}
                 >
-                  {catItem.imageUrl || catItem.icon ? (
+                  {catItem.imageUrl ? (
                     <Image
-                      source={catItem.imageUrl ? { uri: catItem.imageUrl } : catItem.icon}
+                      source={{ uri: catItem.imageUrl }}
                       style={styles.categoryIcon}
                     />
                   ) : (
-                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}> 
                       <Text style={{ color: '#bbb', fontSize: 12 }}>?</Text>
                     </View>
                   )}
@@ -242,7 +230,7 @@ const HomeScreen = () => {
                     {recipeItem.image ? (
                       <Image source={recipeItem.image} style={styles.productImg} />
                     ) : (
-                      <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                      <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}> 
                         <Text style={{ color: '#bbb', fontSize: 12 }}>Không có ảnh</Text>
                       </View>
                     )}
@@ -269,16 +257,9 @@ const HomeScreen = () => {
                   <View style={styles.productInfoRow}>
                     <View style={styles.ratingBox}>
                       <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
-                      {item.type === 'trending_recipes' && <Text style={styles.reviewText}>· {recipeItem.reviews} Reviews</Text>}
                     </View>
                     <Text style={styles.freeTag}>Miễn phí</Text>
                   </View>
-                  {/* Hiển thị giá nếu có */}
-                  {recipeItem.price ? (
-                    <Text style={{ color: '#FF6600', fontWeight: 'bold', fontSize: 13, marginTop: 2 }}>
-                      Giá: {recipeItem.price}đ
-                    </Text>
-                  ) : null}
                 </View>
               ))}
             </ScrollView>
@@ -325,6 +306,54 @@ const HomeScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* Header cố định */}
+      <>
+        <ImageBackground
+          source={require('../../assert/image/Header.png')}
+          style={styles.banner}
+          resizeMode="cover"
+          imageStyle={styles.bannerImg}
+        >
+          <View style={styles.headerProfileRow}>
+            <Image
+              source={user?.avatar || require('../../assert/image/avatar.png')}
+              style={styles.headerAvatar}
+            />
+            <View style={{ marginLeft: 12 }}>
+              <Text style={styles.headerGreeting}>
+                {getGreeting()}, hôm nay bạn muốn nấu gì?
+              </Text>
+              <Text style={styles.headerName}>{user?.name || 'Guest'}</Text>
+            </View>
+          </View>
+        </ImageBackground>
+        <View style={styles.searchRow}>
+          <View style={styles.searchBox}>
+            <Image
+              source={require('../../assert/image/blacksearch.png')}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Tìm món ăn/thể loại..."
+              placeholderTextColor="#888"
+            />
+          </View>
+          <View style={styles.pointBox}>
+            <View style={styles.pointIconWrap}>
+              <Image
+                source={require('../../assert/image/point.png')}
+                style={styles.pointIcon}
+              />
+            </View>
+            <View style={styles.pointInfo}>
+              <Text style={styles.pointLabel}>Điểm xếp hạng</Text>
+              <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
+            </View>
+          </View>
+        </View>
+      </>
+      {/* Các section cuộn được */}
       <FlatList
         data={homeScreenSections}
         keyExtractor={(item, index) => item.type + index}
@@ -411,7 +440,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 12, // giảm font size để placeholder gọn hơn
     color: '#222',
   },
   pointBox: {
@@ -583,11 +612,6 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     fontWeight: 'bold',
     fontSize: 13,
-  },
-  reviewText: {
-    color: '#888',
-    fontSize: 12,
-    marginLeft: 4,
   },
   freeTag: {
     color: '#00C48C',

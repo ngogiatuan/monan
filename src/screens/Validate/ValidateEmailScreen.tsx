@@ -112,14 +112,18 @@ const styles = StyleSheet.create({
     gap: 6, // nhỏ hơn nữa cho vừa 6 ô
   },
   codeInput: {
-    width: 35, // nhỏ gọn hơn
-    height: 38, // nhỏ gọn hơn
+    width: 38, // tăng chiều rộng
+    height: 44, // tăng chiều cao
     borderWidth: 1,
     borderColor: '#eee',
     borderRadius: 8,
-    fontSize: 16,
+    fontSize: 20, // tăng font size cho rõ
     backgroundColor: '#fafafa',
     marginHorizontal: 2,
+    textAlignVertical: 'center', // căn giữa dọc số
+    paddingVertical: 0, // loại bỏ padding thừa
+    paddingTop: 0,
+    paddingBottom: 0,
   },
 });
 

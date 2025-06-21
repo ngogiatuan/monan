@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
@@ -95,7 +95,8 @@ const EditProfileScreen = () => {
       ...user,
       name,
       email,
-      avatar: avatar || user?.avatar, // luôn giữ avatar cũ nếu không đổi
+      avatar: avatarUrl || avatar || user?.avatar, // luôn ưu tiên avatarUrl mới nhất
+      cover: cover || user?.cover, // luôn ưu tiên cover mới nhất
       joined: user?.joined,
       point: user?.point,
     });
@@ -105,10 +106,12 @@ const EditProfileScreen = () => {
   // Kiểm tra có thay đổi gì không để disable nút lưu nếu không đổi gì
   const isChanged =
     name !== user?.name ||
-    email !== user?.email;
+    email !== user?.email ||
+    (avatarUrl && avatarUrl !== user?.avatar) ||
+    (cover && cover !== user?.cover);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -125,20 +128,42 @@ const EditProfileScreen = () => {
         />
         {/* Camera icon ở chính giữa cover */}
         <TouchableOpacity
-          style={styles.cameraBtnCenter}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: [{ translateX: -12 }, { translateY: -12 }], // icon 24x24
+            zIndex: 2,
+            padding: 0,
+            backgroundColor: 'transparent',
+            borderRadius: 0,
+            elevation: 0,
+          }}
           onPress={() => setShowCoverPickerModal(true)}
         >
           <Image
             source={require('../../assert/image/camera.png')}
-            style={styles.cameraIcon}
+            style={{ width: 24, height: 24, tintColor: undefined }}
           />
         </TouchableOpacity>
       </View>
-    
-      {/* Avatar + Thay ảnh: Đặt dưới cover, không dính vào cover */}
-      <View style={styles.avatarRow}>
-        
-     
+      {/* Avatar + Thay ảnh */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F6F6F6', paddingVertical: 20, paddingHorizontal: 20 }}>
+        <Image
+          source={avatarUrl ? { uri: avatarUrl } : require('../../assert/image/avatar.png')}
+          style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#eee', marginRight: 16 }}
+        />
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#E5E5E5',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 24,
+          }}
+          onPress={() => setShowAvatarPickerModal(true)}
+        >
+          <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Thay ảnh</Text>
+        </TouchableOpacity>
       </View>
       {/* Modal chọn ảnh/camera */}
       <Modal
@@ -184,19 +209,6 @@ const EditProfileScreen = () => {
           </View>
         </View>
       </Modal>
-      {/* Avatar hiển thị */}
-      <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image
-          source={avatarUrl ? { uri: avatarUrl } : require('../../assert/image/avatar.png')}
-          style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#eee' }}
-        />
-        <TouchableOpacity
-          style={styles.changeAvatarBtn}
-          onPress={() => setShowAvatarPickerModal(true)}
-        >
-          <Text style={styles.changeAvatarText}>Thay ảnh</Text>
-        </TouchableOpacity>
-      </View>
       {/* Modal chọn ảnh/camera cho avatar */}
       <Modal
         visible={showAvatarPickerModal}
@@ -228,11 +240,10 @@ const EditProfileScreen = () => {
           </View>
         </View>
       </Modal>
-      {/* Form */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}
+      {/* Form nhập liệu trong ScrollView */}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.form}>
           <Text style={styles.label}>Tên</Text>
@@ -260,9 +271,9 @@ const EditProfileScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
-      {/* Nút lưu hồ sơ luôn ở dưới cùng */}
-      <View style={styles.saveBtnWrapper}>
+      </ScrollView>
+      {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
+      <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.saveBtn}
           onPress={handleSave}

@@ -18,45 +18,6 @@ import { getRecipes } from '../../api/recipeApi';
 
 const { width } = Dimensions.get('window');
 
-const DATA = [
-  {
-    id: '1',
-    image: require('../../assert/image/fish.png'),
-    title: 'Canh chua cá lóc theo chuẩn gu miền Tây',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-    price: '300.000đ',
-  },
-  {
-    id: '2',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-    price: '150.000đ',
-  },
-  {
-    id: '3',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-    price: '150.000đ',
-  },
-  {
-    id: '4',
-    image: require('../../assert/image/product.png'),
-    title: 'Rainbow Veggie Bowl Delight Joiche/ Hander...',
-    time: '120\'',
-    rating: 4.8,
-    reviews: 23,
-    price: '150.000đ',
-  },
-];
-
 const MEAL_OPTIONS = [
   'Tất cả',
   'Bữa sáng sáng năng lượng',
@@ -129,8 +90,7 @@ const DiscoveryScreen = () => {
           <View style={styles.cardRow}>
             <View style={styles.ratingBox}>
               <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconBlue} />
-              <Text style={styles.ratingTextBlue}>{item.rating}</Text>
-              <Text style={styles.reviewText}>· {item.reviews} Reviews</Text>
+              <Text style={styles.ratingTextBlue}>4.8</Text>
             </View>
           </View>
           <Text style={styles.priceText}>{item.price}</Text>
