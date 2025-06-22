@@ -19,6 +19,7 @@ import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import { getRecipes } from '../../api/recipeApi';
 import { getAllCategories } from '../../api/categoryApi';
+import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,13 @@ const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // State lưu các id món đã được "lưu" (chỉ trên UI, cho user)
+  const [localFavoriteIds, setLocalFavoriteIds] = useState<string[]>([]);
+
+  // State lưu các id món đã được lưu (favorite) từ API cho user
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   // Effect để fetch danh sách món ăn (recipes)
   useEffect(() => {
@@ -49,6 +57,26 @@ const HomeScreen = () => {
       }
     })();
   }, []);
+
+  // Lấy danh sách favorites từ API khi user thay đổi
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (user) {
+        try {
+          const favs = await getFavorites(user._id);
+          setFavorites(favs);
+          setFavoriteIds(favs.map((f: any) => f.recipeId));
+        } catch {
+          setFavorites([]);
+          setFavoriteIds([]);
+        }
+      } else {
+        setFavorites([]);
+        setFavoriteIds([]);
+      }
+    };
+    fetchFavorites();
+  }, [user]);
 
   console.log('categories', categories);
 
@@ -224,44 +252,70 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8, marginBottom: item.type === 'daily_inspiration' ? 20 : 0 }}>
-              {item.data.map((recipeItem, idx) => (
-                <View style={styles.productCard} key={recipeItem.id}>
-                  <View style={styles.productImgWrap}>
-                    {recipeItem.image ? (
-                      <Image source={recipeItem.image} style={styles.productImg} />
-                    ) : (
-                      <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}> 
-                        <Text style={{ color: '#bbb', fontSize: 12 }}>Không có ảnh</Text>
+              {item.data.map((recipeItem, idx) => {
+                const isFav = favoriteIds.includes(recipeItem.id);
+                const favoriteId = findFavoriteId(favorites, recipeItem.id);
+                return (
+                  <View style={styles.productCard} key={recipeItem.id}>
+                    <View style={styles.productImgWrap}>
+                      {recipeItem.image ? (
+                        <Image source={recipeItem.image} style={styles.productImg} />
+                      ) : (
+                        <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                          <Text style={{ color: '#bbb', fontSize: 12 }}>Không có ảnh</Text>
+                        </View>
+                      )}
+                      <TouchableOpacity
+                        style={styles.productMarkCircle}
+                        onPress={async () => {
+                          if (!user) return;
+                          try {
+                            if (!isFav) {
+                              await addFavorite(user._id, recipeItem.id);
+                            } else if (favoriteId) {
+                              await removeFavorite(favoriteId);
+                            }
+                            // Sau khi thao tác, reload lại danh sách yêu thích
+                            const favs = await getFavorites(user._id);
+                            setFavorites(favs);
+                            setFavoriteIds(favs.map((f: any) => f.recipeId));
+                          } catch (e) {
+                            Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={
+                            isFav
+                              ? require('../../assert/image/yellowmark.png')
+                              : require('../../assert/image/mark.png')
+                          }
+                          style={styles.productMark}
+                        />
+                      </TouchableOpacity>
+                      <View style={styles.productTimeOverlay}>
+                        <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
+                        <Text style={styles.timeText}>{recipeItem.time}</Text>
                       </View>
-                    )}
-                    <View style={styles.productMarkCircle}>
-                      <Image
-                        source={require('../../assert/image/mark.png')}
-                        style={styles.productMark}
-                      />
                     </View>
-                    <View style={styles.productTimeOverlay}>
-                      <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-                      <Text style={styles.timeText}>{recipeItem.time}</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        navigation.navigate(nav.detail, { recipeId: recipeItem.id });
+                      }}
+                    >
+                      <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>
+                    </TouchableOpacity>
+                    <View style={styles.productInfoRow}>
+                      <View style={styles.ratingBox}>
+                        <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
+                      </View>
+                      <Text style={styles.freeTag}>Miễn phí</Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      // Cho phép cả guest và user đều xem chi tiết
-                      navigation.navigate(nav.detail, { recipeId: recipeItem.id });
-                    }}
-                  >
-                    <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>
-                  </TouchableOpacity>
-                  <View style={styles.productInfoRow}>
-                    <View style={styles.ratingBox}>
-                      <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
-                    </View>
-                    <Text style={styles.freeTag}>Miễn phí</Text>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </ScrollView>
           </>
         );

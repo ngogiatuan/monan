@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Dimensions, Modal } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, FlatList, TouchableOpacity, Dimensions, Modal, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
+import { UserContext } from '../../context/UserContext';
+import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -17,6 +19,9 @@ const DetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [showImageModal, setShowImageModal] = useState(false);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const { user } = useContext(UserContext);
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   // Đảm bảo mỗi lần vào lại màn này đều fetch lại đúng công thức theo id
   useFocusEffect(
@@ -40,6 +45,26 @@ const DetailScreen = () => {
       return () => { isMounted = false; };
     }, [recipeId])
   );
+
+  // Lấy danh sách favorites từ API khi user hoặc recipeId thay đổi
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (user) {
+        try {
+          const favs = await getFavorites(user._id);
+          setFavorites(favs);
+          setFavoriteIds(favs.map((f: any) => f.recipeId));
+        } catch {
+          setFavorites([]);
+          setFavoriteIds([]);
+        }
+      } else {
+        setFavorites([]);
+        setFavoriteIds([]);
+      }
+    };
+    fetchFavorites();
+  }, [user, recipeId]);
 
   // Hàm lấy ảnh món ăn từ API (ưu tiên imageUrls[0])
   const getRecipeImage = (recipeObj: any) => {
@@ -120,8 +145,35 @@ const DetailScreen = () => {
             <Image source={require('../../assert/image/back.png')} style={styles.overlayIcon} />
           </TouchableOpacity>
           <View style={styles.overlayRight}>
-            <TouchableOpacity style={styles.overlayBtn}>
-              <Image source={require('../../assert/image/whitemark.png')} style={styles.overlayIcon} />
+            <TouchableOpacity
+              style={styles.overlayBtn}
+              onPress={async () => {
+                if (!user) return;
+                const isFav = favoriteIds.includes(recipeId);
+                const favoriteId = findFavoriteId(favorites, recipeId);
+                try {
+                  if (!isFav) {
+                    await addFavorite(user._id, recipeId);
+                  } else if (favoriteId) {
+                    await removeFavorite(favoriteId);
+                  }
+                  // Reload lại trạng thái favorite
+                  const favs = await getFavorites(user._id);
+                  setFavorites(favs);
+                  setFavoriteIds(favs.map((f: any) => f.recipeId));
+                } catch (e) {
+                  Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
+                }
+              }}
+            >
+              <Image
+                source={
+                  favoriteIds.includes(recipeId)
+                    ? require('../../assert/image/yellowmark.png')
+                    : require('../../assert/image/mark.png')
+                }
+                style={styles.overlayIcon}
+              />
             </TouchableOpacity>
             <TouchableOpacity style={styles.overlayBtn}>
               <Image source={require('../../assert/image/share.png')} style={styles.overlayIcon} />
