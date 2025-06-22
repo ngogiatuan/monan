@@ -17,6 +17,8 @@ export const getUserByEmailAndPassword = async (email: string, password: string)
         avatar: require('../assert/image/avatar.png'),
         joined,
         point: 0,
+        token: res.data.token, // Lưu token vào user object
+        _id: res.data._id,     // Nếu API trả về _id thì lấy luôn
       };
     }
     return null;
@@ -45,7 +47,8 @@ export const registerUser = async (fullname: string, email: string, password: st
         avatar: require('../assert/image/avatar.png'),
         joined,
         point: 0,
-        token: res.data.token, // Lưu token nếu cần
+        token: res.data.token,
+        _id: res.data._id, // Nếu API trả về _id thì lấy luôn
       };
     }
     return null;

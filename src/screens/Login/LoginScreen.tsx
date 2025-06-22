@@ -28,6 +28,7 @@ const LoginScreen = () => {
     setEmailError('');
     const userData = await getUserByEmailAndPassword(email, password);
     if (userData) {
+      console.log('User data:', userData);
       setUser(userData);
       navigation.navigate(nav.home as never);
     } else {

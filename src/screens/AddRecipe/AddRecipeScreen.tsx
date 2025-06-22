@@ -20,7 +20,8 @@ const AddRecipeScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
-          <Image source={require('../../assert/image/back.png')} style={styles.headerBackIcon} />
+          {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tổng quan</Text>
       </View>

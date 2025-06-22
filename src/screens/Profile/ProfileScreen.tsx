@@ -18,11 +18,15 @@ const ProfileScreen = () => {
   const [showLogout, setShowLogout] = useState(false);
   const { user } = React.useContext(UserContext);
 
+  // --- Header cố định, tổng quát scroll theo ---
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+      {/* Header cố định */}
+      <View style={styles.fixedHeaderWrap}>
         <ProfileInfo />
-        {/* Tổng quát: chỉ hiện khi đã đăng nhập */}
+      </View>
+      {/* ScrollView cho phần còn lại, gồm tổng quát và các section khác */}
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
         {user && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tổng quát</Text>
@@ -217,6 +221,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   generalIcon: { width: 20, height: 20, tintColor: '#00AEEF' },
+  fixedHeaderWrap: {
+    backgroundColor: '#fff',
+    // Đảm bảo header và tổng quát không bị kéo theo khi scroll
+    // Có thể thêm shadow nếu muốn nổi bật
+    zIndex: 2,
+    elevation: 2,
+  },
 });
 
 export default ProfileScreen;

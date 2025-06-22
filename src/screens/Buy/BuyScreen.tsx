@@ -63,7 +63,8 @@ const BuyScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Image source={require('../../assert/image/back.png')} style={styles.backIcon} />
+          {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mua công thức</Text>
       </View>

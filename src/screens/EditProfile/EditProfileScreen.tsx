@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, ScrollView, Keyboard } from 'react-native';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
@@ -8,34 +8,63 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 const EditProfileScreen = () => {
   const { user, setUser } = useContext(UserContext);
   const navigation = useNavigation<any>();
+
+  // --- SỬA: Khởi tạo avatarUrl và cover từ user.avatar và user.cover (nếu có) ---
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [cover, setCover] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    typeof user?.avatar === 'string' ? user.avatar : null
+  );
+  const [cover, setCover] = useState<string | null>(
+    typeof user?.cover === 'string' ? user.cover : null
+  );
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showCoverPickerModal, setShowCoverPickerModal] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  const pickImageFromLibrary = () => {
-    setShowPickerModal(false);
+  // --- SỬA: Khi user thay đổi (ví dụ sau khi lưu), đồng bộ lại state ---
+  useEffect(() => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+    setAvatarUrl(typeof user?.avatar === 'string' ? user.avatar : null);
+    setCover(typeof user?.cover === 'string' ? user.cover : null);
+  }, [user]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  // --- SỬA: Khi chọn/chụp ảnh mới, chỉ setAvatarUrl (không dùng avatar state phụ) ---
+  const pickAvatarFromLibrary = () => {
+    setShowAvatarPickerModal(false);
     launchImageLibrary(
       { mediaType: 'photo', quality: 0.7 },
       (response) => {
         if (response.assets && response.assets.length > 0) {
-          setAvatar(response.assets[0].uri || null);
+          setAvatarUrl(response.assets[0].uri || null);
         }
       }
     );
   };
 
-  const pickImageFromCamera = () => {
-    setShowPickerModal(false);
+  const pickAvatarFromCamera = () => {
+    setShowAvatarPickerModal(false);
     launchCamera(
       { mediaType: 'photo', quality: 0.7, saveToPhotos: true },
       (response) => {
         if (response.assets && response.assets.length > 0) {
-          setAvatar(response.assets[0].uri || null);
+          setAvatarUrl(response.assets[0].uri || null);
         }
       }
     );
@@ -65,65 +94,48 @@ const EditProfileScreen = () => {
     );
   };
 
-  const pickAvatarFromLibrary = () => {
-    setShowAvatarPickerModal(false);
-    launchImageLibrary(
-      { mediaType: 'photo', quality: 0.7 },
-      (response) => {
-        if (response.assets && response.assets.length > 0) {
-          setAvatarUrl(response.assets[0].uri || null);
-        }
-      }
-    );
-  };
-
-  const pickAvatarFromCamera = () => {
-    setShowAvatarPickerModal(false);
-    launchCamera(
-      { mediaType: 'photo', quality: 0.7, saveToPhotos: true },
-      (response) => {
-        if (response.assets && response.assets.length > 0) {
-          setAvatarUrl(response.assets[0].uri || null);
-        }
-      }
-    );
-  };
-
-  // Khi bấm lưu hồ sơ, cập nhật user context nếu có thay đổi
+  // --- SỬA: Khi bấm lưu, lưu đúng avatarUrl và cover vào context ---
   const handleSave = () => {
     setUser({
       ...user,
       name,
       email,
-      avatar: avatarUrl || avatar || user?.avatar, // luôn ưu tiên avatarUrl mới nhất
-      cover: cover || user?.cover, // luôn ưu tiên cover mới nhất
+      avatar: avatarUrl || require('../../assert/image/avatar.png'),
+      cover: cover || require('../../assert/image/cover.png'), // Nếu không có thì dùng cover mặc định
       joined: user?.joined,
       point: user?.point,
     });
     navigation.goBack();
   };
 
-  // Kiểm tra có thay đổi gì không để disable nút lưu nếu không đổi gì
+  // --- SỬA: Kiểm tra thay đổi đúng ---
   const isChanged =
     name !== user?.name ||
     email !== user?.email ||
-    (avatarUrl && avatarUrl !== user?.avatar) ||
-    (cover && cover !== user?.cover);
+    (avatarUrl && avatarUrl !== (typeof user?.avatar === 'string' ? user.avatar : null)) ||
+    (cover && cover !== (typeof user?.cover === 'string' ? user.cover : null));
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Image source={require('../../assert/image/back.png')} style={styles.backIcon} />
+          {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sửa hồ sơ</Text>
         <View style={{ width: 40 }} />
       </View>
       {/* Cover image */}
+      <ScrollView>
       <View style={styles.bannerWrap}>
         <Image
-          source={cover ? { uri: cover } : require('../../assert/image/cover.png')}
+          source={
+            cover
+              ? { uri: cover }
+              : require('../../assert/image/cover.png')
+          }
           style={styles.bannerImg}
         />
         {/* Camera icon ở chính giữa cover */}
@@ -150,7 +162,11 @@ const EditProfileScreen = () => {
       {/* Avatar + Thay ảnh */}
       <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F6F6F6', paddingVertical: 20, paddingHorizontal: 20 }}>
         <Image
-          source={avatarUrl ? { uri: avatarUrl } : require('../../assert/image/avatar.png')}
+          source={
+            avatarUrl
+              ? { uri: avatarUrl }
+              : require('../../assert/image/avatar.png')
+          }
           style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#eee', marginRight: 16 }}
         />
         <TouchableOpacity
@@ -175,10 +191,11 @@ const EditProfileScreen = () => {
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
             <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn hình đại diện</Text>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickImageFromLibrary}>
+            {/* Sửa lại gọi đúng hàm pickAvatarFromLibrary và pickAvatarFromCamera */}
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromLibrary}>
               <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chọn từ thư viện</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickImageFromCamera}>
+            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromCamera}>
               <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chụp ảnh</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowPickerModal(false)}>
@@ -241,10 +258,7 @@ const EditProfileScreen = () => {
         </View>
       </Modal>
       {/* Form nhập liệu trong ScrollView */}
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
-        keyboardShouldPersistTaps="handled"
-      >
+    
         <View style={styles.form}>
           <Text style={styles.label}>Tên</Text>
           <View style={styles.inputWrap}>
@@ -271,9 +285,11 @@ const EditProfileScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+     
+    
       </ScrollView>
-      {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
-      <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
+        {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
+     {!isKeyboardVisible && <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.saveBtn}
           onPress={handleSave}
@@ -281,7 +297,7 @@ const EditProfileScreen = () => {
         >
           <Text style={styles.saveBtnText}>Lưu hồ sơ</Text>
         </TouchableOpacity>
-      </View>
+      </View>}
     </View>
   );
 };
@@ -476,4 +492,7 @@ const styles = StyleSheet.create({
 });
 
 export default EditProfileScreen;
+
+
+
 

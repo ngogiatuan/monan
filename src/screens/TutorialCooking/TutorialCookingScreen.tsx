@@ -48,7 +48,8 @@ const StepCookingViewer = ({
             }
           }}
         >
-          <Image source={require('../../assert/image/back.png')} style={styles.backIcon} />
+          {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{`${stepIdx + 1}/${steps.length}`}</Text>
       </View>

@@ -35,7 +35,7 @@ const RankingScreen = () => {
     {
       id: 'user',
       name: user?.name || '',
-      avatar: user?.avatar || require('../../assert/image/avatar.png'),
+      avatar: typeof user?.avatar ==="string" ? {uri: user.avatar} : require('../../assert/image/avatar.png'),
       point: 0,
       quests: 0,
       rank: 1,
@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ff6f2c',
     paddingRight: 0,
+    height: 56, // Đảm bảo chiều cao bằng header
   },
   searchBar: {
     flex: 1,
@@ -197,9 +198,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 8,
-    marginVertical: 8,
+    marginVertical: 0, // bỏ margin dọc
     paddingHorizontal: 8,
     marginRight: 0,
+    height: 40, // Giảm chiều cao input cho vừa header
   },
   searchInputIcon: {
     width: 20,
@@ -212,8 +214,9 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     backgroundColor: 'transparent',
     fontSize: 16,
-    paddingVertical: 8,
+    paddingVertical: 0, // giảm padding dọc
     color: '#222',
+    height: 40, // Giảm chiều cao input cho vừa header
   },
   cancelIcon: {
     width: 18,

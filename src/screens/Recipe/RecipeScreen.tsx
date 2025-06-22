@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
+import { getFavorites } from '../../api/favoriteApi';
+import { UserContext } from '../../context/UserContext';
 
 // Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
 
@@ -229,6 +231,30 @@ const styles = StyleSheet.create({
 const RecipeScreen = () => {
   const [tab, setTab] = useState<'my' | 'saved'>('saved');
   const navigation = useNavigation<any>();
+  const [favorites, setFavorites] = useState<any[]>([]); // Danh sách công thức đã lưu
+  const { user } = useContext(UserContext);
+
+  React.useEffect(() => {
+    // Giả lập lấy danh sách công thức đã lưu từ API
+    const fetchFavorites = async () => {
+      try {
+        if (user?.token) {
+        const favs = await getFavorites(user.token);
+        console.log('favs', favs);
+        setFavorites(favs);
+        }else {
+          setFavorites([]); 
+        }
+        
+      } catch (error) {
+        console.error('Error fetching favorites:', error);  
+        setFavorites([]); 
+      }
+      
+    
+    };
+    fetchFavorites();
+  }, [user]);
 
   // Render từng item công thức của tôi
   const renderMyRecipe = ({ item }: { item: typeof MY_RECIPES[0] }) => (

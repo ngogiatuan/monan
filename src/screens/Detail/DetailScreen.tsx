@@ -49,9 +49,9 @@ const DetailScreen = () => {
   // Lấy danh sách favorites từ API khi user hoặc recipeId thay đổi
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (user) {
+      if (user?.token) {
         try {
-          const favs = await getFavorites(user._id);
+          const favs = await getFavorites(user.token);
           setFavorites(favs);
           setFavoriteIds(favs.map((f: any) => f.recipeId));
         } catch {
@@ -142,7 +142,8 @@ const DetailScreen = () => {
         {/* Overlay nút trên ảnh */}
         <View style={styles.imageOverlayRow}>
           <TouchableOpacity onPress={() => navigation.navigate(nav.home)} style={styles.overlayBtn}>
-            <Image source={require('../../assert/image/back.png')} style={styles.overlayIcon} />
+            {/* Đổi icon thành ký tự '<' thay vì back.png */}
+            <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
           </TouchableOpacity>
           <View style={styles.overlayRight}>
             <TouchableOpacity

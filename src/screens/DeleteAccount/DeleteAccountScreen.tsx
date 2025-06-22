@@ -9,17 +9,21 @@ const DeleteAccountScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
   const { user, setUser } = useContext(UserContext);
 
-  // So sánh chính xác, loại bỏ khoảng trắng thừa, không phân biệt kiểu unicode tổ hợp, không phân biệt kiểu gõ dấu
+  // So sánh chính xác, loại bỏ khoảng trắng thừa, không phân biệt kiểu unicode tổ hợp, không phân biệt kiểu gõ dấu, không phân biệt hoa thường
   const normalize = (str: string) =>
     str
       .normalize('NFC')
       .replace(/\s+/g, ' ')
       .trim();
 
-  // Đúng "Xóa tài khoản" (có dấu, đúng thứ tự, không dư/thừa ký tự, không phân biệt kiểu gõ)
-  const isValid =
-    normalize(input) === 'Xóa tài khoản' &&
-    normalize(input).length === 'Xóa tài khoản'.length;
+  // Chấp nhận các biến thể "xoa tai khoan", "xoá tài khoản", "XÓA TÀI KHOẢN", v.v.
+  const validPhrases = [
+    'Xóa tài khoản',
+    'Xoá tài khoản',
+    'Xoa tai khoan'
+  ];
+
+  const isValid = validPhrases.some(phrase => normalize(input) === phrase);
 
   // Thêm chức năng xóa tài khoản
   const handleDelete = async () => {
@@ -121,3 +125,4 @@ const styles = StyleSheet.create({
 });
 
 export default DeleteAccountScreen;
+

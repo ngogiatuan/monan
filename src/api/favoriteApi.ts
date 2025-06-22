@@ -3,11 +3,15 @@ import axios from 'axios';
 const API_URL = 'http://103.72.99.132:3000/api/favorites';
 
 // Lấy danh sách món ăn yêu thích của user
-export const getFavorites = async (userId: string) => {
+export const getFavorites = async (token: string) => {
   try {
     // GET /api/favorites/user/:userId
-    if (!userId) return [];
-    const res = await axios.get(`${API_URL}/user/${userId}`);
+    if (!token) return [];
+    const res = await axios.get(`${API_URL}`,{
+      headers: {
+        Authorization: `Bearer ${token}`, // Sử dụng token để xác thực
+      },
+    });
     // Một số API trả về {data: []}, một số trả về [] trực tiếp
     if (Array.isArray(res.data)) return res.data;
     if (res.data?.data && Array.isArray(res.data.data)) return res.data.data;

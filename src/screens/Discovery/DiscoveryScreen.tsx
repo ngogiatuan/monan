@@ -51,35 +51,33 @@ const DiscoveryScreen = () => {
   const [showTypeDialog, setShowTypeDialog] = useState(false);
   const [mealSearch, setMealSearch] = useState('');
   const [typeSearch, setTypeSearch] = useState('');
-  const [recipes, setRecipes] = useState([]);
+  const [recipes, setRecipes] = useState<any[]>([]);
 
- React.useEffect(() => {
+  React.useEffect(() => {
     (async () => {
-         try {
-           const data = await getRecipes(1, 10); // Lấy 10 món ăn đầu tiên
-           setRecipes(data);
-         } catch (error) {
-           console.error('Lỗi khi lấy danh sách món ăn:', error);
-         }
-       })();
+      try {
+        const data = await getRecipes(1, 20); // Lấy nhiều hơn để đủ hiển thị
+        setRecipes(data);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách món ăn:', error);
+      }
+    })();
   }, []);
-  const renderItem = ({ item }: { item: any}) => (
+
+  const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => {
-      //  if (item.id === '1') {
-          navigation.navigate(nav.buy as never, { item } as never);
-     //   }
+        navigation.navigate(nav.buy as never, { item } as never);
       }}
-    //  disabled={item.id !== '1'}
-    //  style={{ opacity: item.id === '1' ? 1 : 0.7 }}
     >
       <View style={styles.card}>
         <View style={styles.cardImgWrap}>
-          <Image source={{uri: item?.imageUrls[0]}} style={styles.cardImg} />
+          <Image source={{ uri: item?.imageUrls?.[0] }} style={styles.cardImg} />
           <View style={styles.cardTimeRight}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-            <Text style={styles.timeText}>{item.time}</Text>
+            {/* Lấy thời gian từ API (item.cookingTime) */}
+            <Text style={styles.timeText}>{item.cookingTime || ''}</Text>
           </View>
         </View>
         <View style={styles.cardContent}>
@@ -103,7 +101,8 @@ const DiscoveryScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Image source={require('../../assert/image/back.png')} style={styles.backIcon} />
+          {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Khám phá ẩm thực</Text>
         <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilter(true)}>
@@ -111,7 +110,11 @@ const DiscoveryScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.sectionRow}>
-        <Image source={require('../../assert/image/favorite.png')} style={styles.fireIcon} />
+        <Image
+          source={require('../../assert/image/favorite.png')}
+          style={styles.fireIcon}
+          resizeMode="contain" // Thêm dòng này để không bị cắt xén
+        />
         <View>
           <Text style={styles.sectionSubTitle}>Breakfast</Text>
           <Text style={styles.sectionTitle}>Món ăn thịnh hành</Text>
@@ -179,7 +182,8 @@ const DiscoveryScreen = () => {
           <View style={styles.dialogContainer}>
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowMealDialog(false)}>
-                <Image source={require('../../assert/image/back.png')} style={styles.dialogBackIcon} />
+                {/* Đổi icon thành ký tự '<' thay vì back.png */}
+                <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
               <Text style={styles.dialogTitle}>Theo bữa ăn</Text>
             </View>
@@ -236,7 +240,8 @@ const DiscoveryScreen = () => {
           <View style={styles.dialogContainer}>
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowTypeDialog(false)}>
-                <Image source={require('../../assert/image/back.png')} style={styles.dialogBackIcon} />
+                {/* Đổi icon thành ký tự '<' thay vì back.png */}
+                <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
               <Text style={styles.dialogTitle}>Theo thể loại</Text>
             </View>
@@ -330,10 +335,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   fireIcon: {
-    width: 20,
-    height: 18,
-    marginRight: 8,
+    width: 28, // tăng width
+    height: 28, // tăng height
+    marginRight: 10, // tăng margin cho cân đối
     marginTop: 2,
+    resizeMode: 'contain', // Đảm bảo không bị cắt xén
   },
   sectionSubTitle: {
     fontSize: 12,

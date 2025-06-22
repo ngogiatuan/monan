@@ -61,9 +61,10 @@ const HomeScreen = () => {
   // Lấy danh sách favorites từ API khi user thay đổi
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (user) {
+      if (user?.token) {
         try {
-          const favs = await getFavorites(user._id);
+          const favs = await getFavorites(user.token);
+          console.log('favs', favs);
           setFavorites(favs);
           setFavoriteIds(favs.map((f: any) => f.recipeId));
         } catch {
@@ -79,6 +80,7 @@ const HomeScreen = () => {
   }, [user]);
 
   console.log('categories', categories);
+  console.log('user',  user?.avatar);
 
   // Hàm tạo lời chào dựa trên thời gian trong ngày
   const getGreeting = () => {
@@ -163,7 +165,7 @@ const HomeScreen = () => {
             >
               <View style={styles.headerProfileRow}>
                 <Image
-                  source={user?.avatar || require('../../assert/image/avatar.png')}
+                  source={typeof user?.avatar ==="string" ? {uri: user?.avatar} :  require('../../assert/image/avatar.png')}
                   style={styles.headerAvatar}
                 />
                 <View style={{ marginLeft: 12 }}>
@@ -271,12 +273,16 @@ const HomeScreen = () => {
                           if (!user) return;
                           try {
                             if (!isFav) {
-                              await addFavorite(user._id, recipeItem.id);
+                              console.log('Adding favorite for recipe:', recipeItem.id,'==', user);
+                           const responseAddFav =   await addFavorite(user._id, recipeItem.id);
+                           console.log('responseAddFav', responseAddFav);
                             } else if (favoriteId) {
-                              await removeFavorite(favoriteId);
+                            const responseRemovèav =  await removeFavorite(favoriteId);
+                            console.log('responseRemoveFav', responseRemovèav);
                             }
                             // Sau khi thao tác, reload lại danh sách yêu thích
-                            const favs = await getFavorites(user._id);
+                            const favs = await getFavorites(user.token);
+                            console.log('favs', favs);
                             setFavorites(favs);
                             setFavoriteIds(favs.map((f: any) => f.recipeId));
                           } catch (e) {
@@ -363,14 +369,14 @@ const HomeScreen = () => {
       {/* Header cố định */}
       <>
         <ImageBackground
-          source={require('../../assert/image/Header.png')}
+          source={typeof user?.cover ==="string" ? {uri: user?.cover} : require('../../assert/image/Header.png')}
           style={styles.banner}
           resizeMode="cover"
           imageStyle={styles.bannerImg}
         >
           <View style={styles.headerProfileRow}>
             <Image
-              source={user?.avatar || require('../../assert/image/avatar.png')}
+               source={typeof user?.avatar ==="string" ? {uri: user?.avatar} :  require('../../assert/image/avatar.png')}
               style={styles.headerAvatar}
             />
             <View style={{ marginLeft: 12 }}>

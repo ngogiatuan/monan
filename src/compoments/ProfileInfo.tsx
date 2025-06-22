@@ -11,10 +11,10 @@ const ProfileInfo = () => {
   return (
     <View>
       <View style={styles.coverContainer}>
-        <Image source={require('../assert/image/cover.png')} style={styles.coverImg} />
+        <Image source={ typeof user?.cover ==="string" ? {uri: user.cover} : require('../assert/image/cover.png')} style={styles.coverImg} />
         <TouchableOpacity style={styles.avatarWrapper} activeOpacity={0.8}>
           <Image
-            source={user?.avatar || require('../assert/image/avatar.png')}
+            source={typeof user?.avatar ==="string" ? {uri: user?.avatar} : require('../assert/image/avatar.png')}
             style={styles.avatar}
           />
         </TouchableOpacity>
