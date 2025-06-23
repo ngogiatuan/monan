@@ -23,10 +23,15 @@ export const getFavorites = async (token: string) => {
 };
 
 // Thêm món ăn vào danh sách yêu thích (POST /api/favorites)
-export const addFavorite = async (userId: string, recipeId: string) => {
+export const addFavorite = async (token: string, recipeId: string) => {
   try {
-    if (!userId || !recipeId) throw new Error('Missing userId or recipeId');
-    const res = await axios.post(`${API_URL}`, { userId, recipeId });
+    if (!token || !recipeId) throw new Error('Missing token or recipeId');
+  
+    const res = await axios.post(`${API_URL}`, { recipeId }, {
+      headers: {
+        Authorization: `Bearer ${token}`, 
+      },
+    });
     return res.data;
   } catch (e) {
     console.error('Error adding favorite:', e?.response?.data || e);
@@ -35,10 +40,12 @@ export const addFavorite = async (userId: string, recipeId: string) => {
 };
 
 // Xóa món ăn khỏi danh sách yêu thích (DELETE /api/favorites/:favoriteId)
-export const removeFavorite = async (favoriteId: string) => {
+export const removeFavorite = async (token: string, favoriteId: string) => {
   try {
-    if (!favoriteId) throw new Error('Missing favoriteId');
-    const res = await axios.delete(`${API_URL}/${favoriteId}`);
+    if (!favoriteId || !token) throw new Error('Missing favoriteId or token');
+    const res = await axios.delete(`${API_URL}/${favoriteId}`,{headers: {
+      Authorization: `Bearer ${token}`,
+   } });
     return res.data;
   } catch (e) {
     console.error('Error removing favorite:', e?.response?.data || e);
@@ -48,6 +55,9 @@ export const removeFavorite = async (favoriteId: string) => {
 
 // Tìm favoriteId theo userId và recipeId từ danh sách favorites
 export const findFavoriteId = (favorites: any[], recipeId: string) => {
-  const fav = favorites.find((f: any) => f.recipeId === recipeId);
-  return fav ? fav._id : null;
+  const fav = favorites.find((f: any) => {
+   // console.log('f.recipeId._id',  f.recipeId?._id=== recipeId);
+    return f.recipeId._id === recipeId
+  } );
+  return fav?._id ? fav._id : null;
 };

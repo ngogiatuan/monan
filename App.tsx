@@ -7,14 +7,19 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 
 import RootNavigation from './src/navigation/rootNavigation';
 import { UserProvider } from './src/context/UserContext';
+import { addEventListener } from "@react-native-community/netinfo";
+import { Alert, Linking, Text, View } from 'react-native';
 
 const App = () => {
+
+
+
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor} loading={null}>
         <SafeAreaView style={{flex: 1}}>
           <UserProvider>
-            <RootNavigation />
+          <RootNavigation />
           </UserProvider>
         </SafeAreaView>
       </PersistGate>

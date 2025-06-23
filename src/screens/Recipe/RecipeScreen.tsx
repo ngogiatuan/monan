@@ -5,8 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
-import { getFavorites } from '../../api/favoriteApi';
+import { getFavorites, removeFavorite } from '../../api/favoriteApi';
 import { UserContext } from '../../context/UserContext';
+import { addEventListener } from '@react-native-community/netinfo';
 
 // Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
 
@@ -196,7 +197,6 @@ const styles = StyleSheet.create({
   moreIcon: {
     width: 18,
     height: 18,
-    tintColor: '#bbb',
   },
   fireIconEmpty: {
     width: 80,
@@ -234,8 +234,20 @@ const RecipeScreen = () => {
   const [favorites, setFavorites] = useState<any[]>([]); // Danh sách công thức đã lưu
   const { user } = useContext(UserContext);
 
+  const [isConnected, setIsConnected] = React.useState(true);
+
   React.useEffect(() => {
-    // Giả lập lấy danh sách công thức đã lưu từ API
+    // Kiểm tra kết nối mạng khi ứng dụng khởi động
+    const unsubscribe = addEventListener(state => {
+      setIsConnected(!!state.isConnected);   
+    });
+
+    // Dọn dẹp khi component unmount
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
     const fetchFavorites = async () => {
       try {
         if (user?.token) {
@@ -253,32 +265,46 @@ const RecipeScreen = () => {
       
     
     };
+
+  React.useEffect(() => {
+    // Giả lập lấy danh sách công thức đã lưu từ API
     fetchFavorites();
   }, [user]);
 
+  const onFav = async (recipeId: string) => {
+try {
+  if(user?.token)
+    await removeFavorite(user.token, recipeId);
+  await fetchFavorites(); // Cập nhật lại danh sách sau khi xóa
+
+}catch (error) {  
+  }
+  }
+
   // Render từng item công thức của tôi
   const renderMyRecipe = ({ item }: { item: typeof MY_RECIPES[0] }) => (
+    console.log('item', item),
     <View style={styles.recipeCard}>
       <View style={styles.recipeImgWrap}>
-        <Image source={item.image} style={styles.recipeImg} />
+        <Image source={{uri:  item?.recipeId?.imageUrls?.[0]}} style={styles.recipeImg} />
         <View style={styles.recipeTimeOverlay}>
           <Image source={require('../../assert/image/time.png')} style={styles.timeIconOverlay} />
-          <Text style={styles.timeTextOverlay}>{item.time}</Text>
+          <Text style={styles.timeTextOverlay}>{item?.recipeId?.cookingTime}</Text>
         </View>
       </View>
       <View style={styles.recipeInfo}>
-        <Text style={styles.recipeTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.recipeTitle} numberOfLines={2}>{item?.recipeId?.name}</Text>
         <View style={styles.recipeRateRow}>
           <View style={styles.recipeRateBox}>
             <Image source={require('../../assert/image/whitestar.png')} style={styles.starIcon} />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+            <Text style={styles.ratingText}>4.8</Text>
           </View>
           <Text style={styles.reviewText}>{item.reviews} Reviews</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.moreBtn}>
+      <TouchableOpacity style={styles.moreBtn} onPress={()=> onFav(item?._id)} >
         <View style={styles.moreIconWrap}>
-          <Image source={require('../../assert/image/more.png')} style={styles.moreIcon} />
+          <Image source={require('../../assert/image/yellowmark.png')} style={styles.moreIcon} />
         </View>
       </TouchableOpacity>
     </View>
@@ -307,23 +333,29 @@ const RecipeScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.body}>
-        {tab === 'my' ? (
-          MY_RECIPES.length === 0 ? (
+        {!isConnected ? <>
+        <View>
+          <Text>khong co internet</Text>
+        </View>
+        </> : tab !== 'my' ? (
+          favorites.length === 0 ? (
             <View style={styles.savedEmptyWrap}>
-              <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.recipe)} />
+             
+                 <RecipeEmpty onExplore={() => navigation.navigate(nav.discovery)} />
             </View>
           ) : (
             <FlatList
-              data={MY_RECIPES}
-              keyExtractor={item => item.id}
+              data={favorites}
+              keyExtractor={item => item._id}
               renderItem={renderMyRecipe}
               contentContainerStyle={{ padding: 16 }}
               showsVerticalScrollIndicator={false}
+
             />
           )
         ) : (
           <View style={styles.savedEmptyWrap}>
-            <RecipeEmpty onExplore={() => navigation.navigate(nav.discovery)} />
+            <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.recipe)} />
           </View>
         )}
       </View>

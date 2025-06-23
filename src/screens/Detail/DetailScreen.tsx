@@ -6,6 +6,7 @@ import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { UserContext } from '../../context/UserContext';
 import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
+import NetInfo from '@react-native-community/netinfo';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -22,6 +23,7 @@ const DetailScreen = () => {
   const { user } = useContext(UserContext);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(true);
 
   // Đảm bảo mỗi lần vào lại màn này đều fetch lại đúng công thức theo id
   useFocusEffect(
@@ -47,24 +49,34 @@ const DetailScreen = () => {
   );
 
   // Lấy danh sách favorites từ API khi user hoặc recipeId thay đổi
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (user?.token) {
-        try {
-          const favs = await getFavorites(user.token);
-          setFavorites(favs);
-          setFavoriteIds(favs.map((f: any) => f.recipeId));
-        } catch {
-          setFavorites([]);
-          setFavoriteIds([]);
-        }
-      } else {
-        setFavorites([]);
-        setFavoriteIds([]);
-      }
+
+   const fetchFavorites = async () => {
+       if (user?.token) {
+           try {
+             const favs = await getFavorites(user.token);
+             setFavorites(favs);
+             setFavoriteIds(favs.map((f: any) => f.recipeId?._id || f.recipeId)); // Hỗ trợ cả object và string
+           } catch {
+             setFavorites([]);
+             setFavoriteIds([]);
+           }
+         } else {
+           setFavorites([]);
+           setFavoriteIds([]);
+         }
     };
+
+  useEffect(() => {
     fetchFavorites();
   }, [user, recipeId]);
+
+  // Kiểm tra kết nối mạng
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(!!state.isConnected);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Hàm lấy ảnh món ăn từ API (ưu tiên imageUrls[0])
   const getRecipeImage = (recipeObj: any) => {
@@ -122,6 +134,9 @@ const DetailScreen = () => {
     },
   ];
 
+   const isFav = favoriteIds.includes(recipe._id);
+   const favoriteId = findFavoriteId(favorites, recipe._id);
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Ảnh món ăn với overlay nút back, whitemark, share */}
@@ -149,19 +164,18 @@ const DetailScreen = () => {
             <TouchableOpacity
               style={styles.overlayBtn}
               onPress={async () => {
-                if (!user) return;
-                const isFav = favoriteIds.includes(recipeId);
-                const favoriteId = findFavoriteId(favorites, recipeId);
+                if (!isConnected) {
+                  Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                  return;
+                }
+                if (!user?.token) return;
                 try {
                   if (!isFav) {
-                    await addFavorite(user._id, recipeId);
-                  } else if (favoriteId) {
-                    await removeFavorite(favoriteId);
+                    await addFavorite(user.token, recipe._id);
+                  } else {
+                    await removeFavorite(user.token, favoriteId);
                   }
-                  // Reload lại trạng thái favorite
-                  const favs = await getFavorites(user._id);
-                  setFavorites(favs);
-                  setFavoriteIds(favs.map((f: any) => f.recipeId));
+                  await fetchFavorites();
                 } catch (e) {
                   Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
                 }
@@ -169,7 +183,7 @@ const DetailScreen = () => {
             >
               <Image
                 source={
-                  favoriteIds.includes(recipeId)
+                 isFav
                     ? require('../../assert/image/yellowmark.png')
                     : require('../../assert/image/mark.png')
                 }
@@ -448,7 +462,6 @@ const styles = StyleSheet.create({
   overlayIcon: {
     width: 24,
     height: 24,
-    tintColor: '#fff',
     marginHorizontal: 2,
     resizeMode: 'contain',
   },

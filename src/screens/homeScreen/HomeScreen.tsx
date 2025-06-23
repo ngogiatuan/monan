@@ -20,6 +20,8 @@ import { UserContext } from '../../context/UserContext';
 import { getRecipes } from '../../api/recipeApi';
 import { getAllCategories } from '../../api/categoryApi';
 import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
+import NetInfo from '@react-native-community/netinfo';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -28,6 +30,8 @@ const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [recipesCache, setRecipesCache] = useState<any[]>([]);
+  const [categoriesCache, setCategoriesCache] = useState<any[]>([]);
 
   // State lưu các id món đã được "lưu" (chỉ trên UI, cho user)
   const [localFavoriteIds, setLocalFavoriteIds] = useState<string[]>([]);
@@ -35,52 +39,78 @@ const HomeScreen = () => {
   // State lưu các id món đã được lưu (favorite) từ API cho user
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
-  // Effect để fetch danh sách món ăn (recipes)
+  // Theo dõi trạng thái mạng
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await getRecipes(1, 10); // Lấy 10 món ăn đầu tiên
-        setRecipes(data);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách món ăn:', error);
-      }
-    })();
-
-     (async () => {
-      try {
-        const data = await getAllCategories(); // Lấy 10 món ăn đầu tiên
-        setCategories(data);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách món ăn:', error);
-        setCategories([]);
-      }
-    })();
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(!!state.isConnected);
+    });
+    return () => unsubscribe();
   }, []);
 
-  // Lấy danh sách favorites từ API khi user thay đổi
+  // Fetch danh sách món ăn và category chỉ khi có mạng
   useEffect(() => {
-    const fetchFavorites = async () => {
-      if (user?.token) {
+    let ignore = false;
+    if (isConnected) {
+      (async () => {
         try {
-          const favs = await getFavorites(user.token);
-          console.log('favs', favs);
-          setFavorites(favs);
-          setFavoriteIds(favs.map((f: any) => f.recipeId));
-        } catch {
-          setFavorites([]);
-          setFavoriteIds([]);
+          const data = await getRecipes(1, 10);
+          if (!ignore && data && data.length > 0) {
+            setRecipes(data);
+            setRecipesCache(data);
+            setHasLoadedRecipes(true);
+          }
+        } catch (error) {
+          if (!ignore && recipesCache.length > 0) {
+            setRecipes(recipesCache);
+            setHasLoadedRecipes(true);
+          }
         }
-      } else {
-        setFavorites([]);
-        setFavoriteIds([]);
-      }
-    };
-    fetchFavorites();
-  }, [user]);
+      })();
 
-  console.log('categories', categories);
-  console.log('user',  user?.avatar);
+      (async () => {
+        try {
+          const data = await getAllCategories();
+          if (!ignore && data && data.length > 0) {
+            setCategories(data);
+            setCategoriesCache(data);
+          }
+        } catch (error) {
+          if (!ignore && categoriesCache.length > 0) {
+            setCategories(categoriesCache);
+          }
+        }
+      })();
+    } else {
+      // Nếu mất mạng, dùng cache nếu có
+      if (recipesCache.length > 0) setRecipes(recipesCache);
+      if (categoriesCache.length > 0) setCategories(categoriesCache);
+      setHasLoadedRecipes(true);
+    }
+    return () => { ignore = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected]); // chỉ chạy 1 lần khi mount
+
+  // Lấy danh sách favorites từ API khi user thay đổi hoặc khi thao tác lưu/xóa
+  const reloadFavorites = async () => {
+    if (!isConnected) return; // Không gọi API khi offline
+    if (user?.token) {
+      try {
+        const favs = await getFavorites(user.token);
+        setFavorites(favs);
+        setFavoriteIds(favs.map((f: any) => f.recipeId?._id || f.recipeId));
+      } catch {
+        // Không setFavorites([]) để giữ trạng thái cũ khi mất mạng
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isConnected) reloadFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isConnected]);
 
   // Hàm tạo lời chào dựa trên thời gian trong ngày
   const getGreeting = () => {
@@ -213,7 +243,7 @@ const HomeScreen = () => {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
-              {(categories.length > 0 ? categories : []).map(catItem => (
+              {(categories.length > 0 ? categories : categoriesCache).map(catItem => (
                 <TouchableOpacity
                   key={catItem?._id || catItem.key}
                   style={styles.categoryItem}
@@ -232,7 +262,7 @@ const HomeScreen = () => {
                       style={styles.categoryIcon}
                     />
                   ) : (
-                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}> 
+                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
                       <Text style={{ color: '#bbb', fontSize: 12 }}>?</Text>
                     </View>
                   )}
@@ -270,21 +300,16 @@ const HomeScreen = () => {
                       <TouchableOpacity
                         style={styles.productMarkCircle}
                         onPress={async () => {
-                          if (!user) return;
+                          const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                          if (!ok) return;
+                          if (!user?.token) return;
                           try {
                             if (!isFav) {
-                              console.log('Adding favorite for recipe:', recipeItem.id,'==', user);
-                           const responseAddFav =   await addFavorite(user._id, recipeItem.id);
-                           console.log('responseAddFav', responseAddFav);
-                            } else if (favoriteId) {
-                            const responseRemovèav =  await removeFavorite(favoriteId);
-                            console.log('responseRemoveFav', responseRemovèav);
+                              await addFavorite(user.token, recipeItem.id);
+                            } else {
+                              await removeFavorite(user.token, favoriteId);
                             }
-                            // Sau khi thao tác, reload lại danh sách yêu thích
-                            const favs = await getFavorites(user.token);
-                            console.log('favs', favs);
-                            setFavorites(favs);
-                            setFavoriteIds(favs.map((f: any) => f.recipeId));
+                            await reloadFavorites();
                           } catch (e) {
                             Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
                           }
@@ -307,7 +332,9 @@ const HomeScreen = () => {
                     </View>
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      onPress={() => {
+                      onPress={async () => {
+                        const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem chi tiết công thức.');
+                        if (!ok) return;
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                       }}
                     >
@@ -414,14 +441,26 @@ const HomeScreen = () => {
         </View>
       </>
       {/* Các section cuộn được */}
-      <FlatList
-        data={homeScreenSections}
-        keyExtractor={(item, index) => item.type + index}
-        showsVerticalScrollIndicator={false}
-        renderItem={renderSection}
-        contentContainerStyle={{ paddingBottom: 0 }}
-        style={{ flex: 1 }}
-      />
+      {!isConnected && recipes.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center' }}>
+            Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem danh sách món ăn.
+          </Text>
+        </View>
+      ) : hasLoadedRecipes ? (
+        <FlatList
+          data={homeScreenSections}
+          keyExtractor={(item, index) => item.type + index}
+          showsVerticalScrollIndicator={false}
+          renderItem={renderSection}
+          contentContainerStyle={{ paddingBottom: 0 }}
+          style={{ flex: 1 }}
+        />
+      ) : (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Đang tải dữ liệu...</Text>
+        </View>
+      )}
       <BottomNavigation current="home" />
     </View>
   );
@@ -628,7 +667,6 @@ const styles = StyleSheet.create({
   productMark: {
     width: 10,
     height: 13,
-    tintColor: '#fff',
     resizeMode: 'contain',
   },
   productTimeOverlay: {

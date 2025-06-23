@@ -6,6 +6,8 @@ import BottomNavigation from '../../compoments/Bottomnavigation';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { UserContext } from '../../context/UserContext';
 import ProfileInfo from '../../compoments/ProfileInfo';
+import NetInfo from '@react-native-community/netinfo';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 const supportList = [
   { label: 'Cách thức hoạt động', icon: require('../../assert/image/activity.png') },
@@ -17,6 +19,14 @@ const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [showLogout, setShowLogout] = useState(false);
   const { user } = React.useContext(UserContext);
+  const [isConnected, setIsConnected] = useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(!!state.isConnected);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // --- Header cố định, tổng quát scroll theo ---
   return (
@@ -30,7 +40,13 @@ const ProfileScreen = () => {
         {user && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tổng quát</Text>
-            <TouchableOpacity style={styles.row}>
+            <TouchableOpacity style={styles.row} onPress={() => {
+              if (!isConnected) {
+                Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                return;
+              }
+              // ...existing code nếu có...
+            }}>
               <Image
                 source={require('../../assert/image/code.png')}
                 style={styles.generalIcon}
@@ -38,7 +54,13 @@ const ProfileScreen = () => {
               />
               <Text style={styles.rowText}>Mã ưu đãi</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.row}>
+            <TouchableOpacity style={styles.row} onPress={() => {
+              if (!isConnected) {
+                Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                return;
+              }
+              // ...existing code nếu có...
+            }}>
               <Image
                 source={require('../../assert/image/invite.png')}
                 style={styles.generalIcon}
@@ -108,6 +130,30 @@ const ProfileScreen = () => {
         <TouchableOpacity style={styles.logoutBtn} onPress={() => setShowLogout(true)}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
+        {/* Nếu là guest thì hiện nút tạo tài khoản, và chặn khi offline */}
+        {!user && (
+          <TouchableOpacity
+            style={{
+              marginTop: 24,
+              marginHorizontal: 20,
+              backgroundColor: '#FF6600',
+              borderRadius: 8,
+              paddingVertical: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={async () => {
+              // DEBUG: kiểm tra giá trị trả về và trạng thái mạng
+              const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.');
+              // Thêm log để kiểm tra
+              console.log('checkNetworkAndAlert ok:', ok);
+              if (!ok) return;
+              navigation.navigate(nav.authen);
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Tạo tài khoản</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
       <BottomNavigation current="profile" />
       {/* Dialog xác nhận đăng xuất */}
@@ -231,3 +277,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
