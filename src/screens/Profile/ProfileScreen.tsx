@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert } from 'react-native';
 import { nav } from '../../navigation/navigationName';
 import { useNavigation } from '@react-navigation/native';
@@ -8,18 +8,70 @@ import { UserContext } from '../../context/UserContext';
 import ProfileInfo from '../../compoments/ProfileInfo';
 import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
+import { useTranslation } from 'react-i18next';
 
-const supportList = [
-  { label: 'Cách thức hoạt động', icon: require('../../assert/image/activity.png') },
-  { label: 'Chính sách bảo mật', icon: require('../../assert/image/policy.png') },
-  { label: 'Điều khoản & Điều kiện', icon: require('../../assert/image/Conditions.png') },
-];
+const DEFAULT_LABELS = {
+  overview: 'Tổng quát',
+  settings: 'Cài đặt',
+  support: 'Hỗ trợ',
+  about_us: 'Về chúng tôi',
+  rate_app: 'Đánh giá ứng dụng',
+  security: 'Bảo mật',
+  delete_account: 'Xóa tài khoản',
+  logout: 'Đăng xuất',
+  promo_code: 'Mã ưu đãi',
+  invite_friends: 'Giới thiệu bạn bè',
+  support_how: 'Cách thức hoạt động',
+  support_policy: 'Chính sách bảo mật',
+  support_terms: 'Điều khoản & Điều kiện',
+};
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [showLogout, setShowLogout] = useState(false);
   const { user } = React.useContext(UserContext);
   const [isConnected, setIsConnected] = useState(true);
+  const { t, i18n } = useTranslation();
+  const [labels, setLabels] = useState(DEFAULT_LABELS);
+  const [supportList, setSupportList] = useState([
+    { label: DEFAULT_LABELS.support_how, icon: require('../../assert/image/activity.png') },
+    { label: DEFAULT_LABELS.support_policy, icon: require('../../assert/image/policy.png') },
+    { label: DEFAULT_LABELS.support_terms, icon: require('../../assert/image/Conditions.png') },
+  ]);
+
+  useEffect(() => {
+    // Nếu là tiếng Việt mặc định (chưa đổi), dùng base label
+    if (i18n.language === 'vi') {
+      setLabels(DEFAULT_LABELS);
+      setSupportList([
+        { label: DEFAULT_LABELS.support_how, icon: require('../../assert/image/activity.png') },
+        { label: DEFAULT_LABELS.support_policy, icon: require('../../assert/image/policy.png') },
+        { label: DEFAULT_LABELS.support_terms, icon: require('../../assert/image/Conditions.png') },
+      ]);
+    } else {
+      setLabels({
+        overview: t('overview'),
+        settings: t('settings'),
+        support: t('support'),
+        about_us: t('about_us'),
+        rate_app: t('rate_app'),
+        security: t('security'),
+        delete_account: t('delete_account'),
+        logout: t('logout'),
+        promo_code: t('promo_code'),
+        invite_friends: t('invite_friends'),
+        support_how: t('support_how'),
+        support_policy: t('support_policy'),
+        support_terms: t('support_terms'),
+      });
+      setSupportList([
+        { label: t('support_how'), icon: require('../../assert/image/activity.png') },
+        { label: t('support_policy'), icon: require('../../assert/image/policy.png') },
+        { label: t('support_terms'), icon: require('../../assert/image/Conditions.png') },
+      ]);
+    }
+    // eslint-disable-next-line
+  }, [i18n.language]);
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -33,16 +85,28 @@ const ProfileScreen = () => {
     <View style={{flex: 1, backgroundColor: '#fff'}}>
       {/* Header cố định */}
       <View style={styles.fixedHeaderWrap}>
-        <ProfileInfo />
+        <ProfileInfo
+          onCreateAccount={async () => {
+            const ok = await checkNetworkAndAlert(
+              t('network_create_account') ||
+                'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.'
+            );
+            if (!ok) return;
+            navigation.navigate(nav.authen);
+          }}
+        />
       </View>
       {/* ScrollView cho phần còn lại, gồm tổng quát và các section khác */}
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
         {user && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tổng quát</Text>
+            <Text style={styles.sectionTitle}>{labels.overview}</Text>
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
-                Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                Alert.alert(
+                  t('network_feature') || 'Không có kết nối mạng',
+                  t('network_feature_detail') || 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.'
+                );
                 return;
               }
               // ...existing code nếu có...
@@ -52,11 +116,14 @@ const ProfileScreen = () => {
                 style={styles.generalIcon}
                 resizeMode="contain"
               />
-              <Text style={styles.rowText}>Mã ưu đãi</Text>
+              <Text style={styles.rowText}>{labels.promo_code}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
-                Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                Alert.alert(
+                  t('network_feature') || 'Không có kết nối mạng',
+                  t('network_feature_detail') || 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.'
+                );
                 return;
               }
               // ...existing code nếu có...
@@ -66,26 +133,33 @@ const ProfileScreen = () => {
                 style={styles.generalIcon}
                 resizeMode="contain"
               />
-              <Text style={styles.rowText}>Giới thiệu bạn bè</Text>
+              <Text style={styles.rowText}>{labels.invite_friends}</Text>
             </TouchableOpacity>
           </View>
         )}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cài đặt</Text>
+          <Text style={styles.sectionTitle}>{labels.settings}</Text>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => navigation.navigate(nav.language as string)}
+            onPress={async () => {
+              const ok = await checkNetworkAndAlert(
+                t('network_language') ||
+                  'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để thay đổi ngôn ngữ.'
+              );
+              if (!ok) return;
+              navigation.navigate(nav.language as string);
+            }}
           >
             <Image
               source={require('../../assert/image/language.png')}
               style={styles.settingIcon}
               resizeMode="contain"
             />
-            <Text style={styles.rowText}>Ngôn ngữ</Text>
+            <Text style={styles.rowText}>{t('language')}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hỗ trợ</Text>
+          <Text style={styles.sectionTitle}>{labels.support}</Text>
           {supportList.map((item) => (
             <TouchableOpacity style={styles.row} key={item.label}>
               <Image
@@ -102,7 +176,7 @@ const ProfileScreen = () => {
               style={styles.groupIcon}
               resizeMode="contain"
             />
-            <Text style={styles.rowText}>Về chúng tôi</Text>
+            <Text style={styles.rowText}>{labels.about_us}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.row}>
             <Image
@@ -110,28 +184,35 @@ const ProfileScreen = () => {
               style={styles.starIcon}
               resizeMode="contain"
             />
-            <Text style={styles.rowText}>Đánh giá ứng dụng</Text>
+            <Text style={styles.rowText}>{labels.rate_app}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bảo mật</Text>
+          <Text style={styles.sectionTitle}>{labels.security}</Text>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => navigation.navigate(nav.deleteAccount as string)}
+            onPress={async () => {
+              const ok = await checkNetworkAndAlert(
+                t('network_delete_account') ||
+                  'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xóa tài khoản.'
+              );
+              if (!ok) return;
+              navigation.navigate(nav.deleteAccount as string);
+            }}
           >
             <Image
               source={require('../../assert/image/deleteaccount.png')}
               style={styles.settingIcon}
               resizeMode="contain"
             />
-            <Text style={styles.rowText}>Xóa tài khoản</Text>
+            <Text style={styles.rowText}>{labels.delete_account}</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={() => setShowLogout(true)}>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
+          <Text style={styles.logoutText}>{labels.logout}</Text>
         </TouchableOpacity>
-        {/* Nếu là guest thì hiện nút tạo tài khoản, và chặn khi offline */}
-        {!user && (
+        {/* XÓA đoạn này: nút tạo tài khoản dưới đăng xuất */}
+        {/* {!user && (
           <TouchableOpacity
             style={{
               marginTop: 24,
@@ -143,17 +224,14 @@ const ProfileScreen = () => {
               justifyContent: 'center',
             }}
             onPress={async () => {
-              // DEBUG: kiểm tra giá trị trả về và trạng thái mạng
               const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.');
-              // Thêm log để kiểm tra
-              console.log('checkNetworkAndAlert ok:', ok);
               if (!ok) return;
               navigation.navigate(nav.authen);
             }}
           >
             <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Tạo tài khoản</Text>
           </TouchableOpacity>
-        )}
+        )} */}
       </ScrollView>
       <BottomNavigation current="profile" />
       {/* Dialog xác nhận đăng xuất */}

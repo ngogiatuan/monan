@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
 import { UserContext } from '../../context/UserContext';
 import { deleteUserByEmail } from '../../api/userApi';
@@ -8,6 +8,7 @@ import { nav } from '../../navigation/navigationName';
 const DeleteAccountScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
   const { user, setUser } = useContext(UserContext);
+  const [showGuestDialog, setShowGuestDialog] = useState(false);
 
   // So sánh chính xác, loại bỏ khoảng trắng thừa, không phân biệt kiểu unicode tổ hợp, không phân biệt kiểu gõ dấu, không phân biệt hoa thường
   const normalize = (str: string) =>
@@ -28,6 +29,10 @@ const DeleteAccountScreen = ({ navigation }: any) => {
   // Thêm chức năng xóa tài khoản
   const handleDelete = async () => {
     if (!isValid) return;
+    if (!user) {
+      setShowGuestDialog(true);
+      return;
+    }
     if (user?.email) {
       await deleteUserByEmail(user.email);
     }
@@ -67,6 +72,50 @@ const DeleteAccountScreen = ({ navigation }: any) => {
             Đồng ý, tôi muốn xóa
           </Text>
         </TouchableOpacity>
+        {/* Dialog cho guest */}
+        <Modal
+          visible={showGuestDialog}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowGuestDialog(false)}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.18)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            <View style={{
+              backgroundColor: '#fff',
+              borderRadius: 16,
+              padding: 24,
+              width: '80%',
+              alignItems: 'center',
+            }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222', textAlign: 'center' }}>
+                Bạn chưa có tài khoản để xóa đâu ^^
+              </Text>
+              <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
+                Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#FF6600',
+                  borderRadius: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 32,
+                  marginTop: 8,
+                }}
+                onPress={() => {
+                  setShowGuestDialog(false);
+                  navigation.goBack();
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );

@@ -1,122 +1,223 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserContext } from '../context/UserContext';
-import { nav } from '../navigation/navigationName';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { nav } from '../navigation/navigationName';
 
-const ProfileInfo = () => {
+const LABELS = {
+  vi: {
+    login: 'Đăng nhập',
+    no_account: 'Chưa có tài khoản?',
+    create_account: 'Tạo tài khoản',
+    profile: 'Trang cá nhân',
+    edit_profile: 'Chỉnh sửa',
+    member_of_app: 'Thành viên app',
+  },
+  en: {
+    login: 'Login',
+    no_account: 'No account yet?',
+    create_account: 'Create account',
+    profile: 'Profile',
+    edit_profile: 'Edit',
+    member_of_app: 'Member',
+  },
+};
+
+const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
   const { user } = useContext(UserContext);
+  const { i18n } = useTranslation();
   const navigation = useNavigation<any>();
+  const [labels, setLabels] = useState(LABELS.vi);
 
-  return (
-    <View>
-      <View style={styles.coverContainer}>
-        <Image source={ typeof user?.cover ==="string" ? {uri: user.cover} : require('../assert/image/cover.png')} style={styles.coverImg} />
-        <TouchableOpacity style={styles.avatarWrapper} activeOpacity={0.8}>
+  useEffect(() => {
+    if (i18n.language === 'en') setLabels(LABELS.en);
+    else setLabels(LABELS.vi);
+  }, [i18n.language]);
+
+  if (!user) {
+    // Guest
+    return (
+      <View style={styles.container}>
+        <View style={styles.coverWrap}>
           <Image
-            source={typeof user?.avatar ==="string" ? {uri: user?.avatar} : require('../assert/image/avatar.png')}
+            source={require('../assert/image/cover.png')}
+            style={styles.coverImg}
+            resizeMode="cover"
+          />
+          <View style={styles.avatarWrap}>
+            <Image
+              source={require('../assert/image/avatar.png')}
+              style={styles.avatar}
+            />
+          </View>
+        </View>
+        <View style={styles.infoRow}>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.name}>{labels.login}</Text>
+            <Text style={styles.memberText}>
+              {labels.no_account}{' '}
+              <Text
+                style={styles.createAccountText}
+                onPress={onCreateAccount}
+              >
+                {labels.create_account}
+              </Text>
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // User đã đăng nhập
+  return (
+    <View style={styles.container}>
+      <View style={styles.coverWrap}>
+        <Image
+          source={require('../assert/image/cover.png')}
+          style={styles.coverImg}
+          resizeMode="cover"
+        />
+        <View style={styles.avatarWrap}>
+          <Image
+            source={typeof user.avatar === 'string' ? { uri: user.avatar } : require('../assert/image/avatar.png')}
             style={styles.avatar}
           />
-        </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.infoContainer}>
-        {/* Guest view */}
-        {!user && (
-          <>
-            <Text style={styles.loginText}>Đăng nhập</Text>
-            <View style={styles.rowInline}>
-              <Text style={styles.subText}>Chưa có tài khoản?</Text>
-              <TouchableOpacity onPress={() => navigation.navigate(nav.authen)}>
-                <Text style={styles.linkText}> Tạo tài khoản</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-        {/* User view */}
-        {user && (
-          <>
-            <Text style={styles.loginText}>{user.name}</Text>
-            <Text style={styles.subText}>{user.email}</Text>
-            <View style={styles.actionRow}>
-              <View style={styles.actionBtn}>
-                <Text style={styles.actionBtnText}>Trang cá nhân</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => navigation.navigate(nav.editProfile)}
-              >
-                <Text style={styles.actionBtnText}>Chỉnh sửa</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
-              Thành viên appname
-            </Text>
-            {user.joined && (
-              <Text style={{ color: '#888', fontSize: 13, marginTop: 2 }}>
-                {user.joined}
-              </Text>
-            )}
-          </>
-        )}
+      <View style={styles.infoRow}>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={styles.name}>{user.name}</Text>
+          <Text style={styles.memberText}>
+            {user.email}
+          </Text>
+          <View style={styles.btnRow}>
+            <TouchableOpacity style={styles.profileBtn}>
+              <Text style={styles.profileBtnText}>{labels.profile}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate(nav.editProfile)}
+            >
+              <Text style={styles.editBtnText}>{labels.edit_profile}</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.memberText}>
+            {labels.member_of_app}
+          </Text>
+          <Text style={styles.memberText}>
+            {user.joined}
+          </Text>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  coverContainer: { width: '100%', height: 180, backgroundColor: '#eee' },
-  coverImg: { width: '100%', height: 180, resizeMode: 'cover' },
-  avatarWrapper: {
-    position: 'absolute',
-    left: 20,
-    bottom: -40,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: '#fff',
+  container: {
     backgroundColor: '#fff',
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatar: { width: 72, height: 72, borderRadius: 36 },
-  infoContainer: {
-    marginTop: 56,
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  loginText: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
-  subText: { color: '#888', fontSize: 14 },
-  linkText: { color: '#007aff', fontWeight: 'bold' },
-  rowInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 0,
   },
-  actionRow: {
+  coverWrap: {
+    width: 393,
+    height: 200,
+    position: 'relative',
+    backgroundColor: '#fff',
+  },
+  coverImg: {
+    width: 393,
+    height: 200,
+    top: -1,
+    resizeMode: 'cover',
+  },
+  avatarWrap: {
+    position: 'absolute',
+    left: 32,
+    bottom: -32,
+    zIndex: 2,
+    backgroundColor: 'transparent',
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#eee',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  infoRow: {
     flexDirection: 'row',
-    marginTop: 16,
+    alignItems: 'center',
+    marginTop: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    minHeight: 64,
+  },
+  name: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    color: '#222',
+    marginBottom: 2,
+  },
+  memberText: {
+    color: '#888',
+    fontSize: 14,
+  },
+  createAccountText: {
+    color: '#007aff',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  btnRow: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    marginTop: 6,
+    marginBottom: 2,
+    gap: 10,
   },
-  actionBtn: {
+  profileBtn: {
     backgroundColor: '#AAB9C5',
     borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    marginHorizontal: 6,
-    minWidth: 120,
+    width: 158.5,
+    height: 36,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 0,
+    borderWidth: 0,
   },
-  actionBtnText: {
-    color: '#fff',
+  profileBtnText: {
+    color: '#FCFCFC',
     fontWeight: 'bold',
     fontSize: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 0,
+  },
+  editBtn: {
+    backgroundColor: '#AAB9C5',
+    borderRadius: 8,
+    width: 158.5,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
+    marginLeft: 0,
+  },
+  editBtnText: {
+    color: '#FCFCFC',
+    fontWeight: 'bold',
+    fontSize: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 0,
   },
 });
 
 export default ProfileInfo;
+
 
 

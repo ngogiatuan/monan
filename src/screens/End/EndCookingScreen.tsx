@@ -15,6 +15,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -26,13 +27,36 @@ const EndCookingScreen = () => {
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [isConnected, setIsConnected] = useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = require('@react-native-community/netinfo').addEventListener(
+      (state: any) => setIsConnected(!!state.isConnected)
+    );
+    return () => unsubscribe();
+  }, []);
 
   // Lấy thời gian bắt đầu từ params
   const startTime = route.params?.startTime;
+  const cookedDuration = route.params?.cookedDuration;
+  const wasOffline = route.params?.wasOffline;
+  const offlineAtEnd = route.params?.offlineAtEnd;
   // Không cần estimatedTime nữa
   const [duration, setDuration] = useState<string>('0\'');
+  const [showOfflineDialog, setShowOfflineDialog] = useState(!!(wasOffline && offlineAtEnd));
+  const [realDuration, setRealDuration] = useState<number | null>(typeof cookedDuration === 'number' ? cookedDuration : null);
+
   React.useEffect(() => {
-    if (startTime) {
+    // Nếu có cookedDuration (từ TutorialCookingScreen truyền sang), ưu tiên dùng
+    if (typeof cookedDuration === 'number') {
+      let diff = Math.floor(cookedDuration / 1000); // giây
+      let text = '';
+      if (diff < 60) text = `${diff}s`;
+      else if (diff < 3600) text = `${Math.floor(diff / 60)}'${diff % 60 > 0 ? diff % 60 + 's' : ''}`;
+      else text = `${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}'`;
+      setDuration(text);
+      setRealDuration(cookedDuration);
+    } else if (startTime) {
       const now = Date.now();
       let diff = Math.floor((now - startTime) / 1000); // giây
       let text = '';
@@ -40,16 +64,39 @@ const EndCookingScreen = () => {
       else if (diff < 3600) text = `${Math.floor(diff / 60)}'${diff % 60 > 0 ? diff % 60 + 's' : ''}`;
       else text = `${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}'`;
       setDuration(text);
+      setRealDuration(now - startTime);
     }
-  }, [startTime]);
+  }, [startTime, cookedDuration]);
+
+  // Khi quay lại từ TutorialCookingScreen và đã bật mạng, cập nhật lại thời gian nấu thực tế
+  React.useEffect(() => {
+    if (wasOffline && !offlineAtEnd && typeof cookedDuration === 'number') {
+      setShowOfflineDialog(false);
+      // Đảm bảo duration hiển thị đúng
+      let diff = Math.floor(cookedDuration / 1000);
+      let text = '';
+      if (diff < 60) text = `${diff}s`;
+      else if (diff < 3600) text = `${Math.floor(diff / 60)}'${diff % 60 > 0 ? diff % 60 + 's' : ''}`;
+      else text = `${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}'`;
+      setDuration(text);
+      setRealDuration(cookedDuration);
+    }
+  }, [wasOffline, offlineAtEnd, cookedDuration]);
 
   // Render các ngôi sao (blank star và full star)
   const renderStars = () => {
-    // Đổi khai báo mảng thành: const stars = [] as any[];
     const stars = [] as any[];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <TouchableOpacity key={i} onPress={() => setRating(i)} activeOpacity={0.7}>
+        <TouchableOpacity
+          key={i}
+          onPress={async () => {
+            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để đánh giá.');
+            if (!ok) return;
+            setRating(i);
+          }}
+          activeOpacity={0.7}
+        >
           <Image
             source={
               i <= rating
@@ -78,7 +125,14 @@ const EndCookingScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={async () => {
+            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để quay lại.');
+            if (!ok) return;
+            navigation.goBack();
+          }}
+        >
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
@@ -102,12 +156,22 @@ const EndCookingScreen = () => {
           <View style={styles.timeBox}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
             <Text style={styles.timeLabel}>Thời gian bạn làm</Text>
-            <Text style={styles.timeValue}>{duration}</Text>
+            <Text style={styles.timeValue}>
+              {showOfflineDialog ? '0' : duration}
+            </Text>
             <View style={styles.timeCheckCircle}>
               <Image source={require('../../assert/image/check.png')} style={styles.timeCheckIcon} />
             </View>
           </View>
         </View>
+        {/* Nếu có wasOffline và offlineAtEnd thì show dialog nhắc bật mạng để xem thống kê */}
+        {showOfflineDialog ? (
+          <View style={{ alignItems: 'center', marginTop: 12 }}>
+            <Text style={{ color: '#e53935', fontWeight: 'bold', fontSize: 15, textAlign: 'center' }}>
+              Bạn đã mất kết nối mạng khi hoàn thành món ăn. Vui lòng bật mạng rồi quay lại để thống kê thời gian nấu!
+            </Text>
+          </View>
+        ) : null}
         <Text style={styles.sectionLabel}>Bạn nhận được</Text>
         <View style={styles.rewardRowCenter}>
           <View style={styles.rewardIconCircle}>
@@ -125,7 +189,11 @@ const EndCookingScreen = () => {
       <View style={styles.fixedBottomBtnRow}>
         <ButtonNavigation
           title="Tiếp tục"
-          onPress={() => setShowRating(true)}
+          onPress={async () => {
+            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tiếp tục.');
+            if (!ok) return;
+            setShowRating(true);
+          }}
           backgroundColor="#FF6600"
         />
       </View>
@@ -155,6 +223,11 @@ const EndCookingScreen = () => {
               multiline
               numberOfLines={3}
               placeholderTextColor="#BDBDBD"
+              onSubmitEditing={async () => {
+                const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để nhận xét.');
+                if (!ok) return;
+                // ...submit logic nếu có...
+              }}
             />
             <View style={styles.modalPointRow}>
               <Text style={styles.modalPointText}>
@@ -165,7 +238,9 @@ const EndCookingScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={() => {
+              onPress={async () => {
+                const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xác nhận.');
+                if (!ok) return;
                 setShowRating(false);
                 navigation.navigate(nav.home);
               }}

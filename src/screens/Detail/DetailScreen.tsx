@@ -7,6 +7,7 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { UserContext } from '../../context/UserContext';
 import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
 import NetInfo from '@react-native-community/netinfo';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -24,6 +25,8 @@ const DetailScreen = () => {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(true);
+  const [firstRecipeId, setFirstRecipeId] = useState<string | null>(null);
+  const [historyStack, setHistoryStack] = useState<string[]>([]);
 
   // Đảm bảo mỗi lần vào lại màn này đều fetch lại đúng công thức theo id
   useFocusEffect(
@@ -96,6 +99,25 @@ const DetailScreen = () => {
   };
   const images = getRecipeImages(recipe);
 
+  useEffect(() => {
+    // Lưu lại recipeId đầu tiên khi vào từ HomeScreen
+    if (!firstRecipeId && recipeId) {
+      setFirstRecipeId(recipeId);
+    }
+  }, [recipeId, firstRecipeId]);
+
+  useEffect(() => {
+    // Khi vào lần đầu, lưu lại recipeId đầu tiên vào historyStack
+    if (historyStack.length === 0 && recipeId) {
+      setHistoryStack([recipeId]);
+    }
+    // Nếu vào từ công thức liên quan, push vào stack
+    else if (historyStack.length > 0 && recipeId && recipeId !== historyStack[historyStack.length - 1]) {
+      setHistoryStack(prev => [...prev, recipeId]);
+    }
+    // eslint-disable-next-line
+  }, [recipeId]);
+
   if (loading) {
     return (
       <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
@@ -156,8 +178,22 @@ const DetailScreen = () => {
         </TouchableOpacity>
         {/* Overlay nút trên ảnh */}
         <View style={styles.imageOverlayRow}>
-          <TouchableOpacity onPress={() => navigation.navigate(nav.home)} style={styles.overlayBtn}>
-            {/* Đổi icon thành ký tự '<' thay vì back.png */}
+          <TouchableOpacity
+            onPress={() => {
+              // Nếu chỉ có 1 phần tử trong stack, về HomeScreen
+              // Nếu có nhiều phần tử, pop stack và replace về công thức trước đó
+              if (historyStack.length <= 1) {
+                navigation.navigate(nav.home);
+              } else {
+                const newStack = [...historyStack];
+                newStack.pop();
+                const prevRecipeId = newStack[newStack.length - 1];
+                setHistoryStack(newStack);
+                navigation.replace(nav.detail, { recipeId: prevRecipeId });
+              }
+            }}
+            style={styles.overlayBtn}
+          >
             <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
           </TouchableOpacity>
           <View style={styles.overlayRight}>
@@ -306,41 +342,75 @@ const DetailScreen = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingVertical: 8, paddingLeft: 8, paddingRight: 24, paddingBottom: 70 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.relatedCard}
-                onPress={() => navigation.replace(nav.detail, { recipeId: item._id })}
-              >
-                <View style={styles.relatedImgWrap}>
-                  <Image
-                    source={getRecipeImage(item)}
-                    style={styles.relatedImg}
-                  />
-                  {/* mark.png góc phải trên cùng */}
-                  <View style={styles.relatedMarkCircle}>
-                    <Image
-                      source={require('../../assert/image/mark.png')}
-                      style={styles.relatedMark}
-                    />
-                  </View>
-                  {/* time.png góc trái dưới cùng + thời gian từ API */}
-                  <View style={styles.relatedTimeOverlay}>
-                    <Image source={require('../../assert/image/time.png')} style={styles.relatedTimeIcon} />
-                    <Text style={styles.relatedTimeText}>{item.cookingTime || ''}</Text>
-                  </View>
+            renderItem={({ item }) => {
+              const relatedIsFav = favoriteIds.includes(item._id);
+              const relatedFavoriteId = findFavoriteId(favorites, item._id);
+              return (
+                <View style={styles.relatedCard}>
+                  <TouchableOpacity
+                    style={{ flex: 1 }}
+                    onPress={() => {
+                      // Khi bấm công thức liên quan, push vào stack và replace
+                      setHistoryStack(prev => [...prev, item._id]);
+                      navigation.replace(nav.detail, { recipeId: item._id });
+                    }}
+                  >
+                    <View style={styles.relatedImgWrap}>
+                      <Image
+                        source={getRecipeImage(item)}
+                        style={styles.relatedImg}
+                      />
+                      {/* mark góc phải trên cùng: có thể lưu công thức liên quan */}
+                      <TouchableOpacity
+                        style={styles.relatedMarkCircle}
+                        onPress={async (e) => {
+                          e.stopPropagation && e.stopPropagation();
+                          if (!isConnected) {
+                            Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
+                            return;
+                          }
+                          if (!user?.token) return;
+                          try {
+                            if (!relatedIsFav) {
+                              await addFavorite(user.token, item._id);
+                            } else {
+                              await removeFavorite(user.token, relatedFavoriteId);
+                            }
+                            await fetchFavorites();
+                          } catch (e) {
+                            Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
+                          }
+                        }}
+                      >
+                        <Image
+                          source={
+                            relatedIsFav
+                              ? require('../../assert/image/yellowmark.png')
+                              : require('../../assert/image/mark.png')
+                          }
+                          style={styles.relatedMark}
+                        />
+                      </TouchableOpacity>
+                      {/* time.png góc trái dưới cùng + thời gian từ API */}
+                      <View style={styles.relatedTimeOverlay}>
+                        <Image source={require('../../assert/image/time.png')} style={styles.relatedTimeIcon} />
+                        <Text style={styles.relatedTimeText}>{item.cookingTime || ''}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
+                    <View style={styles.relatedInfoRow}>
+                      <View style={styles.relatedRatingBox}>
+                        <Image source={require('../../assert/image/bluestar.png')} style={styles.relatedStarIcon} />
+                        <Text style={styles.relatedRatingText}>4.8</Text>
+                      </View>
+                      <View style={styles.relatedFreeTag}>
+                        <Text style={styles.relatedFreeTagText}>Miễn phí</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
-                <View style={styles.relatedInfoRow}>
-                  <View style={styles.relatedRatingBox}>
-                    <Image source={require('../../assert/image/bluestar.png')} style={styles.relatedStarIcon} />
-                    <Text style={styles.relatedRatingText}>4.8</Text>
-                  </View>
-                  <View style={styles.relatedFreeTag}>
-                    <Text style={styles.relatedFreeTagText}>Miễn phí</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            )}
+              );
+            }}
           />
         </View>
       </ScrollView>
@@ -348,7 +418,9 @@ const DetailScreen = () => {
       <View style={styles.fixedCookBtnWrapper}>
         <ButtonNavigation
           title="Vào bếp thôi !"
-          onPress={() =>
+          onPress={async () => {
+            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem hướng dẫn nấu ăn.');
+            if (!ok) return;
             navigation.navigate(nav.tutorialCooking, {
               recipeId,
               imageUrl:
@@ -356,8 +428,8 @@ const DetailScreen = () => {
                   ? recipe.imageUrls[0]
                   : null,
               name: recipe?.name || '',
-            })
-          }
+            });
+          }}
           backgroundColor="#FF6600"
           style={styles.cookBtn}
           textStyle={styles.cookBtnText}

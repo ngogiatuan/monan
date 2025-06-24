@@ -9,6 +9,7 @@ import RootNavigation from './src/navigation/rootNavigation';
 import { UserProvider } from './src/context/UserContext';
 import { addEventListener } from "@react-native-community/netinfo";
 import { Alert, Linking, Text, View } from 'react-native';
+import './src/locales/i18n'
 
 const App = () => {
 

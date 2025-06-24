@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import BottomNavigation from '../../compoments/Bottomnavigation';
@@ -8,6 +8,7 @@ import { nav } from '../../navigation/navigationName';
 import { getFavorites, removeFavorite } from '../../api/favoriteApi';
 import { UserContext } from '../../context/UserContext';
 import { addEventListener } from '@react-native-community/netinfo';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 // Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
 
@@ -283,7 +284,6 @@ try {
 
   // Render từng item công thức của tôi
   const renderMyRecipe = ({ item }: { item: typeof MY_RECIPES[0] }) => (
-    console.log('item', item),
     <View style={styles.recipeCard}>
       <View style={styles.recipeImgWrap}>
         <Image source={{uri:  item?.recipeId?.imageUrls?.[0]}} style={styles.recipeImg} />
@@ -293,7 +293,17 @@ try {
         </View>
       </View>
       <View style={styles.recipeInfo}>
-        <Text style={styles.recipeTitle} numberOfLines={2}>{item?.recipeId?.name}</Text>
+        <TouchableOpacity
+          onPress={async () => {
+            if (!isConnected) {
+              Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để xem chi tiết công thức.');
+              return;
+            }
+            navigation.navigate(nav.detail, { recipeId: item?.recipeId?._id });
+          }}
+        >
+          <Text style={styles.recipeTitle} numberOfLines={2}>{item?.recipeId?.name}</Text>
+        </TouchableOpacity>
         <View style={styles.recipeRateRow}>
           <View style={styles.recipeRateBox}>
             <Image source={require('../../assert/image/whitestar.png')} style={styles.starIcon} />
@@ -302,7 +312,16 @@ try {
           <Text style={styles.reviewText}>{item.reviews} Reviews</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.moreBtn} onPress={()=> onFav(item?._id)} >
+      <TouchableOpacity
+        style={styles.moreBtn}
+        onPress={async () => {
+          if (!isConnected) {
+            Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để bỏ lưu công thức.');
+            return;
+          }
+          await onFav(item?._id);
+        }}
+      >
         <View style={styles.moreIconWrap}>
           <Image source={require('../../assert/image/yellowmark.png')} style={styles.moreIcon} />
         </View>
@@ -333,15 +352,19 @@ try {
         </TouchableOpacity>
       </View>
       <View style={styles.body}>
-        {!isConnected ? <>
-        <View>
-          <Text>khong co internet</Text>
-        </View>
-        </> : tab !== 'my' ? (
+        {/* Khi mất mạng, vẫn giữ UI, chỉ chặn onPress các nút */}
+        {tab !== 'my' ? (
           favorites.length === 0 ? (
             <View style={styles.savedEmptyWrap}>
-             
-                 <RecipeEmpty onExplore={() => navigation.navigate(nav.discovery)} />
+              <RecipeEmpty
+                isConnected={isConnected}
+                isGuest={!user}
+                onExplore={async () => {
+                  // Đã xử lý alert trong RecipeEmpty, không cần xử lý ở đây nữa
+                  if (!isConnected || !user) return;
+                  navigation.navigate(nav.discovery);
+                }}
+              />
             </View>
           ) : (
             <FlatList
@@ -350,12 +373,18 @@ try {
               renderItem={renderMyRecipe}
               contentContainerStyle={{ padding: 16 }}
               showsVerticalScrollIndicator={false}
-
             />
           )
         ) : (
           <View style={styles.savedEmptyWrap}>
-            <RecipeEmpty onAddRecipe={() => navigation.navigate(nav.recipe)} />
+            <RecipeEmpty
+              isConnected={isConnected}
+              isGuest={!user}
+              onAddRecipe={async () => {
+                if (!isConnected) return;
+                navigation.navigate(nav.recipe);
+              }}
+            />
           </View>
         )}
       </View>

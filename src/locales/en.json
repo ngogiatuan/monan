@@ -1,0 +1,21 @@
+{
+    "language": "Language",
+    "overview": "Overview",
+    "settings": "Settings",
+    "support": "Support",
+    "about_us": "About us",
+    "rate_app": "Rate app",
+    "security": "Security",
+    "delete_account": "Delete account",
+    "logout": "Logout",
+    "promo_code": "Promo code",
+    "invite_friends": "Invite friends",
+    "support_how": "How it works",
+    "support_policy": "Privacy policy",
+    "support_terms": "Terms & Conditions",
+    "guest": "Guest",
+    "not_logged_in": "You are not logged in",
+    "login": "Login",
+    "member_of_app": "Member of {{app}}",
+    "edit_profile": "Edit"
+}

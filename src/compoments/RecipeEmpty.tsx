@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import ButtonNavigation from './ButtonNavigation';
 
 interface RecipeEmptyProps {
   onAddRecipe?: () => void;
   onExplore?: () => void;
+  isConnected?: boolean;
+  isGuest?: boolean;
 }
 
-const RecipeEmpty = ({ onAddRecipe, onExplore }: RecipeEmptyProps) => (
+const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmptyProps) => (
   <View style={styles.container}>
     <Image source={require('../assert/image/fire.png')} style={styles.icon} resizeMode='contain' />
     <Text style={styles.text}>
@@ -29,7 +31,17 @@ const RecipeEmpty = ({ onAddRecipe, onExplore }: RecipeEmptyProps) => (
         color="#fff"
         style={styles.btn}
         textStyle={styles.btnText}
-        onPress={onExplore}
+        onPress={() => {
+          if (isConnected === false) {
+            Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để khám phá công thức.');
+            return;
+          }
+          if (isGuest) {
+            Alert.alert('Vui lòng đăng nhập để khám phá công thức!');
+            return;
+          }
+          onExplore && onExplore();
+        }}
       />
     ) : null}
   </View>
@@ -68,5 +80,3 @@ const styles = StyleSheet.create({
 });
 
 export default RecipeEmpty;
-// Đúng interface chỉ nhận onExplore, không nhận onAddRecipe.
-// Nếu muốn dùng cho nhiều mục đích, hãy mở rộng interface, còn hiện tại chỉ dùng onExplore.

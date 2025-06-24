@@ -1,28 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
+
+const LANG_LABELS = {
+  vi: {
+    vi: 'Tiếng Việt',
+    en: 'Tiếng Anh',
+    select: 'Chọn ngôn ngữ',
+  },
+  en: {
+    vi: 'Vietnamese',
+    en: 'English',
+    select: 'Select language',
+  },
+};
 
 const languages = [
   {
     key: 'vi',
-    label: 'Tiếng Việt',
     icon: require('../../assert/image/vietnam.png'),
   },
   {
     key: 'en',
-    label: 'Tiếng Anh',
     icon: require('../../assert/image/english.png'),
-  },
-  {
-    key: 'es',
-    label: 'Tiếng Tây Ban Nha',
-    icon: require('../../assert/image/spain.png'),
   },
 ];
 
 const LanguageScreen = () => {
   const navigation = useNavigation<any>();
-  const [selected, setSelected] = useState('vi');
+  const { t, i18n } = useTranslation();
+  const [selected, setSelected] = useState(i18n.language);
+
+  useEffect(() => {
+    setSelected(i18n.language);
+  }, [i18n.language]);
+
+  // Lấy label động theo ngôn ngữ hiện tại
+  const getLabel = (langKey: string) => {
+    const currentLang = i18n.language in LANG_LABELS ? i18n.language : 'vi';
+    return LANG_LABELS[currentLang][langKey] || langKey;
+  };
+  const getSelectLabel = () => {
+    const currentLang = i18n.language in LANG_LABELS ? i18n.language : 'vi';
+    return LANG_LABELS[currentLang].select || t('language');
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -30,19 +53,22 @@ const LanguageScreen = () => {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ngôn ngữ</Text>
+        <Text style={styles.headerTitle}>{t('language')}</Text>
       </View>
       <View style={styles.body}>
-        <Text style={styles.label}>Chọn ngôn ngữ</Text>
+        <Text style={styles.label}>{getSelectLabel()}</Text>
         {languages.map(lang => (
           <TouchableOpacity
             key={lang.key}
             style={styles.row}
-            onPress={() => setSelected(lang.key)}
+            onPress={() => {
+              setSelected(lang.key);
+              i18next.changeLanguage(lang.key);
+            }}
             activeOpacity={0.7}
           >
             <Image source={lang.icon} style={styles.flag} />
-            <Text style={styles.langText}>{lang.label}</Text>
+            <Text style={styles.langText}>{getLabel(lang.key)}</Text>
             {selected === lang.key && (
               <Text style={styles.check}>✔</Text>
             )}
@@ -110,10 +136,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   check: {
-    color: '#2196f3', // xanh da trời
+    color: '#2196f3',
     fontSize: 20,
     fontWeight: 'bold',
   },
 });
 
 export default LanguageScreen;
+

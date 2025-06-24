@@ -1,0 +1,21 @@
+{
+    "language": "Ngôn ngữ",
+    "overview": "Tổng quát",
+    "settings": "Cài đặt",
+    "support": "Hỗ trợ",
+    "about_us": "Về chúng tôi",
+    "rate_app": "Đánh giá ứng dụng",
+    "security": "Bảo mật",
+    "delete_account": "Xóa tài khoản",
+    "logout": "Đăng xuất",
+    "promo_code": "Mã ưu đãi",
+    "invite_friends": "Giới thiệu bạn bè",
+    "support_how": "Cách thức hoạt động",
+    "support_policy": "Chính sách bảo mật",
+    "support_terms": "Điều khoản & Điều kiện",
+    "guest": "Khách",
+    "not_logged_in": "Bạn chưa đăng nhập",
+    "login": "Đăng nhập",
+    "member_of_app": "Thành viên {{app}}",
+    "edit_profile": "Chỉnh sửa"
+}

@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Keyboard } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Keyboard, Alert } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RankingList from '../../compoments/RankingList';
 import { UserContext } from '../../context/UserContext';
+import NetInfo from '@react-native-community/netinfo';
+import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
 const TABS = [
   { key: 'all', label: 'Tất cả' },
@@ -17,6 +19,14 @@ const RankingScreen = () => {
   const [search, setSearch] = useState('');
   const [searchSubmitted, setSearchSubmitted] = useState(false);
   const { user } = useContext(UserContext);
+  const [isConnected, setIsConnected] = useState(true);
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(!!state.isConnected);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Nếu là guest
   const guestRanking = [
@@ -58,6 +68,86 @@ const RankingScreen = () => {
     !searchSubmitted &&
     filteredRanking.length > 0;
 
+  // Khi offline, chỉ hiện dòng nhắc, vẫn giữ header, 3 tab và input search nếu searchMode
+  if (!isConnected) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        {/* Header giữ nguyên, có thể là searchMode hoặc không */}
+        <View style={styles.header}>
+          {!searchMode ? (
+            <>
+              <Text style={styles.headerTitle}>Xếp hạng</Text>
+              <TouchableOpacity
+                onPress={() => setSearchMode(true)}
+              >
+                <Image source={require('../../assert/image/whitesearch.png')} style={styles.searchIcon} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.searchBarWrap}>
+              <View style={styles.searchBar}>
+                <Image source={require('../../assert/image/blacksearch.png')} style={styles.searchInputIcon} />
+                <InputNavigation
+                  style={styles.searchInput}
+                  placeholder="Tìm người chơi"
+                  placeholderTextColor="#888"
+                  value={search}
+                  onChangeText={text => {
+                    setSearch(text);
+                    setSearchSubmitted(false);
+                  }}
+                  autoFocus
+                  returnKeyType="search"
+                  onSubmitEditing={() => {
+                    Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                  }}
+                />
+                {search.length > 0 && (
+                  <TouchableOpacity onPress={() => {
+                    setSearch('');
+                    setSearchSubmitted(false);
+                  }}>
+                    <Image source={require('../../assert/image/cancel.png')} style={styles.cancelIcon} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setSearch('');
+                  setSearchMode(false);
+                  setSearchSubmitted(false);
+                  Keyboard.dismiss();
+                }}
+              >
+                <Text style={styles.cancelText}>Hủy</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        {/* Tabs giữ nguyên */}
+        <View style={styles.tabRow}>
+          {TABS.map(t => (
+            <TouchableOpacity
+              key={t.key}
+              style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
+              onPress={() => setTab(t.key)}
+            >
+              <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {/* Dòng nhắc ở giữa màn hình */}
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginHorizontal: 24 }}>
+            Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem bảng xếp hạng.
+          </Text>
+        </View>
+        <BottomNavigation current="rank" />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
@@ -65,7 +155,16 @@ const RankingScreen = () => {
         {!searchMode ? (
           <>
             <Text style={styles.headerTitle}>Xếp hạng</Text>
-            <TouchableOpacity onPress={() => setSearchMode(true)}>
+            <TouchableOpacity
+              onPress={async () => {
+                // Khi offline, không cho vào search
+                if (!isConnected) {
+                  Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                  return;
+                }
+                setSearchMode(true);
+              }}
+            >
               <Image source={require('../../assert/image/whitesearch.png')} style={styles.searchIcon} />
             </TouchableOpacity>
           </>
@@ -84,7 +183,14 @@ const RankingScreen = () => {
                 }}
                 autoFocus
                 returnKeyType="search"
-                onSubmitEditing={() => setSearchSubmitted(true)}
+                onSubmitEditing={async () => {
+                  // Khi offline, alert khi bấm enter tìm kiếm
+                  if (!isConnected) {
+                    Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                    return;
+                  }
+                  setSearchSubmitted(true);
+                }}
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => {
