@@ -69,7 +69,7 @@ const BuyScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('buy_recipe') || 'Mua công thức'}</Text>
+        <Text style={styles.headerTitle}>{t('buyrecipe') }</Text>
       </View>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {/* Steps */}
@@ -120,7 +120,7 @@ const BuyScreen = () => {
                   style={styles.foodImg}
                 />
                 <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Text style={styles.infoLabel}>{t('buy_selected_recipe') || 'Công thức chọn mua'}</Text>
+                  <Text style={styles.infoLabel}>{t('buyselectedrecipe') }</Text>
                   <Text style={styles.infoTitle} numberOfLines={2}>
                     {item?.name || ''}
                   </Text>
@@ -131,7 +131,7 @@ const BuyScreen = () => {
             <View style={styles.promoRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 <Image source={require('../../assert/image/ticket.png')} style={styles.promoIcon} />
-                <Text style={styles.promoLabel}>{t('enter_promo_code') || 'Nhập mã khuyến mãi'}</Text>
+                <Text style={styles.promoLabel}>{t('enterpromocode') }</Text>
               </View>
               <Switch
                 value={promoEnabled}
@@ -143,7 +143,7 @@ const BuyScreen = () => {
             {promoEnabled && (
               <TextInput
                 style={styles.promoInput}
-                placeholder={t('enter_promo_code_placeholder') || "Nhập mã khuyến mãi"}
+                placeholder={t('enterpromocodeplaceholder') }
                 value={promoCode}
                 onChangeText={setPromoCode}
                 placeholderTextColor="#888"
@@ -151,22 +151,22 @@ const BuyScreen = () => {
             )}
             {/* Payment Info */}
             <View style={styles.paymentCard}>
-              <Text style={styles.paymentTitle}>{t('payment') || 'Thanh toán'}</Text>
+              <Text style={styles.paymentTitle}>{t('payment')}</Text>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('unit_price') || 'Đơn giá'}</Text>
+                <Text style={styles.paymentLabel}>{t('unitprice')}</Text>
                 <Text style={styles.paymentValue}>{price.toLocaleString('vi-VN')}đ</Text>
               </View>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('discount') || 'Giảm giá'}</Text>
+                <Text style={styles.paymentLabel}>{t('discount')}</Text>
                 <Text style={styles.paymentValue}>{discount.toLocaleString('vi-VN')}</Text>
               </View>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabelBold}>{t('total') || 'Tổng tiền'}</Text>
+                <Text style={styles.paymentLabelBold}>{t('total')}</Text>
                 <Text style={styles.paymentValueBold}>{total.toLocaleString('vi-VN')}đ</Text>
               </View>
               <TouchableOpacity>
                 <Text style={styles.policyText}>
-                  {t('refund_policy') || 'Chính sách hoàn huỷ'}{' '}
+                  {t('refundpolicy') }{' '}
                   <Image source={require('../../assert/image/link.png')} style={styles.linkIcon} />
                 </Text>
               </TouchableOpacity>
@@ -176,7 +176,7 @@ const BuyScreen = () => {
         {/* Bước 2: Chọn phương thức thanh toán */}
         {step === 2 && (
           <View style={styles.paymentStep2Wrap}>
-            <Text style={styles.paymentStep2Title}>{t('choose_payment_method') || 'Chọn phương thức thanh toán'}</Text>
+            <Text style={styles.paymentStep2Title}>{t('choosepaymentmethod')}</Text>
             {PAYMENT_METHODS.map(method => (
               <TouchableOpacity
                 key={method.key}
@@ -199,22 +199,22 @@ const BuyScreen = () => {
             ))}
             {/* Payment Info */}
             <View style={styles.paymentCard}>
-              <Text style={styles.paymentTitle}>{t('payment') || 'Thanh toán'}</Text>
+              <Text style={styles.paymentTitle}>{t('payment')}</Text>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('unit_price') || 'Đơn giá'}</Text>
+                <Text style={styles.paymentLabel}>{t('unit_price')}</Text>
                 <Text style={styles.paymentValue}>{price.toLocaleString('vi-VN')}đ</Text>
               </View>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('discount') || 'Giảm giá'}</Text>
+                <Text style={styles.paymentLabel}>{t('discount')}</Text>
                 <Text style={styles.paymentValue}>{discount.toLocaleString('vi-VN')}</Text>
               </View>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabelBold}>{t('total') || 'Tổng tiền'}</Text>
+                <Text style={styles.paymentLabelBold}>{t('total') }</Text>
                 <Text style={styles.paymentValueBold}>{total.toLocaleString('vi-VN')}đ</Text>
               </View>
               <TouchableOpacity>
                 <Text style={styles.policyText}>
-                  {t('refund_policy') || 'Chính sách hoàn huỷ'}{' '}
+                  {t('refundpolicy')}{' '}
                   <Image source={require('../../assert/image/link.png')} style={styles.linkIcon} />
                 </Text>
               </TouchableOpacity>
@@ -226,13 +226,13 @@ const BuyScreen = () => {
       <View style={styles.bottomBtnRow}>
         {step === 1 ? (
           <ButtonNavigation
-            title={`${t('continue') || 'Tiếp tục'} - ${total.toLocaleString('vi-VN')}đ`}
+            title={`${t('continue')} - ${total.toLocaleString('vi-VN')}đ`}
             backgroundColor="#FF6600"
             onPress={() => setStep(2)}
           />
         ) : step === 2 ? (
           <ButtonNavigation
-            title={t('pay') || "Thanh toán"}
+            title={t('pay')}
             backgroundColor="#FF6600"
             onPress={() => setShowSuccess(true)}
           />
@@ -247,8 +247,8 @@ const BuyScreen = () => {
       >
         <View style={styles.successOverlay}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 28, width: '90%', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 10 }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success') || 'Thành công'}</Text>
-            <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('success_buy_desc') || 'Hãy xem công thức và nấu một món thật ngon miệng nhé!'}</Text>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success') }</Text>
+            <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('successbuydesc')}</Text>
             <View style={{ backgroundColor: '#00C48C', borderRadius: 48, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}>
               <Image
                 source={require('../../assert/image/check.png')}
@@ -256,7 +256,7 @@ const BuyScreen = () => {
               />
             </View>
             <ButtonNavigation
-              title={t('view_recipe') || "Xem công thức"}
+              title={t('viewrecipe')}
               backgroundColor="#FF6600"
               onPress={() => {
                 setShowSuccess(false);
@@ -266,7 +266,7 @@ const BuyScreen = () => {
               textStyle={{ fontWeight: 'bold', fontSize: 16 }}
             />
             <ButtonNavigation
-              title={t('home') || "Trang chủ"}
+              title={t('home')}
               backgroundColor="#E0E0E0"
               color="#222"
               onPress={() => {

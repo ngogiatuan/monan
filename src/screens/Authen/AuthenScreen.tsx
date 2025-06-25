@@ -114,7 +114,7 @@ const AuthenScreen = () => {
           lineHeight: 18,
         }}
       >
-        {t('loginagreeterms') || 'Bằng cách đăng nhập, bạn sẽ đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi'}
+        {t('loginagreeterms') }
       </Text>
     </AuthForm>
   );

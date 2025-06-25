@@ -101,7 +101,7 @@ const DiscoveryScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('discovery') || 'Khám phá ẩm thực'}</Text>
+        <Text style={styles.headerTitle}>{t('discovery') }</Text>
         <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilter(true)}>
           <Image source={require('../../assert/image/filter.png')} style={styles.filterIcon} />
         </TouchableOpacity>
@@ -137,7 +137,7 @@ const DiscoveryScreen = () => {
             <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
             <View style={styles.filterGroup}>
               <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('meal') || 'Bữa ăn'}</Text>
+                <Text style={styles.filterLabel}>{t('meal') }</Text>
                 <TouchableOpacity
                   style={styles.filterSelect}
                   activeOpacity={0.7}
@@ -148,7 +148,7 @@ const DiscoveryScreen = () => {
                 </TouchableOpacity>
               </View>
               <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('type') || 'Thể loại'}</Text>
+                <Text style={styles.filterLabel}>{t('type') }</Text>
                 <TouchableOpacity
                   style={styles.filterSelect}
                   activeOpacity={0.7}
@@ -160,7 +160,7 @@ const DiscoveryScreen = () => {
               </View>
             </View>
             <ButtonNavigation
-              title={t('confirm') || 'Xác nhận'}
+              title={t('confirm')}
               style={styles.filterBtnConfirm}
               onPress={() => setShowFilter(false)}
             />
@@ -182,7 +182,7 @@ const DiscoveryScreen = () => {
                 {/* Đổi icon thành ký tự '<' thay vì back.png */}
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('by_meal') || 'Theo bữa ăn'}</Text>
+              <Text style={styles.dialogTitle}>{t('bymeal') }</Text>
             </View>
             <View style={styles.dialogInputWrap}>
               <Image
@@ -190,7 +190,7 @@ const DiscoveryScreen = () => {
                 style={styles.searchIcon}
               />
               <InputNavigation
-                placeholder={t('search_meal') || 'Tìm theo bữa ăn'}
+                placeholder={t('searchmeal') }
                 style={[styles.dialogInput, { paddingLeft: 32 }]}
                 value={mealSearch}
                 onChangeText={setMealSearch}
@@ -240,7 +240,7 @@ const DiscoveryScreen = () => {
                 {/* Đổi icon thành ký tự '<' thay vì back.png */}
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('by_type') || 'Theo thể loại'}</Text>
+              <Text style={styles.dialogTitle}>{t('bytype')}</Text>
             </View>
             <View style={styles.dialogInputWrap}>
               <Image
@@ -248,7 +248,7 @@ const DiscoveryScreen = () => {
                 style={styles.searchIcon}
               />
               <InputNavigation
-                placeholder={t('search_type') || 'Tìm thể loại...'}
+                placeholder={t('searchtype') }
                 style={[styles.dialogInput, { paddingLeft: 32 }]}
                 value={typeSearch}
                 onChangeText={setTypeSearch}
