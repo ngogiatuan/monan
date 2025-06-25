@@ -247,7 +247,7 @@ const HomeScreen = () => {
           <>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity>
+              <TouchableOpacity >
                 <Text style={styles.seeMore}>{t('see_more', { defaultValue: 'Xem thêm' })}</Text>
               </TouchableOpacity>
             </View>
@@ -288,7 +288,7 @@ const HomeScreen = () => {
           <>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={goDiscovery}>
                 <Text style={styles.seeMore}>{t('see_more', { defaultValue: 'Xem thêm' })}</Text>
               </TouchableOpacity>
             </View>
@@ -399,6 +399,10 @@ const HomeScreen = () => {
         return null;
     }
   };
+
+  const goDiscovery = () => {
+    navigation.navigate(nav.discovery)
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>

@@ -134,5 +134,8 @@
     "networkdeleteaccount": "Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xóa tài khoản.",
     "notfoundrecipe": "Không tìm thấy món ăn.",
     "noaccounttodelete":"Bạn không có tài khoản để xóa đâu ^^!",
-    "registerbeforedelete":"Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!"
+    "registerbeforedelete":"Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!",
+    "discovery":"Khám phá ẩm thực",
+    "filterrecipe":"Lọc công thức",
+    "meal":"Bữa ăn"
 }

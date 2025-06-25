@@ -36,11 +36,6 @@ const TYPE_OPTIONS = [
   'Món ăn thịnh hành',
   'Hôm nay bạn nấu gì?',
   'Cảm hứng hàng ngày',
-  'Dành cho người bận rộn',
-  'Món healthy chill chill',
-  'Ăn là ghiền',
-  'Vào bếp cùng gia đình',
-  'Ăn chơi cuối tuần',
 ];
 
 const DiscoveryScreen = () => {
@@ -139,7 +134,7 @@ const DiscoveryScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.filterModal}>
-            <Text style={styles.filterTitle}>{t('filter_recipe') || 'Lọc công thức'}</Text>
+            <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
             <View style={styles.filterGroup}>
               <View style={styles.filterRowCol}>
                 <Text style={styles.filterLabel}>{t('meal') || 'Bữa ăn'}</Text>
@@ -605,6 +600,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     color: '#222',
     paddingLeft: 32, // để chừa chỗ cho icon kính lúp
+    flex:1,
+    marginLeft: 15
   },
   dialogOption: {
     flexDirection: 'row',

@@ -139,5 +139,8 @@
     "networkdeleteaccount": "No network connection. Please turn on wifi or mobile data to delete account.",
     "notfoundrecipe": "Recipe not found.",
     "noaccounttodelete":"You don't have account to delete ^^",
-    "registerbeforedelete":"Please register an account before performing this function!"
+    "registerbeforedelete":"Please register an account before performing this function!",
+    "discovery":"Explore cuisine",
+    "filterrecipe":"Filler Recipe",
+    "meal":"Meal"
 }

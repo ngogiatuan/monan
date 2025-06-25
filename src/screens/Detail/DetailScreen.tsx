@@ -171,9 +171,9 @@ const DetailScreen = () => {
                         resizeMode="cover"
                     />
                     {/* Number of images 1/x at the bottom right corner of the image */}
-                    {images.length > 0 && (
+                    {recipe?.imageUrls.length > 0 && (
                         <View style={{ position: 'absolute', right: 0, bottom: 8, backgroundColor: 'rgba(0,0,0,0.38)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4, minWidth: 44, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={{ color: '#fff', fontSize: 15, fontWeight: 'bold' }}>{currentImageIdx + 1}/{images.length}</Text>
+                            <Text style={{ color: '#fff', fontSize: 15, fontWeight: 'bold' }}>{currentImageIdx + 1}/{recipe.imageUrls.length}</Text>
                         </View>
                     )}
                 </TouchableOpacity>
@@ -349,6 +349,7 @@ const DetailScreen = () => {
                                                 style={styles.relatedMarkCircle}
                                                 onPress={async (e) => {
                                                     e.stopPropagation && e.stopPropagation();
+                                                   
                                                     if (!isConnected) {
                                                         Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
                                                         return;
@@ -427,24 +428,24 @@ const DetailScreen = () => {
                         <TouchableOpacity onPress={() => setShowImageModal(false)}>
                             <Text style={{ color: '#fff', fontSize: 28 }}>×</Text>
                         </TouchableOpacity>
-                        <Text style={{ color: '#fff', fontSize: 16 }}>{currentImageIdx + 1}/{images.length}</Text>
+                        <Text style={{ color: '#fff', fontSize: 16 }}>{currentImageIdx + 1}/{recipe?.imageUrls.length}</Text>
                         <View style={{ width: 28 }} />
                     </View>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        {images.length > 0 && (
+                        {recipe.imageUrls.length > 0 && (
                             <Image
-                                source={{ uri: images[currentImageIdx] }}
+                                source={{ uri: recipe?.imageUrls[currentImageIdx] }}
                                 style={{ width: '100%', height: 300, resizeMode: 'contain' }}
                             />
                         )}
                     </View>
                     {/* Buttons to switch images if there are multiple images */}
-                    {images.length > 1 && (
+                    {recipe.imageUrls.length > 1 && (
                         <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8 }}>
                             <TouchableOpacity disabled={currentImageIdx === 0} onPress={() => setCurrentImageIdx(idx => Math.max(0, idx - 1))} style={{ padding: 16, opacity: currentImageIdx === 0 ? 0.3 : 1 }}>
                                 <Text style={{ color: '#fff', fontSize: 32 }}>{'<'}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity disabled={currentImageIdx === images.length - 1} onPress={() => setCurrentImageIdx(idx => Math.min(images.length - 1, idx + 1))} style={{ padding: 16, opacity: currentImageIdx === images.length - 1 ? 0.3 : 1 }}>
+                            <TouchableOpacity disabled={currentImageIdx === recipe?.imageUrls.length - 1} onPress={() => setCurrentImageIdx(idx => Math.min(recipe?.imageUrls.length - 1, idx + 1))} style={{ padding: 16, opacity: currentImageIdx === images.length - 1 ? 0.3 : 1 }}>
                                 <Text style={{ color: '#fff', fontSize: 32 }}>{'>'}</Text>
                             </TouchableOpacity>
                         </View>
@@ -813,20 +814,20 @@ const styles = StyleSheet.create({
     },
     relatedMarkCircle: {
         position: 'absolute',
-        top: 8,
-        right: 8,
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: 'rgba(0,0,0,0.7)', // translucent black color
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 2,
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
     },
     relatedMark: {
         width: 16,
         height: 16,
-        tintColor: '#fff',
+        resizeMode:'contain'
     },
     relatedTimeOverlay: {
         position: 'absolute',
