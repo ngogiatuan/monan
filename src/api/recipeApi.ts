@@ -12,3 +12,17 @@ export const getRecipes = async (page = 1, limit = 10) => {
   }
 };
 
+export const getRecipeById = async (id) => {
+  try {
+    if (!id) {
+      console.log('No recipe ID provided');
+      return null;
+    }
+    const res = await axios.get(`${API_URL}/recipes/${id}`);
+    return res.data?.data || null;
+  } catch (e) {
+    console.log('Error fetching recipe by ID:', e);
+    return null;
+  }
+};
+

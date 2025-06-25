@@ -60,25 +60,25 @@ const ResetPasswordScreen = () => {
   return (
     <>
       <AuthForm
-        title={t('reset_password') || "Đặt lại mật khẩu"}
-        desc={t('reset_password_desc') || "Tạo mật khẩu mới cho tài khoản của bạn."}
+        title={t('resetpassword') }
+        desc={t('resetpassworddesc') }
         showBack
         onBack={() => navigation.goBack()}
       >
-        <Text style={styles.label}>{t('new_password') || "Mật khẩu mới"} <Text style={{ color: 'red' }}>*</Text></Text>
+        <Text style={styles.label}>{t('newpassword')} <Text style={{ color: 'red' }}>*</Text></Text>
         <TextInput
           style={[styles.input, { color: '#222' }]}
-          placeholder={t('enter_new_password') || "Nhập mật khẩu mới..."}
+          placeholder={t('enternewpassword')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           placeholderTextColor="#888"
           selectionColor="#222"
         />
-        <Text style={styles.label}>{t('re_new_password') || "Nhập lại mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
+        <Text style={styles.label}>{t('renewpassword') } <Text style={{ color: 'red' }}>*</Text></Text>
         <TextInput
           style={[styles.input, { color: '#222' }]}
-          placeholder={t('enter_re_new_password') || "Nhập lại mật khẩu..."}
+          placeholder={t('enterrenewpassword') }
           value={repassword}
           onChangeText={setRepassword}
           secureTextEntry
@@ -87,7 +87,7 @@ const ResetPasswordScreen = () => {
         />
         {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
         {success && !showDialog ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
-        <ButtonNavigation title={t('continue') || "Tiếp tục"} onPress={handleReset} />
+        <ButtonNavigation title={t('continue') } onPress={handleReset} />
       </AuthForm>
       {/* Dialog báo đổi mật khẩu thành công */}
       <Modal
@@ -102,12 +102,12 @@ const ResetPasswordScreen = () => {
               source={require('../../assert/image/check.png')}
               style={styles.dialogIcon}
             />
-            <Text style={styles.dialogTitle}>{t('reset_password_success') || "Đổi mật khẩu thành công!"}</Text>
+            <Text style={styles.dialogTitle}>{t('resetpasswordsuccess') }</Text>
             <Text style={styles.dialogDesc}>
-              {t('reset_password_success_desc') || "Bạn đã đặt lại mật khẩu mới. Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng."}
+              {t('resetpasswordsuccessdesc') }
             </Text>
             <ButtonNavigation
-              title={t('login') || "Đăng nhập"}
+              title={t('login') }
               backgroundColor="#FF9800"
               color="#222"
               onPress={() => {

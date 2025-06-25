@@ -15,7 +15,7 @@ const AuthenScreen = () => {
   return (
     <AuthForm>
       <ButtonNavigation
-        title={t('login_with_email') || "Đăng nhập bằng Email"}
+        title={t('loginwithemail') }
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -46,7 +46,7 @@ const AuthenScreen = () => {
         />
       </ButtonNavigation>
       <ButtonNavigation
-        title={t('login_with_google') || "Đăng nhập bằng Google"}
+        title={t('loginwithgoogle')}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -76,7 +76,7 @@ const AuthenScreen = () => {
         />
       </ButtonNavigation>
       <ButtonNavigation
-        title={t('login_with_facebook') || "Đăng nhập bằng Facebook"}
+        title={t('loginwithfacebook') }
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -114,7 +114,7 @@ const AuthenScreen = () => {
           lineHeight: 18,
         }}
       >
-        {t('login_agree_terms') || 'Bằng cách đăng nhập, bạn sẽ đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi'}
+        {t('loginagreeterms') || 'Bằng cách đăng nhập, bạn sẽ đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi'}
       </Text>
     </AuthForm>
   );

@@ -39,11 +39,11 @@ const LoginScreen = () => {
   };
 
   return (
-    <AuthForm title={t('login') || "Đăng nhập"}>
-      <Text style={styles.label}>{t('email') || "Email"}</Text>
+    <AuthForm title={t('login') }>
+      <Text style={styles.label}>{t('Email') }</Text>
       <TextInput
-        style={styles.input}
-        placeholder={t('enter_email') || "Nhập email..."}
+        style={[styles.input,{ color: '#222' }]}
+        placeholder={t('enteremail') }
         value={email}
         onChangeText={text => {
           setEmail(text);
@@ -51,14 +51,15 @@ const LoginScreen = () => {
         }}
         keyboardType="email-address"
         autoCapitalize="none"
+        placeholderTextColor="#888"
       />
       {emailError ? (
         <Text style={styles.errorText}>{emailError}</Text>
       ) : null}
-      <Text style={styles.label}>{t('password') || "Mật khẩu"}</Text>
+      <Text style={styles.label}>{t('Password')}</Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder={t('enter_password') || "Nhập mật khẩu"}
+        placeholder={t('enterpassword') }
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -69,16 +70,16 @@ const LoginScreen = () => {
         style={{ alignSelf: 'flex-end', marginBottom: 12 }}
         onPress={() => navigation.navigate(nav.forgot as never)}
       >
-        <Text style={styles.forgot}>{t('forgot_password') || "Quên mật khẩu?"}</Text>
+        <Text style={styles.forgot}>{t('forgotpassword') }</Text>
       </TouchableOpacity>
-      <ButtonNavigation title={t('login') || "Đăng nhập"} onPress={handleLogin} />
+      <ButtonNavigation title={t('login') } onPress={handleLogin} />
       <View style={styles.orContainer}>
         <View style={styles.line} />
-        <Text style={styles.orText}>{t('or') || "Hoặc"}</Text>
+        <Text style={styles.orText}>{t('or')}</Text>
         <View style={styles.line} />
       </View>
       <ButtonNavigation
-        title={t('login_with_google') || "Đăng nhập bằng Google"}
+        title={t('loginwithgoogle') }
         backgroundColor="#fff"
         color="#222"
         style={styles.button}
@@ -87,7 +88,7 @@ const LoginScreen = () => {
         <Image source={require('../../assert/image/Google.png')} style={styles.icon} />
       </ButtonNavigation>
       <ButtonNavigation
-        title={t('login_with_facebook') || "Đăng nhập bằng Facebook"}
+        title={t('loginwithfacebook') }
         backgroundColor="#fff"
         color="#222"
         style={styles.button}
@@ -96,9 +97,9 @@ const LoginScreen = () => {
         <Image source={require('../../assert/image/facebook.png')} style={styles.icon} />
       </ButtonNavigation>
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomTextBold}>{t('no_account') || "Chưa có tài khoản?"}</Text>
+        <Text style={styles.bottomTextBold}>{t('noaccount') }</Text>
         <TouchableOpacity onPress={() => navigation.navigate(nav.register as never)}>
-          <Text style={styles.linkUnderline}> {t('register') || "Đăng ký"}</Text>
+          <Text style={styles.linkUnderline}> {t('register') }</Text>
         </TouchableOpacity>
       </View>
     </AuthForm>

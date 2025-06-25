@@ -45,37 +45,39 @@ const RegisterScreen = () => {
   };
 
   return (
-    <AuthForm title={t('register') || "Đăng ký"}>
-      <Text style={styles.label}>{t('email') || "Email"} <Text style={{ color: 'red' }}>*</Text></Text>
+    <AuthForm title={t('register') }>
+      <Text style={styles.label}>{t('Email') } <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={styles.input}
-        placeholder={t('enter_email') || "Nhập email..."}
+        placeholder={t('enteremail') }
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+         placeholderTextColor="#888"
       />
-      <Text style={styles.label}>{t('fullname') || "Họ và tên"}</Text>
+      <Text style={styles.label}>{t('fullname') }</Text>
       <TextInput
         style={styles.input}
-        placeholder={t('enter_fullname') || "Nhập họ và tên..."}
+        placeholder={t('enterfullname') }
         value={fullname}
         onChangeText={setFullname}
+         placeholderTextColor="#888"
       />
-      <Text style={styles.label}>{t('password') || "Mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('password') } <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder={t('enter_password') || "Nhập mật khẩu..."}
+        placeholder={t('enterpassword') }
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         placeholderTextColor="#888"
         selectionColor="#222"
       />
-      <Text style={styles.label}>{t('re_password') || "Nhập lại mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('enterrepassword') } <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder={t('enter_re_password') || "Nhập lại mật khẩu..."}
+        placeholder={t('enterrepassword')}
         value={repassword}
         onChangeText={setRepassword}
         secureTextEntry
@@ -83,17 +85,17 @@ const RegisterScreen = () => {
         selectionColor="#222"
       />
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{t('register_success') || "Đăng ký thành công! Vui lòng đăng nhập."}</Text> : null}
-      <ButtonNavigation title={t('register') || "Đăng ký"} onPress={handleRegister} />
+      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{t('registersuccess') || "Đăng ký thành công! Vui lòng đăng nhập."}</Text> : null}
+      <ButtonNavigation title={t('register') } onPress={handleRegister} />
       <View style={styles.orContainer}>
         <View style={styles.line} />
-        <Text style={styles.orText}>{t('or') || "Hoặc"}</Text>
+        <Text style={styles.orText}>{t('or') }</Text>
         <View style={styles.line} />
       </View>
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomTextBold}>{t('have_account') || "Đã có tài khoản?"}</Text>
+        <Text style={styles.bottomTextBold}>{t('haveaccount') }</Text>
         <TouchableOpacity onPress={() => navigation.navigate(nav.login as never)}>
-          <Text style={styles.linkUnderline}> {t('login') || "Đăng nhập"}</Text>
+          <Text style={styles.linkUnderline}> {t('login') }</Text>
         </TouchableOpacity>
       </View>
     </AuthForm>

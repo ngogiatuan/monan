@@ -48,15 +48,15 @@ const ForgotPasswordScreen = () => {
 
   return (
     <AuthForm
-      title={t('forgot_password') || "Khôi phục mật khẩu"}
-      desc={t('forgot_password_desc') || "Vui lòng điền email đăng ký để chúng tôi khôi phục lại mật khẩu cho bạn."}
+      title={t('passwordrecovery') }
+      desc={t('forgotpassworddesc') }
       showBack
       onBack={() => navigation.goBack()}
     >
-      <Text style={styles.label}>{t('email') || "Email"} <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('Email') } <Text style={{ color: 'red' }}>*</Text></Text>
       <InputNavigation
         style={styles.input}
-        placeholder={t('enter_email') || "Nhập email..."}
+        placeholder={t('enteremail') }
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -66,7 +66,7 @@ const ForgotPasswordScreen = () => {
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
       {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title={loading ? t('sending') || "Đang gửi..." : t('continue') || "Tiếp tục"}
+        title={loading ? t('sending')  : t('continue') }
         onPress={handleSendOtp}
         disabled={loading}
       />

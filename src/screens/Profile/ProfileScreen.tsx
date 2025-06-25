@@ -104,8 +104,8 @@ const ProfileScreen = () => {
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
                 Alert.alert(
-                  t('network_feature') || 'Không có kết nối mạng',
-                  t('network_feature_detail') || 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.'
+                  t('networkfeature') ,
+                  t('networkfeaturedetail') 
                 );
                 return;
               }
@@ -121,12 +121,11 @@ const ProfileScreen = () => {
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
                 Alert.alert(
-                  t('network_feature') || 'Không có kết nối mạng',
-                  t('network_feature_detail') || 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.'
+                  t('networkfeature') ,
+                  t('networkfeaturedetail') 
                 );
                 return;
               }
-              // ...existing code nếu có...
             }}>
               <Image
                 source={require('../../assert/image/invite.png')}
@@ -143,8 +142,7 @@ const ProfileScreen = () => {
             style={styles.row}
             onPress={async () => {
               const ok = await checkNetworkAndAlert(
-                t('network_language') ||
-                  'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để thay đổi ngôn ngữ.'
+                t('networklanguage')
               );
               if (!ok) return;
               navigation.navigate(nav.language as string);
@@ -193,8 +191,7 @@ const ProfileScreen = () => {
             style={styles.row}
             onPress={async () => {
               const ok = await checkNetworkAndAlert(
-                t('network_delete_account') ||
-                  'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xóa tài khoản.'
+                t('networkdeleteaccount')
               );
               if (!ok) return;
               navigation.navigate(nav.deleteAccount as string);
@@ -211,27 +208,6 @@ const ProfileScreen = () => {
         <TouchableOpacity style={styles.logoutBtn} onPress={() => setShowLogout(true)}>
           <Text style={styles.logoutText}>{labels.logout}</Text>
         </TouchableOpacity>
-        {/* XÓA đoạn này: nút tạo tài khoản dưới đăng xuất */}
-        {/* {!user && (
-          <TouchableOpacity
-            style={{
-              marginTop: 24,
-              marginHorizontal: 20,
-              backgroundColor: '#FF6600',
-              borderRadius: 8,
-              paddingVertical: 14,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onPress={async () => {
-              const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.');
-              if (!ok) return;
-              navigation.navigate(nav.authen);
-            }}
-          >
-            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Tạo tài khoản</Text>
-          </TouchableOpacity>
-        )} */}
       </ScrollView>
       <BottomNavigation current="profile" />
       {/* Dialog xác nhận đăng xuất */}

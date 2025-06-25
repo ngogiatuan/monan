@@ -95,10 +95,10 @@ const DeleteAccountScreen = ({ navigation }: any) => {
               alignItems: 'center',
             }}>
               <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222', textAlign: 'center' }}>
-                {t('no_account_to_delete') || 'Bạn chưa có tài khoản để xóa đâu ^^'}
+                {t('noaccounttodelete') }
               </Text>
               <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
-                {t('register_before_delete') || 'Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!'}
+                {t('registerbeforedelete') || 'Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!'}
               </Text>
               <TouchableOpacity
                 style={{

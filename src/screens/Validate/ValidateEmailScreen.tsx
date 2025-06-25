@@ -71,8 +71,8 @@ const ValidateEmailScreen = () => {
 
   return (
     <AuthForm
-      title={t('validate_email') || "Xác thực email"}
-      desc={t('validate_email_desc', { email }) || `Bạn vui lòng nhập mã xác thực đã được gửi qua ${email}.`}
+      title={t('validateemail') }
+      desc={t('validateemaildesc', { email }) || `Bạn vui lòng nhập mã xác thực đã được gửi qua ${email}.`}
       showBack
       onBack={() => navigation.goBack()}
     >
@@ -98,7 +98,7 @@ const ValidateEmailScreen = () => {
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
       {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title={loading ? t('verifying') || "Đang xác thực..." : t('continue') || "Tiếp tục"}
+        title={loading ? t('verifying') : t('continue') }
         onPress={handleVerify}
         disabled={loading}
       />

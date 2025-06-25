@@ -12,7 +12,7 @@ const LABELS = {
     create_account: 'Tạo tài khoản',
     profile: 'Trang cá nhân',
     edit_profile: 'Chỉnh sửa',
-    member_of_app: 'Thành viên app',
+    member_of_app: 'Thành viên appname',
   },
   en: {
     login: 'Login',
@@ -31,6 +31,7 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
   const [labels, setLabels] = useState(LABELS.vi);
 
   useEffect(() => {
+    console.log('Language changed:', i18n.language);
     if (i18n.language === 'en') setLabels(LABELS.en);
     else setLabels(LABELS.vi);
   }, [i18n.language]);
