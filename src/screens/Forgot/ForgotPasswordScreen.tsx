@@ -6,11 +6,13 @@ import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import InputNavigation from '../../compoments/InputNavigation';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = 'http://103.72.99.132:3000';
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,15 +48,15 @@ const ForgotPasswordScreen = () => {
 
   return (
     <AuthForm
-      title="Khôi phục mật khẩu"
-      desc="Vui lòng điền email đăng ký để chúng tôi khôi phục lại mật khẩu cho bạn."
+      title={t('forgot_password') || "Khôi phục mật khẩu"}
+      desc={t('forgot_password_desc') || "Vui lòng điền email đăng ký để chúng tôi khôi phục lại mật khẩu cho bạn."}
       showBack
       onBack={() => navigation.goBack()}
     >
-      <Text style={styles.label}>Email <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('email') || "Email"} <Text style={{ color: 'red' }}>*</Text></Text>
       <InputNavigation
         style={styles.input}
-        placeholder="Nhập email..."
+        placeholder={t('enter_email') || "Nhập email..."}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -64,7 +66,7 @@ const ForgotPasswordScreen = () => {
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
       {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title={loading ? "Đang gửi..." : "Tiếp tục"}
+        title={loading ? t('sending') || "Đang gửi..." : t('continue') || "Tiếp tục"}
         onPress={handleSendOtp}
         disabled={loading}
       />

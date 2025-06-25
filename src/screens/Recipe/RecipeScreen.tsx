@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
@@ -234,6 +235,7 @@ const RecipeScreen = () => {
   const navigation = useNavigation<any>();
   const [favorites, setFavorites] = useState<any[]>([]); // Danh sách công thức đã lưu
   const { user } = useContext(UserContext);
+  const { t } = useTranslation();
 
   const [isConnected, setIsConnected] = React.useState(true);
 
@@ -335,20 +337,20 @@ try {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Công thức</Text>
+        <Text style={styles.headerTitle}>{t('recipe') || 'Công thức'}</Text>
       </View>
       <View style={styles.tabRow}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'my' && styles.tabBtnActive]}
           onPress={() => setTab('my')}
         >
-          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>Công thức của tôi</Text>
+          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>{t('my_recipe') || 'Công thức của tôi'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'saved' && styles.tabBtnActive]}
           onPress={() => setTab('saved')}
         >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>Công thức đã lưu</Text>
+          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>{t('saved_recipe') || 'Công thức đã lưu'}</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.body}>

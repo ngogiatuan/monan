@@ -6,10 +6,12 @@ import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import { UserContext } from '../../context/UserContext';
 import { registerUser, getUserByEmailAndPassword } from '../../api/userApi';
+import { useTranslation } from 'react-i18next';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
   const { setUser } = useContext(UserContext);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [fullname, setFullname] = useState('');
   const [password, setPassword] = useState('');
@@ -43,37 +45,37 @@ const RegisterScreen = () => {
   };
 
   return (
-    <AuthForm title="Đăng ký">
-      <Text style={styles.label}>Email <Text style={{ color: 'red' }}>*</Text></Text>
+    <AuthForm title={t('register') || "Đăng ký"}>
+      <Text style={styles.label}>{t('email') || "Email"} <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={styles.input}
-        placeholder="Nhập email..."
+        placeholder={t('enter_email') || "Nhập email..."}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      <Text style={styles.label}>Họ và tên</Text>
+      <Text style={styles.label}>{t('fullname') || "Họ và tên"}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nhập họ và tên..."
+        placeholder={t('enter_fullname') || "Nhập họ và tên..."}
         value={fullname}
         onChangeText={setFullname}
       />
-      <Text style={styles.label}>Mật khẩu <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('password') || "Mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder="Nhập mật khẩu..."
+        placeholder={t('enter_password') || "Nhập mật khẩu..."}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         placeholderTextColor="#888"
         selectionColor="#222"
       />
-      <Text style={styles.label}>Nhập lại mật khẩu <Text style={{ color: 'red' }}>*</Text></Text>
+      <Text style={styles.label}>{t('re_password') || "Nhập lại mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder="Nhập lại mật khẩu..."
+        placeholder={t('enter_re_password') || "Nhập lại mật khẩu..."}
         value={repassword}
         onChangeText={setRepassword}
         secureTextEntry
@@ -81,17 +83,17 @@ const RegisterScreen = () => {
         selectionColor="#222"
       />
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>Đăng ký thành công! Vui lòng đăng nhập.</Text> : null}
-      <ButtonNavigation title="Đăng ký" onPress={handleRegister} />
+      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{t('register_success') || "Đăng ký thành công! Vui lòng đăng nhập."}</Text> : null}
+      <ButtonNavigation title={t('register') || "Đăng ký"} onPress={handleRegister} />
       <View style={styles.orContainer}>
         <View style={styles.line} />
-        <Text style={styles.orText}>Hoặc</Text>
+        <Text style={styles.orText}>{t('or') || "Hoặc"}</Text>
         <View style={styles.line} />
       </View>
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomTextBold}>Đã có tài khoản?</Text>
+        <Text style={styles.bottomTextBold}>{t('have_account') || "Đã có tài khoản?"}</Text>
         <TouchableOpacity onPress={() => navigation.navigate(nav.login as never)}>
-          <Text style={styles.linkUnderline}> Đăng nhập</Text>
+          <Text style={styles.linkUnderline}> {t('login') || "Đăng nhập"}</Text>
         </TouchableOpacity>
       </View>
     </AuthForm>
@@ -148,4 +150,3 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
-   

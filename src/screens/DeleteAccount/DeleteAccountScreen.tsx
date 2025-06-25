@@ -4,11 +4,13 @@ import InputNavigation from '../../compoments/InputNavigation';
 import { UserContext } from '../../context/UserContext';
 import { deleteUserByEmail } from '../../api/userApi';
 import { nav } from '../../navigation/navigationName';
+import { useTranslation } from 'react-i18next';
 
 const DeleteAccountScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
   const { user, setUser } = useContext(UserContext);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
+  const { t } = useTranslation();
 
   // So sánh chính xác, loại bỏ khoảng trắng thừa, không phân biệt kiểu unicode tổ hợp, không phân biệt kiểu gõ dấu, không phân biệt hoa thường
   const normalize = (str: string) =>
@@ -49,15 +51,15 @@ const DeleteAccountScreen = ({ navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Xóa tài khoản</Text>
+        <Text style={styles.headerTitle}>{t('delete_account') || 'Xóa tài khoản'}</Text>
       </View>
       <View style={styles.body}>
         <Text style={styles.warning}>
-          Khi bạn xóa tài khoản, tất cả dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.
+          {t('delete_warning') || 'Khi bạn xóa tài khoản, tất cả dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.'}
         </Text>
-        <Text style={styles.label}>Nhập "Xóa tài khoản"</Text>
+        <Text style={styles.label}>{t('enter_delete_phrase') || 'Nhập "Xóa tài khoản"'}</Text>
         <InputNavigation
-          placeholder="Xóa tài khoản"
+          placeholder={t('delete_account') || 'Xóa tài khoản'}
           value={input}
           onChangeText={setInput}
           autoCapitalize="none"
@@ -69,7 +71,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
           onPress={handleDelete}
         >
           <Text style={[styles.deleteBtnText, { color: isValid ? '#fff' : '#bbb' }]}>
-            Đồng ý, tôi muốn xóa
+            {t('confirm_delete') || 'Đồng ý, tôi muốn xóa'}
           </Text>
         </TouchableOpacity>
         {/* Dialog cho guest */}
@@ -93,10 +95,10 @@ const DeleteAccountScreen = ({ navigation }: any) => {
               alignItems: 'center',
             }}>
               <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222', textAlign: 'center' }}>
-                Bạn chưa có tài khoản để xóa đâu ^^
+                {t('no_account_to_delete') || 'Bạn chưa có tài khoản để xóa đâu ^^'}
               </Text>
               <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
-                Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!
+                {t('register_before_delete') || 'Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!'}
               </Text>
               <TouchableOpacity
                 style={{
@@ -111,7 +113,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
                   navigation.goBack();
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>OK</Text>
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{t('ok') || 'OK'}</Text>
               </TouchableOpacity>
             </View>
           </View>

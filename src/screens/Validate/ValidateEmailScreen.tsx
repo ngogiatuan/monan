@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = 'http://103.72.99.132:3000';
 
@@ -12,6 +13,7 @@ const ValidateEmailScreen = () => {
   const route = useRoute<any>();
   const email = route.params?.email || '';
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [code, setCode] = useState(['', '', '', '', '', '']); // 6 ô nhập mã
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -69,8 +71,8 @@ const ValidateEmailScreen = () => {
 
   return (
     <AuthForm
-      title="Xác thực email"
-      desc={`Bạn vui lòng nhập mã xác thực đã được gửi qua ${email}.`}
+      title={t('validate_email') || "Xác thực email"}
+      desc={t('validate_email_desc', { email }) || `Bạn vui lòng nhập mã xác thực đã được gửi qua ${email}.`}
       showBack
       onBack={() => navigation.goBack()}
     >
@@ -96,7 +98,7 @@ const ValidateEmailScreen = () => {
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
       {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
       <ButtonNavigation
-        title={loading ? "Đang xác thực..." : "Tiếp tục"}
+        title={loading ? t('verifying') || "Đang xác thực..." : t('continue') || "Tiếp tục"}
         onPress={handleVerify}
         disabled={loading}
       />

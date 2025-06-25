@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface AuthFormProps {
   title?: string;
@@ -19,29 +20,32 @@ const AuthForm = ({
   showBack = false,
   backgroundImage = require('../assert/image/authen.png'),
   bottomSheetStyle,
-}: AuthFormProps) => (
-  <ImageBackground
-    source={backgroundImage}
-    style={styles.background}
-    resizeMode="cover"
-  >
-    <KeyboardAvoidingView
-      style={{ flex: 1, justifyContent: 'flex-end' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+}: AuthFormProps) => {
+  const { t } = useTranslation();
+  return (
+    <ImageBackground
+      source={backgroundImage}
+      style={styles.background}
+      resizeMode="cover"
     >
-      <View style={[styles.bottomSheet, bottomSheetStyle]}>
-        {showBack && (
-          <TouchableOpacity onPress={onBack}>
-            <Text style={styles.backText}>{'< Quay lại'}</Text>
-          </TouchableOpacity>
-        )}
-        {title ? <Text style={styles.title}>{title}</Text> : null}
-        {desc ? <Text style={styles.desc}>{desc}</Text> : null}
-        {children}
-      </View>
-    </KeyboardAvoidingView>
-  </ImageBackground>
-);
+      <KeyboardAvoidingView
+        style={{ flex: 1, justifyContent: 'flex-end' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.bottomSheet, bottomSheetStyle]}>
+          {showBack && (
+            <TouchableOpacity onPress={onBack}>
+              <Text style={styles.backText}>{'< ' + (t('back') || 'Quay lại')}</Text>
+            </TouchableOpacity>
+          )}
+          {title ? <Text style={styles.title}>{t(title) || title}</Text> : null}
+          {desc ? <Text style={styles.desc}>{t(desc) || desc}</Text> : null}
+          {children}
+        </View>
+      </KeyboardAvoidingView>
+    </ImageBackground>
+  );
+};
 
 const styles = StyleSheet.create({
   background: {

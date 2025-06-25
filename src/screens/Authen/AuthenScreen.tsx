@@ -4,16 +4,18 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
+import { useTranslation } from 'react-i18next';
 
 const ICON_SIZE = 20;
 
 const AuthenScreen = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   return (
     <AuthForm>
       <ButtonNavigation
-        title="Đăng nhập bằng Email"
+        title={t('login_with_email') || "Đăng nhập bằng Email"}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -44,7 +46,7 @@ const AuthenScreen = () => {
         />
       </ButtonNavigation>
       <ButtonNavigation
-        title="Đăng nhập bằng Google"
+        title={t('login_with_google') || "Đăng nhập bằng Google"}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -74,7 +76,7 @@ const AuthenScreen = () => {
         />
       </ButtonNavigation>
       <ButtonNavigation
-        title="Đăng nhập bằng Facebook"
+        title={t('login_with_facebook') || "Đăng nhập bằng Facebook"}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -112,8 +114,7 @@ const AuthenScreen = () => {
           lineHeight: 18,
         }}
       >
-        Bằng cách đăng nhập, bạn sẽ đồng ý với Điều khoản sử dụng
-        và Chính sách bảo mật của chúng tôi
+        {t('login_agree_terms') || 'Bằng cách đăng nhập, bạn sẽ đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi'}
       </Text>
     </AuthForm>
   );

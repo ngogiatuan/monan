@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, FlatList } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface RankingItem {
   id: string;
@@ -16,11 +17,13 @@ interface Props {
 }
 
 const RankingList: React.FC<Props> = ({ data, tab }) => {
+  const { t } = useTranslation();
+
   // Nếu đang search và không có kết quả, hiển thị dòng "Chưa có dữ liệu xếp hạng"
   if (tab === 'search' && (!data || data.length === 0)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 32 }}>
-        <Text style={{ color: '#888', fontSize: 15 }}>Chưa có dữ liệu xếp hạng</Text>
+        <Text style={{ color: '#888', fontSize: 15 }}>{t('no_ranking_data', { defaultValue: 'Chưa có dữ liệu xếp hạng' })}</Text>
       </View>
     );
   }
@@ -35,7 +38,7 @@ const RankingList: React.FC<Props> = ({ data, tab }) => {
             <Image source={require('../assert/image/point.png')} style={styles.pointIcon} />
           </View>
           <View>
-            <Text style={styles.yourPointLabel}>Số điểm của bạn</Text>
+            <Text style={styles.yourPointLabel}>{t('your_point', { defaultValue: 'Số điểm của bạn' })}</Text>
             <Text style={styles.yourPointValue}>
               {data && data[0] && data[0].point !== undefined && data[0].point !== null ? data[0].point : '-'}
             </Text>
@@ -59,7 +62,7 @@ const RankingList: React.FC<Props> = ({ data, tab }) => {
             <View style={{ flex: 1 }}>
               <Text style={styles.nameText}>{item.name}</Text>
               <View style={styles.questRow}>
-                <Text style={styles.questText}>{item.quests} Quests</Text>
+                <Text style={styles.questText}>{item.quests} {t('quests', { defaultValue: 'Quests' })}</Text>
                 {item.rank === 1 && (
                   <Image source={require('../assert/image/king.png')} style={styles.kingIcon} />
                 )}

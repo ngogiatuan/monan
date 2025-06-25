@@ -5,12 +5,14 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import AuthForm from '../../compoments/AuthForm';
 import axios from 'axios';
 import { nav } from '../../navigation/navigationName';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = 'http://103.72.99.132:3000';
 
 const ResetPasswordScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
   const [error, setError] = useState('');
@@ -58,25 +60,25 @@ const ResetPasswordScreen = () => {
   return (
     <>
       <AuthForm
-        title="Đặt lại mật khẩu"
-        desc="Tạo mật khẩu mới cho tài khoản của bạn."
+        title={t('reset_password') || "Đặt lại mật khẩu"}
+        desc={t('reset_password_desc') || "Tạo mật khẩu mới cho tài khoản của bạn."}
         showBack
         onBack={() => navigation.goBack()}
       >
-        <Text style={styles.label}>Mật khẩu mới <Text style={{ color: 'red' }}>*</Text></Text>
+        <Text style={styles.label}>{t('new_password') || "Mật khẩu mới"} <Text style={{ color: 'red' }}>*</Text></Text>
         <TextInput
           style={[styles.input, { color: '#222' }]}
-          placeholder="Nhập mật khẩu mới..."
+          placeholder={t('enter_new_password') || "Nhập mật khẩu mới..."}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           placeholderTextColor="#888"
           selectionColor="#222"
         />
-        <Text style={styles.label}>Nhập lại mật khẩu <Text style={{ color: 'red' }}>*</Text></Text>
+        <Text style={styles.label}>{t('re_new_password') || "Nhập lại mật khẩu"} <Text style={{ color: 'red' }}>*</Text></Text>
         <TextInput
           style={[styles.input, { color: '#222' }]}
-          placeholder="Nhập lại mật khẩu..."
+          placeholder={t('enter_re_new_password') || "Nhập lại mật khẩu..."}
           value={repassword}
           onChangeText={setRepassword}
           secureTextEntry
@@ -85,7 +87,7 @@ const ResetPasswordScreen = () => {
         />
         {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
         {success && !showDialog ? <Text style={{ color: 'green', marginBottom: 8 }}>{success}</Text> : null}
-        <ButtonNavigation title="Tiếp tục" onPress={handleReset} />
+        <ButtonNavigation title={t('continue') || "Tiếp tục"} onPress={handleReset} />
       </AuthForm>
       {/* Dialog báo đổi mật khẩu thành công */}
       <Modal
@@ -100,12 +102,12 @@ const ResetPasswordScreen = () => {
               source={require('../../assert/image/check.png')}
               style={styles.dialogIcon}
             />
-            <Text style={styles.dialogTitle}>Đổi mật khẩu thành công!</Text>
+            <Text style={styles.dialogTitle}>{t('reset_password_success') || "Đổi mật khẩu thành công!"}</Text>
             <Text style={styles.dialogDesc}>
-              Bạn đã đặt lại mật khẩu mới. Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng.
+              {t('reset_password_success_desc') || "Bạn đã đặt lại mật khẩu mới. Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng."}
             </Text>
             <ButtonNavigation
-              title="Đăng nhập"
+              title={t('login') || "Đăng nhập"}
               backgroundColor="#FF9800"
               color="#222"
               onPress={() => {

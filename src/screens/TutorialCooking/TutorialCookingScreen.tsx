@@ -16,6 +16,7 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import axios from 'axios';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import Tts from 'react-native-tts';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -49,6 +50,7 @@ const StepCookingViewer = ({
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx];
   const [isVisibleTts, setIsVisibleTts] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     Tts.getInitStatus().then(
@@ -113,7 +115,7 @@ const StepCookingViewer = ({
       <Image source={step.image} style={styles.stepImg} />
       <View style={styles.contentWrap}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.stepTitle}>{step.title}</Text>
+          <Text style={styles.stepTitle}>{t('step_title', { step: stepIdx + 1 }) || step.title}</Text>
           <TouchableOpacity
             style={{ marginLeft: 10 }}
             onPress={() => {
@@ -140,17 +142,17 @@ const StepCookingViewer = ({
             />
           </TouchableOpacity>
         </View>
-        <Text style={styles.stepDesc}>{step.desc}</Text>
+        <Text style={styles.stepDesc}>{t(`step_desc_${stepIdx + 1}`) || step.desc}</Text>
       </View>
       <View style={styles.bottomBtnRow}>
         <ButtonNavigation
-          title="Quay lại"
+          title={t('back') || "Quay lại"}
           onPress={handleBack}
           backgroundColor="#00C48C"
           style={{ flex: 1, marginRight: 8 }}
         />
         <ButtonNavigation
-          title={stepIdx === steps.length - 1 ? 'Xong' : 'Tiếp tục'}
+          title={stepIdx === steps.length - 1 ? t('done') || 'Xong' : t('continue') || 'Tiếp tục'}
           onPress={handleNext}
           backgroundColor="#FF6600"
           style={{ flex: 1, marginLeft: 8 }}
@@ -167,6 +169,7 @@ const TutorialCookingScreen = () => {
     { image: any; title: string; desc: string }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   // Lấy recipeId từ params truyền sang từ DetailScreen
   const recipeId = route.params?.recipeId;
@@ -206,15 +209,15 @@ const TutorialCookingScreen = () => {
             stepObj.imageUrls && stepObj.imageUrls.length > 0
               ? { uri: stepObj.imageUrls[0] }
               : require('../../assert/image/step1.png'),
-          title: `Bước ${idx + 1}`,
-          desc: stepObj.tutorial || 'Không có hướng dẫn cho bước này.',
+          title: t('step_title', { step: idx + 1 }) || `Bước ${idx + 1}`,
+          desc: t(`step_desc_${idx + 1}`) || stepObj.tutorial || 'Không có hướng dẫn cho bước này.',
         }));
         if (!stepsData.length) {
           stepsData = [
             {
               image: require('../../assert/image/step1.png'),
-              title: 'Bước 1',
-              desc: 'Không có hướng dẫn nấu ăn cho món này.',
+              title: t('step_title', { step: 1 }) || 'Bước 1',
+              desc: t('no_tutorial') || 'Không có hướng dẫn nấu ăn cho món này.',
             },
           ];
         }
@@ -223,8 +226,8 @@ const TutorialCookingScreen = () => {
         setSteps([
           {
             image: require('../../assert/image/step1.png'),
-            title: 'Bước 1',
-            desc: 'Không có hướng dẫn nấu ăn cho món này.',
+            title: t('step_title', { step: 1 }) || 'Bước 1',
+            desc: t('no_tutorial') || 'Không có hướng dẫn nấu ăn cho món này.',
           },
         ]);
       } finally {
@@ -232,7 +235,7 @@ const TutorialCookingScreen = () => {
       }
     };
     fetchSteps();
-  }, [recipeId]);
+  }, [recipeId, t]);
 
   if (loading) {
     return (

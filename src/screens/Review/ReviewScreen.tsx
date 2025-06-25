@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
+import { useTranslation } from 'react-i18next';
 
 const REVIEWS = [
   {
@@ -32,6 +33,7 @@ const REVIEWS = [
 
 const ReviewScreen = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -41,7 +43,7 @@ const ReviewScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Review</Text>
+        <Text style={styles.headerTitle}>{t('review') || 'Review'}</Text>
       </View>
       {/* Tổng điểm */}
       <View style={styles.summaryRow}>
@@ -49,7 +51,7 @@ const ReviewScreen = () => {
           <Text style={styles.summaryScore}>4.8</Text>
           <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
         </View>
-        <Text style={styles.summaryLabel}>Xuất sắc</Text>
+        <Text style={styles.summaryLabel}>{t('excellent') || 'Xuất sắc'}</Text>
       </View>
       {/* Danh sách review */}
       <FlatList

@@ -4,10 +4,12 @@ import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { useTranslation } from 'react-i18next';
 
 const EditProfileScreen = () => {
   const { user, setUser } = useContext(UserContext);
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
 
   // --- SỬA: Khởi tạo avatarUrl và cover từ user.avatar và user.cover (nếu có) ---
   const [name, setName] = useState(user?.name || '');
@@ -117,14 +119,12 @@ const EditProfileScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sửa hồ sơ</Text>
+        <Text style={styles.headerTitle}>{t('edit_profile') || 'Sửa hồ sơ'}</Text>
         <View style={{ width: 40 }} />
       </View>
       {/* Cover image */}
@@ -178,7 +178,7 @@ const EditProfileScreen = () => {
           }}
           onPress={() => setShowAvatarPickerModal(true)}
         >
-          <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Thay ảnh</Text>
+          <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('change_avatar') || 'Thay ảnh'}</Text>
         </TouchableOpacity>
       </View>
       {/* Modal chọn ảnh/camera */}
@@ -190,16 +190,15 @@ const EditProfileScreen = () => {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn hình đại diện</Text>
-            {/* Sửa lại gọi đúng hàm pickAvatarFromLibrary và pickAvatarFromCamera */}
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choose_avatar') || 'Chọn hình đại diện'}</Text>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromLibrary}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chọn từ thư viện</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choose_from_library') || 'Chọn từ thư viện'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromCamera}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chụp ảnh</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('take_photo') || 'Chụp ảnh'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowPickerModal(false)}>
-              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Hủy</Text>
+              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel') || 'Hủy'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -213,15 +212,15 @@ const EditProfileScreen = () => {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>Chọn ảnh cover</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choose_cover') || 'Chọn ảnh cover'}</Text>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromLibrary}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chọn từ thư viện</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choose_from_library') || 'Chọn từ thư viện'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromCamera}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>Chụp ảnh</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('take_photo') || 'Chụp ảnh'}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowCoverPickerModal(false)}>
-              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>Hủy</Text>
+              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel') || 'Hủy'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -235,49 +234,48 @@ const EditProfileScreen = () => {
       >
         <View style={styles.dialogOverlay}>
           <View style={styles.dialogBox}>
-            <Text style={styles.dialogTitle}>Chọn ảnh đại diện</Text>
+            <Text style={styles.dialogTitle}>{t('choose_avatar') || 'Chọn ảnh đại diện'}</Text>
             <TouchableOpacity
               style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
               onPress={pickAvatarFromLibrary}
             >
-              <Text style={styles.dialogBtnText}>Chọn từ thư viện</Text>
+              <Text style={styles.dialogBtnText}>{t('choose_from_library') || 'Chọn từ thư viện'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
               onPress={pickAvatarFromCamera}
             >
-              <Text style={styles.dialogBtnText}>Chụp ảnh</Text>
+              <Text style={styles.dialogBtnText}>{t('take_photo') || 'Chụp ảnh'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.dialogBtn, { backgroundColor: '#eee' }]}
               onPress={() => setShowAvatarPickerModal(false)}
             >
-              <Text style={[styles.dialogBtnText, { color: '#888' }]}>Hủy</Text>
+              <Text style={[styles.dialogBtnText, { color: '#888' }]}>{t('cancel') || 'Hủy'}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       {/* Form nhập liệu trong ScrollView */}
-    
         <View style={styles.form}>
-          <Text style={styles.label}>Tên</Text>
+          <Text style={styles.label}>{t('name') || 'Tên'}</Text>
           <View style={styles.inputWrap}>
             <InputNavigation
               value={name}
               onChangeText={setName}
-              placeholder="Tên"
+              placeholder={t('name') || 'Tên'}
               style={styles.input}
             />
             <TouchableOpacity style={styles.clearBtn} onPress={() => setName('')}>
               <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.label}>Địa chỉ email</Text>
+          <Text style={styles.label}>{t('email_address') || 'Địa chỉ email'}</Text>
           <View style={styles.inputWrap}>
             <InputNavigation
               value={email}
               onChangeText={setEmail}
-              placeholder="Example@gmail.com"
+              placeholder={t('email_placeholder') || 'Example@gmail.com'}
               style={styles.input}
             />
             <TouchableOpacity style={styles.clearBtn} onPress={() => setEmail('')}>
@@ -285,17 +283,15 @@ const EditProfileScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-     
-    
       </ScrollView>
-        {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
-     {!isKeyboardVisible && <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
+      {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
+      {!isKeyboardVisible && <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.saveBtn}
           onPress={handleSave}
           disabled={!isChanged}
         >
-          <Text style={styles.saveBtnText}>Lưu hồ sơ</Text>
+          <Text style={styles.saveBtnText}>{t('save_profile') || 'Lưu hồ sơ'}</Text>
         </TouchableOpacity>
       </View>}
     </View>

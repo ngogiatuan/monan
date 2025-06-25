@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Keyboard, Alert } from 'react-native';
 import InputNavigation from '../../compoments/InputNavigation';
 import BottomNavigation from '../../compoments/Bottomnavigation';
@@ -6,12 +6,7 @@ import RankingList from '../../compoments/RankingList';
 import { UserContext } from '../../context/UserContext';
 import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
-
-const TABS = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'week', label: 'Top tuần' },
-  { key: 'month', label: 'Top tháng' },
-];
+import { useTranslation } from 'react-i18next';
 
 const RankingScreen = () => {
   const [tab, setTab] = useState('all');
@@ -20,6 +15,33 @@ const RankingScreen = () => {
   const [searchSubmitted, setSearchSubmitted] = useState(false);
   const { user } = useContext(UserContext);
   const [isConnected, setIsConnected] = useState(true);
+  const { t, i18n } = useTranslation();
+
+  // Force re-render when language changes to update tab/header text
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    // Sử dụng cả sự kiện languageChanged và navigation focus để đảm bảo đồng bộ UI
+    const handler = () => forceUpdate(v => v + 1);
+    i18n.on('languageChanged', handler);
+
+    // Nếu dùng react-navigation v6+, có thể dùng useFocusEffect để force update khi quay lại từ LanguageScreen
+    // (nếu navigation không tự re-render)
+    // import { useIsFocused } from '@react-navigation/native';
+    // const isFocused = useIsFocused();
+    // useEffect(() => { forceUpdate(v => v + 1); }, [isFocused]);
+
+    return () => {
+      i18n.off('languageChanged', handler);
+    };
+  }, [i18n]);
+
+  // Không dùng useMemo cho TABS/headerTitle, luôn tạo lại mỗi render để đảm bảo đồng bộ
+  const TABS = [
+    { key: 'all', label: t('all', { defaultValue: 'Tất cả' }) },
+    { key: 'week', label: t('top_week', { defaultValue: 'Top tuần' }) },
+    { key: 'month', label: t('top_month', { defaultValue: 'Top tháng' }) },
+  ];
+  const headerTitle = t('ranking', { defaultValue: 'Xếp hạng' });
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -32,7 +54,7 @@ const RankingScreen = () => {
   const guestRanking = [
     {
       id: 'guest',
-      name: 'Guest',
+      name: t('guest', { defaultValue: 'Guest' }),
       avatar: require('../../assert/image/avatar.png'),
       point: '-',
       quests: 0,
@@ -53,7 +75,22 @@ const RankingScreen = () => {
   ];
 
   // Dữ liệu search: chỉ có guest hoặc user, filter theo tên (case-insensitive)
-  const baseRanking = user ? userRanking : guestRanking;
+  const baseRanking = user ? [{
+    id: 'user',
+    name: user?.name || '',
+    avatar: typeof user?.avatar ==="string" ? {uri: user.avatar} : require('../../assert/image/avatar.png'),
+    point: 0,
+    quests: 0,
+    rank: 1,
+  }] : [{
+    id: 'guest',
+    name: t('guest', { defaultValue: 'Guest' }),
+    avatar: require('../../assert/image/avatar.png'),
+    point: '-',
+    quests: 0,
+    rank: 1,
+  }];
+
   const filteredRanking =
     search.trim().length === 0
       ? []
@@ -76,7 +113,7 @@ const RankingScreen = () => {
         <View style={styles.header}>
           {!searchMode ? (
             <>
-              <Text style={styles.headerTitle}>Xếp hạng</Text>
+              <Text style={styles.headerTitle}>{headerTitle}</Text>
               <TouchableOpacity
                 onPress={() => setSearchMode(true)}
               >
@@ -89,7 +126,7 @@ const RankingScreen = () => {
                 <Image source={require('../../assert/image/blacksearch.png')} style={styles.searchInputIcon} />
                 <InputNavigation
                   style={styles.searchInput}
-                  placeholder="Tìm người chơi"
+                  placeholder={t('search_player', { defaultValue: 'Tìm người chơi' })}
                   placeholderTextColor="#888"
                   value={search}
                   onChangeText={text => {
@@ -99,7 +136,10 @@ const RankingScreen = () => {
                   autoFocus
                   returnKeyType="search"
                   onSubmitEditing={() => {
-                    Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                    Alert.alert(
+                      t('no_network', { defaultValue: 'Không có kết nối mạng' }),
+                      t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                    );
                   }}
                 />
                 {search.length > 0 && (
@@ -120,7 +160,7 @@ const RankingScreen = () => {
                   Keyboard.dismiss();
                 }}
               >
-                <Text style={styles.cancelText}>Hủy</Text>
+                <Text style={styles.cancelText}>{t('cancel', { defaultValue: 'Hủy' })}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -140,7 +180,7 @@ const RankingScreen = () => {
         {/* Dòng nhắc ở giữa màn hình */}
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center', marginHorizontal: 24 }}>
-            Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem bảng xếp hạng.
+            {t('no_network_ranking', { defaultValue: 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem bảng xếp hạng.' })}
           </Text>
         </View>
         <BottomNavigation current="rank" />
@@ -154,12 +194,15 @@ const RankingScreen = () => {
       <View style={styles.header}>
         {!searchMode ? (
           <>
-            <Text style={styles.headerTitle}>Xếp hạng</Text>
+            <Text style={styles.headerTitle}>{headerTitle}</Text>
             <TouchableOpacity
               onPress={async () => {
                 // Khi offline, không cho vào search
                 if (!isConnected) {
-                  Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                  Alert.alert(
+                    t('no_network', { defaultValue: 'Không có kết nối mạng' }),
+                    t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                  );
                   return;
                 }
                 setSearchMode(true);
@@ -174,7 +217,7 @@ const RankingScreen = () => {
               <Image source={require('../../assert/image/blacksearch.png')} style={styles.searchInputIcon} />
               <InputNavigation
                 style={styles.searchInput}
-                placeholder="Tìm người chơi"
+                placeholder={t('search_player', { defaultValue: 'Tìm người chơi' })}
                 placeholderTextColor="#888"
                 value={search}
                 onChangeText={text => {
@@ -186,7 +229,10 @@ const RankingScreen = () => {
                 onSubmitEditing={async () => {
                   // Khi offline, alert khi bấm enter tìm kiếm
                   if (!isConnected) {
-                    Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.');
+                    Alert.alert(
+                      t('no_network', { defaultValue: 'Không có kết nối mạng' }),
+                      t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                    );
                     return;
                   }
                   setSearchSubmitted(true);
@@ -210,7 +256,7 @@ const RankingScreen = () => {
                 Keyboard.dismiss();
               }}
             >
-              <Text style={styles.cancelText}>Hủy</Text>
+              <Text style={styles.cancelText}>{t('cancel', { defaultValue: 'Hủy' })}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -397,3 +443,4 @@ const styles = StyleSheet.create({
 });
 
 export default RankingScreen;
+

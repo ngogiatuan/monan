@@ -16,12 +16,14 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 const EndCookingScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
 
   // State cho dialog đánh giá
   const [showRating, setShowRating] = useState(false);
@@ -91,7 +93,7 @@ const EndCookingScreen = () => {
         <TouchableOpacity
           key={i}
           onPress={async () => {
-            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để đánh giá.');
+            const ok = await checkNetworkAndAlert(t('network_rating') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để đánh giá.');
             if (!ok) return;
             setRating(i);
           }}
@@ -128,7 +130,7 @@ const EndCookingScreen = () => {
         <TouchableOpacity
           style={styles.backBtn}
           onPress={async () => {
-            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để quay lại.');
+            const ok = await checkNetworkAndAlert(t('network_back') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để quay lại.');
             if (!ok) return;
             navigation.goBack();
           }}
@@ -136,7 +138,7 @@ const EndCookingScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Kết thúc</Text>
+        <Text style={styles.headerTitle}>{t('end_cooking') || 'Kết thúc'}</Text>
       </View>
       {/* Banner */}
       <Image
@@ -149,13 +151,13 @@ const EndCookingScreen = () => {
           <View style={styles.doneIconCircle}>
             <Image source={require('../../assert/image/check.png')} style={styles.doneIconWhite} />
           </View>
-          <Text style={styles.doneText}>Bạn đã hoàn thành món ăn</Text>
+          <Text style={styles.doneText}>{t('you_finished_dish') || 'Bạn đã hoàn thành món ăn'}</Text>
         </View>
-        <Text style={styles.sectionLabel}>Bạn đã hoàn thành</Text>
+        <Text style={styles.sectionLabel}>{t('you_finished') || 'Bạn đã hoàn thành'}</Text>
         <View style={styles.timeRow}>
           <View style={styles.timeBox}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-            <Text style={styles.timeLabel}>Thời gian bạn làm</Text>
+            <Text style={styles.timeLabel}>{t('your_time') || 'Thời gian bạn làm'}</Text>
             <Text style={styles.timeValue}>
               {showOfflineDialog ? '0' : duration}
             </Text>
@@ -168,11 +170,11 @@ const EndCookingScreen = () => {
         {showOfflineDialog ? (
           <View style={{ alignItems: 'center', marginTop: 12 }}>
             <Text style={{ color: '#e53935', fontWeight: 'bold', fontSize: 15, textAlign: 'center' }}>
-              Bạn đã mất kết nối mạng khi hoàn thành món ăn. Vui lòng bật mạng rồi quay lại để thống kê thời gian nấu!
+              {t('offline_end_notice') || 'Bạn đã mất kết nối mạng khi hoàn thành món ăn. Vui lòng bật mạng rồi quay lại để thống kê thời gian nấu!'}
             </Text>
           </View>
         ) : null}
-        <Text style={styles.sectionLabel}>Bạn nhận được</Text>
+        <Text style={styles.sectionLabel}>{t('you_got') || 'Bạn nhận được'}</Text>
         <View style={styles.rewardRowCenter}>
           <View style={styles.rewardIconCircle}>
             <Image source={require('../../assert/image/point.png')} style={styles.rewardIconCenter} />
@@ -181,16 +183,16 @@ const EndCookingScreen = () => {
         </View>
         <View style={styles.rewardNoteContainer}>
           <Text style={styles.rewardNote}>
-            Điểm kinh nghiệm sẽ giúp bạn thăng hạng ở bảng xếp hạng. Chúc mừng bạn.
+            {t('exp_point_notice') || 'Điểm kinh nghiệm sẽ giúp bạn thăng hạng ở bảng xếp hạng. Chúc mừng bạn.'}
           </Text>
         </View>
       </View>
       {/* Button cố định dưới cùng */}
       <View style={styles.fixedBottomBtnRow}>
         <ButtonNavigation
-          title="Tiếp tục"
+          title={t('continue') || "Tiếp tục"}
           onPress={async () => {
-            const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tiếp tục.');
+            const ok = await checkNetworkAndAlert(t('network_continue') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tiếp tục.');
             if (!ok) return;
             setShowRating(true);
           }}
@@ -212,41 +214,41 @@ const EndCookingScreen = () => {
             <View style={{ alignItems: 'center', marginBottom: 8 }}>
               <View style={styles.modalBar} />
             </View>
-            <Text style={styles.modalTitle}>Đánh giá công thức</Text>
+            <Text style={styles.modalTitle}>{t('rate_recipe') || 'Đánh giá công thức'}</Text>
             {renderStars()}
-            <Text style={styles.modalLabel}>Nhận xét</Text>
+            <Text style={styles.modalLabel}>{t('comment') || 'Nhận xét'}</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Nhận xét về công thức"
+              placeholder={t('comment_recipe_placeholder') || "Nhận xét về công thức"}
               value={comment}
               onChangeText={setComment}
               multiline
               numberOfLines={3}
               placeholderTextColor="#BDBDBD"
               onSubmitEditing={async () => {
-                const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để nhận xét.');
+                const ok = await checkNetworkAndAlert(t('network_comment') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để nhận xét.');
                 if (!ok) return;
                 // ...submit logic nếu có...
               }}
             />
             <View style={styles.modalPointRow}>
               <Text style={styles.modalPointText}>
-                Bạn sẽ nhận thêm <Text style={{ color: '#00C48C', fontWeight: 'bold' }}>+50</Text>
+                {t('you_will_get_more') || 'Bạn sẽ nhận thêm'} <Text style={{ color: '#00C48C', fontWeight: 'bold' }}>+50</Text>
               </Text>
               <Image source={require('../../assert/image/point.png')} style={styles.modalPointIcon} />
-              <Text style={styles.modalPointText}> từ việc đánh giá công thức</Text>
+              <Text style={styles.modalPointText}> {t('from_rating_recipe') || 'từ việc đánh giá công thức'}</Text>
             </View>
             <TouchableOpacity
               style={styles.modalButton}
               onPress={async () => {
-                const ok = await checkNetworkAndAlert('Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xác nhận.');
+                const ok = await checkNetworkAndAlert(t('network_confirm') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xác nhận.');
                 if (!ok) return;
                 setShowRating(false);
                 navigation.navigate(nav.home);
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.modalButtonText}>Xác nhận</Text>
+              <Text style={styles.modalButtonText}>{t('confirm') || 'Xác nhận'}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

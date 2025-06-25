@@ -6,10 +6,12 @@ import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import AuthForm from '../../compoments/AuthForm';
 import { getUserByEmailAndPassword } from '../../api/userApi';
+import { useTranslation } from 'react-i18next';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { setUser } = useContext(UserContext);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -37,11 +39,11 @@ const LoginScreen = () => {
   };
 
   return (
-    <AuthForm title="Đăng nhập">
-      <Text style={styles.label}>Email</Text>
+    <AuthForm title={t('login') || "Đăng nhập"}>
+      <Text style={styles.label}>{t('email') || "Email"}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nhập email..."
+        placeholder={t('enter_email') || "Nhập email..."}
         value={email}
         onChangeText={text => {
           setEmail(text);
@@ -53,10 +55,10 @@ const LoginScreen = () => {
       {emailError ? (
         <Text style={styles.errorText}>{emailError}</Text>
       ) : null}
-      <Text style={styles.label}>Mật khẩu</Text>
+      <Text style={styles.label}>{t('password') || "Mật khẩu"}</Text>
       <TextInput
         style={[styles.input, { color: '#222' }]}
-        placeholder="Nhập mật khẩu"
+        placeholder={t('enter_password') || "Nhập mật khẩu"}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -67,16 +69,16 @@ const LoginScreen = () => {
         style={{ alignSelf: 'flex-end', marginBottom: 12 }}
         onPress={() => navigation.navigate(nav.forgot as never)}
       >
-        <Text style={styles.forgot}>Quên mật khẩu?</Text>
+        <Text style={styles.forgot}>{t('forgot_password') || "Quên mật khẩu?"}</Text>
       </TouchableOpacity>
-      <ButtonNavigation title="Đăng nhập" onPress={handleLogin} />
+      <ButtonNavigation title={t('login') || "Đăng nhập"} onPress={handleLogin} />
       <View style={styles.orContainer}>
         <View style={styles.line} />
-        <Text style={styles.orText}>Hoặc</Text>
+        <Text style={styles.orText}>{t('or') || "Hoặc"}</Text>
         <View style={styles.line} />
       </View>
       <ButtonNavigation
-        title="Đăng nhập bằng Google"
+        title={t('login_with_google') || "Đăng nhập bằng Google"}
         backgroundColor="#fff"
         color="#222"
         style={styles.button}
@@ -85,7 +87,7 @@ const LoginScreen = () => {
         <Image source={require('../../assert/image/Google.png')} style={styles.icon} />
       </ButtonNavigation>
       <ButtonNavigation
-        title="Đăng nhập bằng Facebook"
+        title={t('login_with_facebook') || "Đăng nhập bằng Facebook"}
         backgroundColor="#fff"
         color="#222"
         style={styles.button}
@@ -94,9 +96,9 @@ const LoginScreen = () => {
         <Image source={require('../../assert/image/facebook.png')} style={styles.icon} />
       </ButtonNavigation>
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomTextBold}>Chưa có tài khoản?</Text>
+        <Text style={styles.bottomTextBold}>{t('no_account') || "Chưa có tài khoản?"}</Text>
         <TouchableOpacity onPress={() => navigation.navigate(nav.register as never)}>
-          <Text style={styles.linkUnderline}> Đăng ký</Text>
+          <Text style={styles.linkUnderline}> {t('register') || "Đăng ký"}</Text>
         </TouchableOpacity>
       </View>
     </AuthForm>
