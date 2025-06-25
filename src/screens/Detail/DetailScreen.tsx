@@ -144,8 +144,8 @@ const DetailScreen = () => {
         name: 'Van Dung Tran',
         avatar: require('../../assert/image/user1.png'),
       },
-      content: t('sample_comment_1') || 'Công thức nấu chuẩn chỉnh quá',
-      time: t('sample_time_1') || '2 ngày trước',
+      content:'Công thức nấu chuẩn chỉnh quá',
+      time: '2 ngày trước',
     },
     {
       id: 2,
@@ -153,8 +153,8 @@ const DetailScreen = () => {
         name: 'Quang Lam',
         avatar: require('../../assert/image/user2.png'),
       },
-      content: t('sample_comment_2') || 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
-      time: t('sample_time_2') || '5 ngày trước',
+      content: 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
+      time: '5 ngày trước',
     },
   ];
 
@@ -241,14 +241,14 @@ const DetailScreen = () => {
           <View style={styles.authorRow}>
             <Image source={require('../../assert/image/author.png')} style={styles.authorAvatar} />
             <Text style={styles.authorName}>{recipe.idUser?.full_name || 'Emily Harris'}</Text>
-            <Text style={styles.authorLabel}>· {t('author') || 'Tác giả'}</Text>
+            <Text style={styles.authorLabel}>· {t('author')}</Text>
           </View>
           <View style={styles.tagRow}>
             <View style={styles.tag}>
-              <Text style={styles.tagText}>{t('energy_breakfast') || 'Bữa sáng năng lượng'}</Text>
+              <Text style={styles.tagText}>{t('energy_breakfast') }</Text>
             </View>
             <View style={styles.tag}>
-              <Text style={styles.tagText}>{t('trending_recipes') || 'Món ăn thịnh hành'}</Text>
+              <Text style={styles.tagText}>{t('trending_recipes')}</Text>
             </View>
           </View>
           <Text style={styles.desc}>{recipe.description}</Text>
@@ -257,7 +257,7 @@ const DetailScreen = () => {
             <View style={styles.infoBox}>
               <Image source={require('../../assert/image/time.png')} style={styles.infoBoxIcon} />
               <View>
-                <Text style={styles.infoBoxLabel}>{t('estimated_time') || 'Thời gian dự kiến'}</Text>
+                <Text style={styles.infoBoxLabel}>{t('estimated_time')}</Text>
                 <Text style={styles.infoBoxValue}>{recipe.cookingTime || 'N/A'}</Text>
               </View>
             </View>
@@ -271,22 +271,22 @@ const DetailScreen = () => {
           </View>
           {/* Nguyên liệu */}
           <View style={styles.ingredientSection}>
-            <Text style={styles.ingredientTitle}>{t('ingredients') || 'Nguyên liệu'}</Text>
+            <Text style={styles.ingredientTitle}>{t('ingredients')}</Text>
             <View style={styles.ingredientList}>
               {(recipe.ingredients && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
                 ? recipe.ingredients
                 : [
-                    t('sample_ingredient_1') || '500g cá lóc làm sạch, cắt khúc.',
-                    t('sample_ingredient_2') || '2 quả cà chua bổ múi cau.',
-                    t('sample_ingredient_3') || '1/4 trái thơm (dứa) cắt lát mỏng.',
-                    t('sample_ingredient_4') || '5 trái đậu bắp cắt xéo.',
-                    t('sample_ingredient_5') || '2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.',
-                    t('sample_ingredient_6') || '100g giá đỗ.',
-                    t('sample_ingredient_7') || '2 muỗng me chua hoặc 1 vắt me tươi.',
-                    t('sample_ingredient_8') || '2 củ, 2 tép hành tím, tỏi băm nhỏ.',
-                    t('sample_ingredient_9') || '3 - 4 nhánh rau thơm, ngò gai thái nhỏ.',
-                    t('sample_ingredient_10') || 'Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.',
-                    t('sample_ingredient_11') || '1 trái ớt hiểm nếu muốn ăn cay.',
+                    '500g cá lóc làm sạch, cắt khúc.',
+                    '2 quả cà chua bổ múi cau.',
+                    '1/4 trái thơm (dứa) cắt lát mỏng.',
+                    '5 trái đậu bắp cắt xéo.',
+                    '2 cây bạc hà (dọc mùng) tước vỏ, cắt khúc.',
+                    '100g giá đỗ.',
+                    '2 muỗng me chua hoặc 1 vắt me tươi.',
+                    '2 củ, 2 tép hành tím, tỏi băm nhỏ.',
+                    '3 - 4 nhánh rau thơm, ngò gai thái nhỏ.',
+                    'Gia vị : Muối, đường, hạt nêm, nước mắm, tiêu.',
+                    '1 trái ớt hiểm nếu muốn ăn cay.',
                   ]
               ).map((item, idx) => (
                 <Text style={styles.ingredientItem} key={idx}>• {item}</Text>
@@ -296,13 +296,13 @@ const DetailScreen = () => {
         </View>
         {/* Đánh giá (review) */}
         <View style={styles.reviewSection}>
-          <Text style={styles.reviewTagText}>{t('review') || 'Đánh giá'}</Text>
+          <Text style={styles.reviewTagText}>{t('review')}</Text>
           <View style={styles.reviewHeaderRow}>
             <View style={styles.reviewScoreBox}>
               <Image source={require('../../assert/image/whitestar.png')} style={styles.reviewStarIcon} />
               <Text style={styles.reviewScoreText}>5.0</Text>
             </View>
-            <Text style={styles.reviewHighlight}>{t('excellent') || 'Xuất sắc'}</Text>
+            <Text style={styles.reviewHighlight}>{t('excellent')}</Text>
             <Text style={styles.reviewDot}>•</Text>
           </View>
 
@@ -327,13 +327,13 @@ const DetailScreen = () => {
             </ScrollView>
         
           <TouchableOpacity onPress={() => navigation.navigate(nav.review, { recipeId })}>
-            <Text style={styles.seeMoreReview}>{t('see_more') || 'Xem thêm'}</Text>
+            <Text style={styles.seeMoreReview}>{t('see_more')}</Text>
           </TouchableOpacity>
         </View>
         {/* Công thức liên quan */}
         <View style={styles.relatedSection}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={styles.relatedTitle}>{t('related_recipes') || 'Công thức liên quan'}</Text>
+            <Text style={styles.relatedTitle}>{t('related_recipes')}</Text>
             <TouchableOpacity onPress={() => {/* có thể điều hướng tới trang danh sách công thức nếu muốn */}}>
               <Text style={styles.seeMoreReview}>{t('see_more') || 'Xem thêm'}</Text>
             </TouchableOpacity>

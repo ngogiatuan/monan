@@ -51,15 +51,15 @@ const DeleteAccountScreen = ({ navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('delete_account') || 'Xóa tài khoản'}</Text>
+        <Text style={styles.headerTitle}>{t('deleteaccount') }</Text>
       </View>
       <View style={styles.body}>
         <Text style={styles.warning}>
-          {t('delete_warning') || 'Khi bạn xóa tài khoản, tất cả dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.'}
+          {t('deletewarning') || 'Khi bạn xóa tài khoản, tất cả dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.'}
         </Text>
-        <Text style={styles.label}>{t('enter_delete_phrase') || 'Nhập "Xóa tài khoản"'}</Text>
+        <Text style={styles.label}>{t('enterdeletephrase') }</Text>
         <InputNavigation
-          placeholder={t('delete_account') || 'Xóa tài khoản'}
+          placeholder={t('deleteaccount') }
           value={input}
           onChangeText={setInput}
           autoCapitalize="none"
@@ -71,7 +71,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
           onPress={handleDelete}
         >
           <Text style={[styles.deleteBtnText, { color: isValid ? '#fff' : '#bbb' }]}>
-            {t('confirm_delete') || 'Đồng ý, tôi muốn xóa'}
+            {t('confirmdelete') }
           </Text>
         </TouchableOpacity>
         {/* Dialog cho guest */}

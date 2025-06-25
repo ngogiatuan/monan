@@ -35,7 +35,7 @@ const AuthForm = ({
         <View style={[styles.bottomSheet, bottomSheetStyle]}>
           {showBack && (
             <TouchableOpacity onPress={onBack}>
-              <Text style={styles.backText}>{'< ' + (t('back') || 'Quay lại')}</Text>
+              <Text style={styles.backText}>{'< ' + t('back')}</Text>
             </TouchableOpacity>
           )}
           {title ? <Text style={styles.title}>{t(title) || title}</Text> : null}

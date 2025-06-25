@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import ButtonNavigation from './ButtonNavigation';
+import { useTranslation } from 'react-i18next';
 
 interface RecipeEmptyProps {
   onAddRecipe?: () => void;
@@ -9,43 +10,46 @@ interface RecipeEmptyProps {
   isGuest?: boolean;
 }
 
-const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmptyProps) => (
-  <View style={styles.container}>
-    <Image source={require('../assert/image/fire.png')} style={styles.icon} resizeMode='contain' />
-    <Text style={styles.text}>
-      {onAddRecipe ? 'Bạn chưa có công thức nào' : 'Bạn chưa sở hữu Quest nào'}
-    </Text>
-    {onAddRecipe ? (
-      <ButtonNavigation
-        title="Thêm công thức của tôi"
-        backgroundColor="#ff6f2c"
-        color="#fff"
-        style={styles.btn}
-        textStyle={styles.btnText}
-        onPress={onAddRecipe}
-      />
-    ) : onExplore ? (
-      <ButtonNavigation
-        title="Khám phá ngay >"
-        backgroundColor="#ff6f2c"
-        color="#fff"
-        style={styles.btn}
-        textStyle={styles.btnText}
-        onPress={() => {
-          if (isConnected === false) {
-            Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để khám phá công thức.');
-            return;
-          }
-          if (isGuest) {
-            Alert.alert('Vui lòng đăng nhập để khám phá công thức!');
-            return;
-          }
-          onExplore && onExplore();
-        }}
-      />
-    ) : null}
-  </View>
-);
+const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmptyProps) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.container}>
+      <Image source={require('../assert/image/fire.png')} style={styles.icon} resizeMode='contain' />
+      <Text style={styles.text}>
+        {onAddRecipe ? t('no_recipe') : t('no_quest')}
+      </Text>
+      {onAddRecipe ? (
+        <ButtonNavigation
+          title={t('add_my_recipe')}
+          backgroundColor="#ff6f2c"
+          color="#fff"
+          style={styles.btn}
+          textStyle={styles.btnText}
+          onPress={onAddRecipe}
+        />
+      ) : onExplore ? (
+        <ButtonNavigation
+          title={t('explore_now')}
+          backgroundColor="#ff6f2c"
+          color="#fff"
+          style={styles.btn}
+          textStyle={styles.btnText}
+          onPress={() => {
+            if (isConnected === false) {
+              Alert.alert(t('no_network'), t('turn_on_network_to_explore'));
+              return;
+            }
+            if (isGuest) {
+              Alert.alert(t('login_to_explore'));
+              return;
+            }
+            onExplore && onExplore();
+          }}
+        />
+      ) : null}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

@@ -51,7 +51,7 @@ const ReviewScreen = () => {
           <Text style={styles.summaryScore}>4.8</Text>
           <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
         </View>
-        <Text style={styles.summaryLabel}>{t('excellent') || 'Xuất sắc'}</Text>
+        <Text style={styles.summaryLabel}>{t('excellent')}</Text>
       </View>
       {/* Danh sách review */}
       <FlatList

@@ -17,29 +17,12 @@ const RankingScreen = () => {
   const [isConnected, setIsConnected] = useState(true);
   const { t, i18n } = useTranslation();
 
-  // Force re-render when language changes to update tab/header text
-  const [, forceUpdate] = useState(0);
-  useEffect(() => {
-    // Sử dụng cả sự kiện languageChanged và navigation focus để đảm bảo đồng bộ UI
-    const handler = () => forceUpdate(v => v + 1);
-    i18n.on('languageChanged', handler);
-
-    // Nếu dùng react-navigation v6+, có thể dùng useFocusEffect để force update khi quay lại từ LanguageScreen
-    // (nếu navigation không tự re-render)
-    // import { useIsFocused } from '@react-navigation/native';
-    // const isFocused = useIsFocused();
-    // useEffect(() => { forceUpdate(v => v + 1); }, [isFocused]);
-
-    return () => {
-      i18n.off('languageChanged', handler);
-    };
-  }, [i18n]);
 
   // Không dùng useMemo cho TABS/headerTitle, luôn tạo lại mỗi render để đảm bảo đồng bộ
   const TABS = [
-    { key: 'all', label: t('all', { defaultValue: 'Tất cả' }) },
-    { key: 'week', label: t('top_week', { defaultValue: 'Top tuần' }) },
-    { key: 'month', label: t('top_month', { defaultValue: 'Top tháng' }) },
+    { key: 'all', label: "all" },
+    { key: 'week', label:"top_week" },
+    { key: 'month', label: "top_month" },
   ];
   const headerTitle = t('ranking', { defaultValue: 'Xếp hạng' });
 
@@ -113,7 +96,7 @@ const RankingScreen = () => {
         <View style={styles.header}>
           {!searchMode ? (
             <>
-              <Text style={styles.headerTitle}>{headerTitle}</Text>
+              <Text style={styles.headerTitle}>{t("ranking")}</Text>
               <TouchableOpacity
                 onPress={() => setSearchMode(true)}
               >
@@ -167,13 +150,13 @@ const RankingScreen = () => {
         </View>
         {/* Tabs giữ nguyên */}
         <View style={styles.tabRow}>
-          {TABS.map(t => (
+          {TABS.map(tabItem => (
             <TouchableOpacity
-              key={t.key}
-              style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
-              onPress={() => setTab(t.key)}
+              key={tabItem.key}
+              style={[styles.tabBtn, tab === tabItem.key && styles.tabBtnActive]}
+              onPress={() => setTab(tabItem.key)}
             >
-              <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
+              <Text style={[styles.tabText, tab === tabItem.key && styles.tabTextActive]}>{t(tabItem.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -194,7 +177,7 @@ const RankingScreen = () => {
       <View style={styles.header}>
         {!searchMode ? (
           <>
-            <Text style={styles.headerTitle}>{headerTitle}</Text>
+            <Text style={styles.headerTitle}>{t("ranking")}</Text>
             <TouchableOpacity
               onPress={async () => {
                 // Khi offline, không cho vào search
@@ -217,7 +200,7 @@ const RankingScreen = () => {
               <Image source={require('../../assert/image/blacksearch.png')} style={styles.searchInputIcon} />
               <InputNavigation
                 style={styles.searchInput}
-                placeholder={t('search_player', { defaultValue: 'Tìm người chơi' })}
+                placeholder={t('search_player')}
                 placeholderTextColor="#888"
                 value={search}
                 onChangeText={text => {
@@ -256,7 +239,7 @@ const RankingScreen = () => {
                 Keyboard.dismiss();
               }}
             >
-              <Text style={styles.cancelText}>{t('cancel', { defaultValue: 'Hủy' })}</Text>
+              <Text style={styles.cancelText}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -264,13 +247,13 @@ const RankingScreen = () => {
       {/* Tabs */}
       {!searchMode && (
         <View style={styles.tabRow}>
-          {TABS.map(t => (
+          {TABS.map(tabItem => (
             <TouchableOpacity
-              key={t.key}
-              style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
-              onPress={() => setTab(t.key)}
+              key={tabItem.key}
+              style={[styles.tabBtn, tab === tabItem.key && styles.tabBtnActive]}
+              onPress={() => setTab(tabItem.key)}
             >
-              <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
+              <Text style={[styles.tabText, tab === tabItem.key && styles.tabTextActive]}>{t(tabItem.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>

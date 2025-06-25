@@ -337,20 +337,20 @@ try {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('recipe') || 'Công thức'}</Text>
+        <Text style={styles.headerTitle}>{t('recipe')}</Text>
       </View>
       <View style={styles.tabRow}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'my' && styles.tabBtnActive]}
           onPress={() => setTab('my')}
         >
-          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>{t('my_recipe') || 'Công thức của tôi'}</Text>
+          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>{t('my_recipe')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'saved' && styles.tabBtnActive]}
           onPress={() => setTab('saved')}
         >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>{t('saved_recipe') || 'Công thức đã lưu'}</Text>
+          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>{t('saved_recipe')}</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.body}>

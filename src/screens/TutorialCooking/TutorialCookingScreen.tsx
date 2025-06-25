@@ -114,8 +114,8 @@ const StepCookingViewer = ({
       </View>
       <Image source={step.image} style={styles.stepImg} />
       <View style={styles.contentWrap}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.stepTitle}>{t('step_title', { step: stepIdx + 1 }) || step.title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={styles.stepTitle}>{step.title}</Text>
           <TouchableOpacity
             style={{ marginLeft: 10 }}
             onPress={() => {
@@ -137,22 +137,22 @@ const StepCookingViewer = ({
                   ? require('../../assert/image/loa.png')
                   : require('../../assert/image/muteloa.png')
               }
-              style={{ width: 40, height: 40, tintColor: '#FF6600' }}
+              style={{ width: 28, height: 28, tintColor: '#FF6600' }}
               resizeMode='contain'
             />
           </TouchableOpacity>
         </View>
-        <Text style={styles.stepDesc}>{t(`step_desc_${stepIdx + 1}`) || step.desc}</Text>
+        <Text style={styles.stepDesc}>{step.desc}</Text>
       </View>
       <View style={styles.bottomBtnRow}>
         <ButtonNavigation
-          title={t('back') || "Quay lại"}
+          title={t('back')}
           onPress={handleBack}
           backgroundColor="#00C48C"
           style={{ flex: 1, marginRight: 8 }}
         />
         <ButtonNavigation
-          title={stepIdx === steps.length - 1 ? t('done') || 'Xong' : t('continue') || 'Tiếp tục'}
+          title={stepIdx === steps.length - 1 ? t('done') : t('continue')}
           onPress={handleNext}
           backgroundColor="#FF6600"
           style={{ flex: 1, marginLeft: 8 }}
@@ -209,8 +209,8 @@ const TutorialCookingScreen = () => {
             stepObj.imageUrls && stepObj.imageUrls.length > 0
               ? { uri: stepObj.imageUrls[0] }
               : require('../../assert/image/step1.png'),
-          title: t('step_title', { step: idx + 1 }) || `Bước ${idx + 1}`,
-          desc: t(`step_desc_${idx + 1}`) || stepObj.tutorial || 'Không có hướng dẫn cho bước này.',
+          title: stepObj.title || `Bước ${idx + 1}`,
+          desc: stepObj.tutorial || 'Không có hướng dẫn cho bước này.',
         }));
         if (!stepsData.length) {
           stepsData = [
