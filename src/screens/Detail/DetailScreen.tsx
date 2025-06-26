@@ -263,7 +263,7 @@ const DetailScreen = () => {
                         <View style={styles.infoBox}>
                             <Image source={require('../../assert/image/people.png')} style={styles.infoBoxIcon} />
                             <View>
-                                <Text style={styles.infoBoxLabel}>{t('servings') || 'Khẩu phần ăn'}</Text>
+                                <Text style={styles.infoBoxLabel}>{t('servings') }</Text>
                                 <Text style={styles.infoBoxValue}>{recipe.servings || 'N/A'}</Text>
                             </View>
                         </View>
@@ -317,7 +317,7 @@ const DetailScreen = () => {
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={styles.relatedTitle}>{t('related_recipes')}</Text>
                         <TouchableOpacity onPress={() => {/* can navigate to recipe list page if desired */ }}>
-                            <Text style={styles.seeMoreReview}>{t('see_more') || 'Xem thêm'}</Text>
+                            <Text style={styles.seeMoreReview}>{t('see_more') }</Text>
                         </TouchableOpacity>
                     </View>
                     <FlatList
@@ -402,9 +402,9 @@ const DetailScreen = () => {
             {/* "Let's cook!" button fixed at the bottom, using ButtonNavigation */}
             <View style={styles.fixedCookBtnWrapper}>
                 <ButtonNavigation
-                    title={t('start_cooking') || "Vào bếp thôi !"}
+                    title={t('start_cooking') }
                     onPress={async () => {
-                        const ok = await checkNetworkAndAlert(t('network_view_tutorial') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem hướng dẫn nấu ăn.');
+                        const ok = await checkNetworkAndAlert(t('networkviewtutorial') );
                         if (!ok) return;
                         navigation.navigate(nav.tutorialCooking, {
                             recipeId,

@@ -157,5 +157,12 @@
     "home":"Trang chủ",
     "viewrecipe":"Xem công thức",
     "successbuydes":"Hãy xem công thức và nấu một món thật ngon miệng nhé!",
-    "hoosepaymentmethod":"Chọn phương thức thanh toán"
+    "hoosepaymentmethod":"Chọn phương thức thanh toán",
+    "networkviewtutorial":"Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem hướng dẫn nấu ăn.",
+    "breakfast":"Bữa sáng",
+    "networksaverecipe":"Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.",
+    "cannotsaverecipe":"Không thể lưu công thức. Vui lòng thử lại!.",
+    "networkviewrecipe":"Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem chi tiết công thức.",
+    "nonetworkhome":"Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem danh sách món ăn.",
+    "turnonnetwork":"Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản."
 }

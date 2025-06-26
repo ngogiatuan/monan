@@ -85,7 +85,7 @@ const RegisterScreen = () => {
         selectionColor="#222"
       />
       {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
-      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{t('registersuccess') || "Đăng ký thành công! Vui lòng đăng nhập."}</Text> : null}
+      {success ? <Text style={{ color: 'green', marginBottom: 8 }}>{t('registersuccess')}</Text> : null}
       <ButtonNavigation title={t('register') } onPress={handleRegister} />
       <View style={styles.orContainer}>
         <View style={styles.line} />

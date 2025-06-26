@@ -308,7 +308,7 @@ const TutorialCookingScreen = () => {
             {
               imageUrls: [], // Không còn ảnh fallback
               title: t('step_title', { step: 1 }),
-              desc: String(t('no_tutorial') || 'Không có hướng dẫn nấu ăn cho món này.'),
+              desc: String(t('no_tutorial')),
             },
           ];
         }
@@ -318,7 +318,7 @@ const TutorialCookingScreen = () => {
           {
             imageUrls: [], // Không còn ảnh fallback
             title: t('step_title', { step: 1 }),
-            desc: String(t('no_tutorial') || 'Không có hướng dẫn nấu ăn cho món này.'),
+            desc: String(t('no_tutorial')),
           },
         ]);
       } finally {

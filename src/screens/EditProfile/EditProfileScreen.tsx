@@ -124,7 +124,7 @@ const EditProfileScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('editprofile') || 'Sửa hồ sơ'}</Text>
+        <Text style={styles.headerTitle}>{t('editprofile')}</Text>
         <View style={{ width: 40 }} />
       </View>
       {/* Cover image */}
@@ -190,12 +190,12 @@ const EditProfileScreen = () => {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choose_avatar') || 'Chọn hình đại diện'}</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('chooseavatar')}</Text>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromLibrary}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choose_from_library') || 'Chọn từ thư viện'}</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromCamera}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('take_photo') || 'Chụp ảnh'}</Text>
+              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('takephoto')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowPickerModal(false)}>
               <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel') }</Text>
@@ -212,7 +212,7 @@ const EditProfileScreen = () => {
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choosecover') || 'Chọn ảnh cover'}</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choosecover')}</Text>
             <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromLibrary}>
               <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
             </TouchableOpacity>

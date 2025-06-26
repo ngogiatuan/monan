@@ -113,8 +113,8 @@ const DiscoveryScreen = () => {
           resizeMode="contain" // Thêm dòng này để không bị cắt xén
         />
         <View>
-          <Text style={styles.sectionSubTitle}>{t('breakfast') || 'Breakfast'}</Text>
-          <Text style={styles.sectionTitle}>{t('trending_recipes') || 'Món ăn thịnh hành'}</Text>
+          <Text style={styles.sectionSubTitle}>{t('breakfast')}</Text>
+          <Text style={styles.sectionTitle}>{t('trending_recipes') }</Text>
         </View>
       </View>
       <FlatList

@@ -55,7 +55,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
       </View>
       <View style={styles.body}>
         <Text style={styles.warning}>
-          {t('deletewarning') || 'Khi bạn xóa tài khoản, tất cả dữ liệu sẽ bị xóa vĩnh viễn và không thể khôi phục.'}
+          {t('deletewarning') }
         </Text>
         <Text style={styles.label}>{t('enterdeletephrase') }</Text>
         <InputNavigation
@@ -98,7 +98,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
                 {t('noaccounttodelete') }
               </Text>
               <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
-                {t('registerbeforedelete') || 'Hãy đăng ký tài khoản trước khi thực hiện chức năng này nhé!'}
+                {t('registerbeforedelete') }
               </Text>
               <TouchableOpacity
                 style={{

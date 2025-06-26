@@ -43,7 +43,7 @@ const ReviewScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('review') || 'Review'}</Text>
+        <Text style={styles.headerTitle}>{t('review')}</Text>
       </View>
       {/* Tổng điểm */}
       <View style={styles.summaryRow}>

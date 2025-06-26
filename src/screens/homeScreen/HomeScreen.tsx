@@ -119,15 +119,15 @@ const HomeScreen = () => {
     // Luôn trả về tiếng Việt nếu chưa đổi ngôn ngữ (i18n.language === 'vi' hoặc không tồn tại key)
     const hour = new Date().getHours();
     if (i18n.language === 'en') {
-      if (hour >= 5 && hour < 11) return t('good_morning', { defaultValue: 'Good morning' });
-      if (hour >= 11 && hour < 13) return t('good_noon', { defaultValue: 'Good noon' });
-      if (hour >= 13 && hour < 18) return t('good_afternoon', { defaultValue: 'Good afternoon' });
+      if (hour >= 5 && hour < 11) return t('good_morning');
+      if (hour >= 11 && hour < 13) return t('good_noon');
+      if (hour >= 13 && hour < 18) return t('good_afternoon');
       return t('good_evening', { defaultValue: 'Good evening' });
     }
     // Mặc định tiếng Việt
-    if (hour >= 5 && hour < 11) return t('good_morning', { defaultValue: 'Chào buổi sáng' });
-    if (hour >= 11 && hour < 13) return t('good_noon', { defaultValue: 'Chào buổi trưa' });
-    if (hour >= 13 && hour < 18) return t('good_afternoon', { defaultValue: 'Chào buổi chiều' });
+    if (hour >= 5 && hour < 11) return t('good_morning');
+    if (hour >= 11 && hour < 13) return t('good_noon');
+    if (hour >= 13 && hour < 18) return t('good_afternoon');
     return t('good_evening', { defaultValue: 'Chào buổi tối' });
   };
 
@@ -184,11 +184,11 @@ const HomeScreen = () => {
 
   // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
   const homeScreenSections = [
-    { type: 'categories', title: t('categories', { defaultValue: 'Các loại công thức' }), data: categories },
-    { type: 'trending_recipes', title: t('trending_recipes', { defaultValue: 'Món ăn thịnh hành' }), data: trendingData },
-    { type: 'today_recipes', title: t('today_recipes', { defaultValue: 'Hôm nay nấu món gì?' }), data: todayData },
-    { type: 'offers', title: t('offers', { defaultValue: 'Ưu đãi mới' }), data: offerData },
-    { type: 'daily_inspiration', title: t('daily_inspiration', { defaultValue: 'Cảm hứng hàng ngày' }), data: todayData },
+    { type: 'categories', title: t('categories'), data: categories },
+    { type: 'trending_recipes', title: t('trending_recipes'), data: trendingData },
+    { type: 'today_recipes', title: t('today_recipes'), data: todayData },
+    { type: 'offers', title: t('offers'), data: offerData },
+    { type: 'daily_inspiration', title: t('daily_inspiration'), data: todayData },
   ];
 
   const renderSection = ({ item }) => {
@@ -209,9 +209,9 @@ const HomeScreen = () => {
                 />
                 <View style={{ marginLeft: 12 }}>
                   <Text style={styles.headerGreeting}>
-                    {getGreeting()}, {t('what_to_cook_today', { defaultValue: 'hôm nay bạn muốn nấu gì?' })}
+                    {getGreeting()}, {t('what_to_cook_today')}
                   </Text>
-                  <Text style={styles.headerName}>{user?.name || t('guest', { defaultValue: 'Guest' })}</Text>
+                  <Text style={styles.headerName}>{user?.name || t('guest')}</Text>
                 </View>
               </View>
             </ImageBackground>
@@ -223,7 +223,7 @@ const HomeScreen = () => {
                 />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder={t('search_recipe_placeholder', { defaultValue: "Tìm món ăn/thể loại..." })}
+                  placeholder={t('search_recipe_placeholder')}
                   placeholderTextColor="#888"
                 />
               </View>
@@ -235,7 +235,7 @@ const HomeScreen = () => {
                   />
                 </View>
                 <View style={styles.pointInfo}>
-                  <Text style={styles.pointLabel}>{t('ranking_point', { defaultValue: 'Điểm xếp hạng' })}</Text>
+                  <Text style={styles.pointLabel}>{t('ranking_point')}</Text>
                   <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
                 </View>
               </View>
@@ -248,7 +248,7 @@ const HomeScreen = () => {
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
               <TouchableOpacity >
-                <Text style={styles.seeMore}>{t('see_more', { defaultValue: 'Xem thêm' })}</Text>
+                <Text style={styles.seeMore}>{t('see_more')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
@@ -289,7 +289,7 @@ const HomeScreen = () => {
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
               <TouchableOpacity onPress={goDiscovery}>
-                <Text style={styles.seeMore}>{t('see_more', { defaultValue: 'Xem thêm' })}</Text>
+                <Text style={styles.seeMore}>{t('see_more')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8, marginBottom: item.type === 'daily_inspiration' ? 20 : 0 }}>
@@ -303,13 +303,13 @@ const HomeScreen = () => {
                         <Image source={recipeItem.image} style={styles.productImg} />
                       ) : (
                         <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
-                          <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image', { defaultValue: 'Không có ảnh' })}</Text>
+                          <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
                         </View>
                       )}
                       <TouchableOpacity
                         style={styles.productMarkCircle}
                         onPress={async () => {
-                          const ok = await checkNetworkAndAlert(t('network_save_recipe', { defaultValue: 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.' }));
+                          const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                           if (!ok) return;
                           if (!user?.token) return;
                           try {
@@ -320,7 +320,7 @@ const HomeScreen = () => {
                             }
                             await reloadFavorites();
                           } catch (e) {
-                            Alert.alert('Lỗi', t('cannot_save_recipe', { defaultValue: 'Không thể lưu công thức. Vui lòng thử lại!' }));
+                            Alert.alert('Lỗi', t('cannotsaverecipe'));
                           }
                         }}
                         activeOpacity={0.7}
@@ -342,7 +342,7 @@ const HomeScreen = () => {
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
-                        const ok = await checkNetworkAndAlert(t('network_view_recipe', { defaultValue: 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem chi tiết công thức.' }));
+                        const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
                         if (!ok) return;
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                       }}
@@ -353,7 +353,7 @@ const HomeScreen = () => {
                       <View style={styles.ratingBox}>
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
                       </View>
-                      <Text style={styles.freeTag}>{t('free', { defaultValue: 'Miễn phí' })}</Text>
+                      <Text style={styles.freeTag}>{t('free')}</Text>
                     </View>
                   </View>
                 );
@@ -421,9 +421,9 @@ const HomeScreen = () => {
             />
             <View style={{ marginLeft: 12 }}>
               <Text style={styles.headerGreeting}>
-                {getGreeting()}, {t('what_to_cook_today', { defaultValue: 'hôm nay bạn muốn nấu gì?' })}
+                {getGreeting()}, {t('what_to_cook_today')}
               </Text>
-              <Text style={styles.headerName}>{user?.name || t('guest', { defaultValue: 'Guest' })}</Text>
+              <Text style={styles.headerName}>{user?.name || t('guest')}</Text>
             </View>
           </View>
         </ImageBackground>
@@ -435,7 +435,7 @@ const HomeScreen = () => {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder={t('search_recipe_placeholder', { defaultValue: "Tìm món ăn/thể loại..." })}
+              placeholder={t('search_recipe_placeholder')}
               placeholderTextColor="#888"
             />
           </View>
@@ -447,7 +447,7 @@ const HomeScreen = () => {
               />
             </View>
             <View style={styles.pointInfo}>
-              <Text style={styles.pointLabel}>{t('ranking_point', { defaultValue: 'Điểm xếp hạng' })}</Text>
+              <Text style={styles.pointLabel}>{t('ranking_point')}</Text>
               <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
             </View>
           </View>
@@ -457,7 +457,7 @@ const HomeScreen = () => {
       {!isConnected && recipes.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center' }}>
-            {t('no_network_home') || 'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để xem danh sách món ăn.'}
+            {t('nonetworkhome')}
           </Text>
         </View>
       ) : hasLoadedRecipes ? (
@@ -472,7 +472,7 @@ const HomeScreen = () => {
       ) : (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text>
-            {t('loadingData', { defaultValue: 'Đang tải dữ liệu...' })}
+            {t('loadingData')}
           </Text>
         </View>
       )}

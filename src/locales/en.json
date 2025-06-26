@@ -162,5 +162,12 @@
     "home":"Home",
     "viewrecipe":"View recipe",
     "successbuydes":"Check out the recipe and cook something delicious!",
-    "hoosepaymentmethod":"Chọn phương thức thanh toán"
+    "hoosepaymentmethod":"Chọn phương thức thanh toán",
+    "networkviewtutorial":"No internet connection. Please turn on wifi or mobile data to view cooking instructions.",
+    "breakfast":"Breakfast",
+    "networksaverecipe":"No network connection. Please enable wifi or mobile data to use this function.",
+    "cannotsaverecipe":"The recipe could not be saved. Please try again!.",
+    "networkviewrecipe":"No internet connection. Please enable wifi or mobile data to view recipe details.",
+    "nonetworkhome":"No internet connection. Please turn on wifi or mobile data to view the menu.",
+    "turnonnetwork":"Please turn on wifi or mobile data to search for accounts."
 }

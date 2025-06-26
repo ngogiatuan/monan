@@ -24,7 +24,7 @@ const RankingScreen = () => {
     { key: 'week', label:"top_week" },
     { key: 'month', label: "top_month" },
   ];
-  const headerTitle = t('ranking', { defaultValue: 'Xếp hạng' });
+  const headerTitle = t('ranking');
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -37,7 +37,7 @@ const RankingScreen = () => {
   const guestRanking = [
     {
       id: 'guest',
-      name: t('guest', { defaultValue: 'Guest' }),
+      name: t('guest'),
       avatar: require('../../assert/image/avatar.png'),
       point: '-',
       quests: 0,
@@ -67,7 +67,7 @@ const RankingScreen = () => {
     rank: 1,
   }] : [{
     id: 'guest',
-    name: t('guest', { defaultValue: 'Guest' }),
+    name: t('guest'),
     avatar: require('../../assert/image/avatar.png'),
     point: '-',
     quests: 0,
@@ -109,7 +109,7 @@ const RankingScreen = () => {
                 <Image source={require('../../assert/image/blacksearch.png')} style={styles.searchInputIcon} />
                 <InputNavigation
                   style={styles.searchInput}
-                  placeholder={t('search_player', { defaultValue: 'Tìm người chơi' })}
+                  placeholder={t('search_player')}
                   placeholderTextColor="#888"
                   value={search}
                   onChangeText={text => {
@@ -120,8 +120,8 @@ const RankingScreen = () => {
                   returnKeyType="search"
                   onSubmitEditing={() => {
                     Alert.alert(
-                      t('no_network', { defaultValue: 'Không có kết nối mạng' }),
-                      t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                      t('no_network'),
+                      t('turnonnetwork')
                     );
                   }}
                 />
@@ -143,7 +143,7 @@ const RankingScreen = () => {
                   Keyboard.dismiss();
                 }}
               >
-                <Text style={styles.cancelText}>{t('cancel', { defaultValue: 'Hủy' })}</Text>
+                <Text style={styles.cancelText}>{t('cancel')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -183,8 +183,8 @@ const RankingScreen = () => {
                 // Khi offline, không cho vào search
                 if (!isConnected) {
                   Alert.alert(
-                    t('no_network', { defaultValue: 'Không có kết nối mạng' }),
-                    t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                    t('no_network'),
+                    t('turnonnetwork')
                   );
                   return;
                 }
@@ -213,8 +213,8 @@ const RankingScreen = () => {
                   // Khi offline, alert khi bấm enter tìm kiếm
                   if (!isConnected) {
                     Alert.alert(
-                      t('no_network', { defaultValue: 'Không có kết nối mạng' }),
-                      t('turn_on_network', { defaultValue: 'Vui lòng bật wifi hoặc dữ liệu di động để tìm kiếm tài khoản.' })
+                      t('no_network'),
+                      t('turnonnetwork')
                     );
                     return;
                   }
