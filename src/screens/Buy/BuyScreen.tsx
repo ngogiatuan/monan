@@ -194,14 +194,14 @@ const BuyScreen = () => {
                   {selectedPayment === method.key && <View style={styles.radioInner} />}
                 </View>
                 <Image source={method.icon} style={styles.paymentMethodIcon} />
-                <Text style={styles.paymentMethodLabel}>{t(`payment_method_${method.key}`) || method.label}</Text>
+                <Text style={styles.paymentMethodLabel}>{t(`${method.key}`) || method.label}</Text>
               </TouchableOpacity>
             ))}
             {/* Payment Info */}
             <View style={styles.paymentCard}>
               <Text style={styles.paymentTitle}>{t('payment')}</Text>
               <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('unit_price')}</Text>
+                <Text style={styles.paymentLabel}>{t('unitprice')}</Text>
                 <Text style={styles.paymentValue}>{price.toLocaleString('vi-VN')}đ</Text>
               </View>
               <View style={styles.paymentRow}>

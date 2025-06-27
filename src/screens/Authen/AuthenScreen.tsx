@@ -1,16 +1,38 @@
 import React from 'react';
-import { Image, Text } from 'react-native';
+import { Image, Platform, Text } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import { useTranslation } from 'react-i18next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+  webClientId: Platform.OS==='android' ? "340980849991-hi1qq1laqfhqqhuht67bdo15o7e1t1ru.apps.googleusercontent.com" : ""
+})
 
 const ICON_SIZE = 20;
 
 const AuthenScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
+
+    const onGG = async () => {
+      console.log('vaooô')
+      try{
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true
+        });
+  
+        const signInRes = await GoogleSignin.signIn();
+  console.log('signInRes', signInRes);
+  
+      }catch(err){
+        console.log('SIGN_IN_GG_ERR', err)
+      
+      }
+  
+    }
 
   return (
     <AuthForm>
@@ -64,6 +86,7 @@ const AuthenScreen = () => {
           fontWeight: 'bold',
           fontSize: 16,
         }}
+        onPress={onGG}
       >
         <Image
           source={require('../../assert/image/Google.png')}

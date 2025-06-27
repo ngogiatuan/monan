@@ -204,7 +204,7 @@ const HomeScreen = () => {
             >
               <View style={styles.headerProfileRow}>
                 <Image
-                  source={typeof user?.avatar ==="string" ? {uri: user?.avatar} :  require('../../assert/image/avatar.png')}
+                  source={typeof user?.avatar === 'string' ? { uri: user?.avatar } : require('../../assert/image/avatar.png')}
                   style={styles.headerAvatar}
                 />
                 <View style={{ marginLeft: 12 }}>
@@ -298,47 +298,7 @@ const HomeScreen = () => {
                 const favoriteId = findFavoriteId(favorites, recipeItem.id);
                 return (
                   <View style={styles.productCard} key={recipeItem.id}>
-                    <View style={styles.productImgWrap}>
-                      {recipeItem.image ? (
-                        <Image source={recipeItem.image} style={styles.productImg} />
-                      ) : (
-                        <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
-                          <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
-                        </View>
-                      )}
-                      <TouchableOpacity
-                        style={styles.productMarkCircle}
-                        onPress={async () => {
-                          const ok = await checkNetworkAndAlert(t('networksaverecipe'));
-                          if (!ok) return;
-                          if (!user?.token) return;
-                          try {
-                            if (!isFav) {
-                              await addFavorite(user.token, recipeItem.id);
-                            } else {
-                              await removeFavorite(user.token, favoriteId);
-                            }
-                            await reloadFavorites();
-                          } catch (e) {
-                            Alert.alert('Lỗi', t('cannotsaverecipe'));
-                          }
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <Image
-                          source={
-                            isFav
-                              ? require('../../assert/image/yellowmark.png')
-                              : require('../../assert/image/mark.png')
-                          }
-                          style={styles.productMark}
-                        />
-                      </TouchableOpacity>
-                      <View style={styles.productTimeOverlay}>
-                        <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-                        <Text style={styles.timeText}>{recipeItem.time}</Text>
-                      </View>
-                    </View>
+                    {/* Changed this section */}
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
@@ -347,8 +307,50 @@ const HomeScreen = () => {
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                       }}
                     >
+                      <View style={styles.productImgWrap}>
+                        {recipeItem.image ? (
+                          <Image source={recipeItem.image} style={styles.productImg} />
+                        ) : (
+                          <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                            <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
+                          </View>
+                        )}
+                        <TouchableOpacity
+                          style={styles.productMarkCircle}
+                          onPress={async () => {
+                            const ok = await checkNetworkAndAlert(t('networksaverecipe'));
+                            if (!ok) return;
+                            if (!user?.token) return;
+                            try {
+                              if (!isFav) {
+                                await addFavorite(user.token, recipeItem.id);
+                              } else {
+                                await removeFavorite(user.token, favoriteId);
+                              }
+                              await reloadFavorites();
+                            } catch (e) {
+                              Alert.alert('Lỗi', t('cannotsaverecipe'));
+                            }
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={
+                              isFav
+                                ? require('../../assert/image/yellowmark.png')
+                                : require('../../assert/image/mark.png')
+                            }
+                            style={styles.productMark}
+                          />
+                        </TouchableOpacity>
+                        <View style={styles.productTimeOverlay}>
+                          <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
+                          <Text style={styles.timeText}>{recipeItem.time}</Text>
+                        </View>
+                      </View>
                       <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>
                     </TouchableOpacity>
+                    {/* End of changed section */}
                     <View style={styles.productInfoRow}>
                       <View style={styles.ratingBox}>
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
@@ -413,14 +415,14 @@ const HomeScreen = () => {
       {/* Header cố định */}
       <>
         <ImageBackground
-          source={typeof user?.cover ==="string" ? {uri: user?.cover} : require('../../assert/image/Header.png')}
+          source={typeof user?.cover === 'string' ? { uri: user?.cover } : require('../../assert/image/Header.png')}
           style={styles.banner}
           resizeMode="cover"
           imageStyle={styles.bannerImg}
         >
           <View style={styles.headerProfileRow}>
             <Image
-               source={typeof user?.avatar ==="string" ? {uri: user?.avatar} :  require('../../assert/image/avatar.png')}
+              source={typeof user?.avatar === 'string' ? { uri: user?.avatar } : require('../../assert/image/avatar.png')}
               style={styles.headerAvatar}
             />
             <View style={{ marginLeft: 12 }}>

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
@@ -7,6 +7,11 @@ import { UserContext } from '../../context/UserContext';
 import AuthForm from '../../compoments/AuthForm';
 import { getUserByEmailAndPassword } from '../../api/userApi';
 import { useTranslation } from 'react-i18next';
+import {GoogleSignin}  from '@react-native-google-signin/google-signin'
+
+GoogleSignin.configure({
+  webClientId: Platform.OS==='android' ? "340980849991-v1sfui710qdjjjapjt80vbtpg0gakbuh.apps.googleusercontent.com" : ""
+})
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -37,6 +42,23 @@ const LoginScreen = () => {
       setEmailError('Email hoặc mật khẩu không đúng');
     }
   };
+
+  const onGG = async () => {
+    console.log('vaooô')
+    try{
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true
+      });
+
+      const signInRes = await GoogleSignin.signIn();
+console.log('signInRes', signInRes);
+
+    }catch(err){
+      console.log('SIGN_IN_GG_ERR', err)
+    
+    }
+
+  }
 
   return (
     <AuthForm title={t('login') }>
@@ -84,6 +106,7 @@ const LoginScreen = () => {
         color="#222"
         style={styles.button}
         textStyle={styles.buttonText}
+        onPress={onGG}
       >
         <Image source={require('../../assert/image/Google.png')} style={styles.icon} />
       </ButtonNavigation>

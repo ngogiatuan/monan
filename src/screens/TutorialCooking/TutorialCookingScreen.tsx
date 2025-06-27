@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import axios from 'axios';
-import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import Tts from 'react-native-tts';
 import { useTranslation } from 'react-i18next';
 
@@ -71,11 +70,16 @@ const StepCookingViewer = ({
       () => setIsVisibleTts(true),
       () => setIsVisibleTts(false)
     );
+
+    // Cleanup function to stop TTS when component unmounts
+    return () => {
+      Tts.stop();
+    };
   }, []);
 
   useEffect(() => {
     if (isVisibleTts && autoTts) {
-      Tts.stop();
+      Tts.stop(); // Stop any ongoing speech before starting new ones
       Tts.speak(String(step.title));
       Tts.speak(String(step.desc));
     }
@@ -98,6 +102,7 @@ const StepCookingViewer = ({
       Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để quay lại bước trước.');
       return;
     }
+    Tts.stop(); // Stop TTS before navigating back
     if (stepIdx === 0) {
       onBack?.();
     } else {
@@ -114,6 +119,7 @@ const StepCookingViewer = ({
       Alert.alert('Không có kết nối mạng', 'Bạn đang tiếp tục nấu khi mất mạng. Khi có mạng lại, thời gian nấu sẽ được cập nhật.');
       if (offlineStart === null) setOfflineStart(Date.now());
     }
+    Tts.stop(); // Stop TTS before navigating to the next step or finishing
     if (stepIdx === steps.length - 1) onFinish();
     else {
       setStepIdx(stepIdx + 1);
@@ -186,7 +192,7 @@ const StepCookingViewer = ({
                 Tts.stop();
               } else {
                 setAutoTts(true);
-                Tts.stop();
+                Tts.stop(); // Stop current TTS before speaking new ones
                 Tts.speak(String(step.title));
                 Tts.speak(String(step.desc));
               }
@@ -328,6 +334,13 @@ const TutorialCookingScreen = () => {
     fetchSteps();
   }, [recipeId, t]);
 
+  // Stop TTS when the component is unmounted (e.g., navigating back from TutorialCookingScreen)
+  useEffect(() => {
+    return () => {
+      Tts.stop();
+    };
+  }, []);
+
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
@@ -343,6 +356,7 @@ const TutorialCookingScreen = () => {
     }
     const now = Date.now();
     const totalDuration = now - startTime - totalOffline;
+    Tts.stop(); // Stop TTS before navigating to EndCookingScreen
     navigation.navigate(nav.endCooking, {
       startTime,
       cookedDuration: totalDuration > 0 ? totalDuration : 0,
@@ -357,7 +371,10 @@ const TutorialCookingScreen = () => {
       <StepCookingViewer
         steps={steps}
         onFinish={handleFinish}
-        onBack={() => navigation.goBack()}
+        onBack={() => {
+          Tts.stop(); // Stop TTS before navigating back from StepCookingViewer
+          navigation.goBack();
+        }}
         isConnected={isConnected}
         offlineStart={offlineStart}
         setOfflineStart={setOfflineStart}

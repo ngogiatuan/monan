@@ -12,7 +12,20 @@
           "package_name": "com.monngonmoingay"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "340980849991-v1sfui710qdjjjapjt80vbtpg0gakbuh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.monngonmoingay",
+            "certificate_hash": "a7dd9d778cb221a3fad9dbc20d6eef6ce5211ff4"
+          }
+        },
+        {
+          "client_id": "340980849991-hi1qq1laqfhqqhuht67bdo15o7e1t1ru.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCtvbs1dkgacklLTercgUt3nu1ACrXZwDM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "340980849991-hi1qq1laqfhqqhuht67bdo15o7e1t1ru.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
