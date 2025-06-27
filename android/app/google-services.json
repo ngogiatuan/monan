@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340980849991",
+    "project_id": "mon-ngon-moi-ngay-9b173",
+    "storage_bucket": "mon-ngon-moi-ngay-9b173.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340980849991:android:05ff4b2bcff532cea60062",
+        "android_client_info": {
+          "package_name": "com.monngonmoingay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtvbs1dkgacklLTercgUt3nu1ACrXZwDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

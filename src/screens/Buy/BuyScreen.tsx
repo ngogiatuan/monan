@@ -100,7 +100,7 @@ const BuyScreen = () => {
                     step === idx + 1 && { color: '#00C48C', fontWeight: 'bold' },
                   ]}
                 >
-                  {t(`buy_step_${idx + 1}`) || s.label}
+                  {t(`buystep`) + ` ${idx + 1}`}
                 </Text>
               </TouchableOpacity>
               {idx < STEPS.length - 1 && (

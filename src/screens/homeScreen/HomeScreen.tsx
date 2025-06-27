@@ -404,6 +404,10 @@ const HomeScreen = () => {
     navigation.navigate(nav.discovery)
   }
 
+  const goSearchScreen = () => {
+    navigation.navigate(nav.search)
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header cố định */}
@@ -428,7 +432,7 @@ const HomeScreen = () => {
           </View>
         </ImageBackground>
         <View style={styles.searchRow}>
-          <View style={styles.searchBox}>
+          <TouchableOpacity style={styles.searchBox} onPress={goSearchScreen} >
             <Image
               source={require('../../assert/image/blacksearch.png')}
               style={styles.searchIcon}
@@ -437,8 +441,9 @@ const HomeScreen = () => {
               style={styles.searchInput}
               placeholder={t('search_recipe_placeholder')}
               placeholderTextColor="#888"
+              editable={false}
             />
-          </View>
+          </TouchableOpacity>
           <View style={styles.pointBox}>
             <View style={styles.pointIconWrap}>
               <Image

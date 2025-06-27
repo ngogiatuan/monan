@@ -23,6 +23,7 @@ import EndCookingScreen from '../screens/End/EndCookingScreen';
 import BuyScreen from '../screens/Buy/BuyScreen';
 import AddRecipeScreen from '../screens/AddRecipe/AddRecipeScreen';
 import EditProfileScreen from '../screens/EditProfile/EditProfileScreen';
+import SearchScreen from '../screens/Search/Searchscreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +52,7 @@ const RootNavigation = () => {
         <Stack.Screen name={nav.buy} component={BuyScreen} />
         <Stack.Screen name={nav.addRecipe} component={AddRecipeScreen} />
         <Stack.Screen name={nav.editProfile} component={EditProfileScreen} />
+         <Stack.Screen name={nav.search} component={SearchScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

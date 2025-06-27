@@ -169,5 +169,7 @@
     "cannotsaverecipe":"The recipe could not be saved. Please try again!.",
     "networkviewrecipe":"No internet connection. Please enable wifi or mobile data to view recipe details.",
     "nonetworkhome":"No internet connection. Please turn on wifi or mobile data to view the menu.",
-    "turnonnetwork":"Please turn on wifi or mobile data to search for accounts."
+    "turnonnetwork":"Please turn on wifi or mobile data to search for accounts.",
+    "unitprice":"Unit price",
+    "buystep":"Step"
 }

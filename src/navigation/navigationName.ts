@@ -19,7 +19,8 @@ export const nav = {
     endCooking: 'EndCooking',
     buy: 'Buy',
     addRecipe: 'AddRecipe',
-    editProfile: 'EditProfile', // thêm dòng này để rootNavigation không báo lỗi
+    editProfile: 'EditProfile', 
+    search:'SearchScreen'
 }
 export const tab = {
     search: 'SearchScreen'
