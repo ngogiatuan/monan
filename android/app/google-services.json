@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "340980849991",
-    "project_id": "mon-ngon-moi-ngay-9b173",
-    "storage_bucket": "mon-ngon-moi-ngay-9b173.firebasestorage.app"
+    "project_number": "837671072053",
+    "project_id": "monngonmoingay3-4cfff",
+    "storage_bucket": "monngonmoingay3-4cfff.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:340980849991:android:05ff4b2bcff532cea60062",
+        "mobilesdk_app_id": "1:837671072053:android:eb9e880d8873bf41201c7c",
         "android_client_info": {
           "package_name": "com.monngonmoingay"
         }
       },
       "oauth_client": [
         {
-          "client_id": "340980849991-v1sfui710qdjjjapjt80vbtpg0gakbuh.apps.googleusercontent.com",
+          "client_id": "837671072053-t6igbq7pltjiv7uu15qariv0alcs83fa.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.monngonmoingay",
@@ -22,20 +22,20 @@
           }
         },
         {
-          "client_id": "340980849991-hi1qq1laqfhqqhuht67bdo15o7e1t1ru.apps.googleusercontent.com",
+          "client_id": "837671072053-s53hllajofn82ias2c4ed7072mdflte1.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCtvbs1dkgacklLTercgUt3nu1ACrXZwDM"
+          "current_key": "AIzaSyDU5TgKmSezf0ADNLRjceQ13mUV8v6f6GM"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "340980849991-hi1qq1laqfhqqhuht67bdo15o7e1t1ru.apps.googleusercontent.com",
+              "client_id": "837671072053-s53hllajofn82ias2c4ed7072mdflte1.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

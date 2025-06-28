@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import {GoogleSignin}  from '@react-native-google-signin/google-signin'
 
 GoogleSignin.configure({
-  webClientId: Platform.OS==='android' ? "340980849991-v1sfui710qdjjjapjt80vbtpg0gakbuh.apps.googleusercontent.com" : ""
+  webClientId: Platform.OS==='android' ? "837671072053-s53hllajofn82ias2c4ed7072mdflte1.apps.googleusercontent.com" : ""
 })
 
 const LoginScreen = () => {
