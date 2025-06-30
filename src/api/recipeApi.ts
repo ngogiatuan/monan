@@ -5,6 +5,7 @@ const API_URL = 'http://103.72.99.132:3000/api';
 export const getRecipes = async (page = 1, limit = 10) => {
   try {
     const res = await axios.get(`${API_URL}/recipes?page=${page}&limit=${limit}`);
+    // Assuming the API returns an array of recipes with 'id' instead of '_id'
     return res.data?.data || [];
   } catch (e) {
     console.log('Error fetching recipes:', e);
@@ -19,10 +20,10 @@ export const getRecipeById = async (id) => {
       return null;
     }
     const res = await axios.get(`${API_URL}/recipes/${id}`);
+    // Assuming the API returns a single recipe object with 'id' instead of '_id'
     return res.data?.data || null;
   } catch (e) {
     console.log('Error fetching recipe by ID:', e);
     return null;
   }
 };
-

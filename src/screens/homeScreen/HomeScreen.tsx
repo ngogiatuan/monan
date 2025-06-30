@@ -93,7 +93,7 @@ const HomeScreen = () => {
     }
     return () => { ignore = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]); // chỉ chạy 1 lần khi mount
+  }, [isConnected]); // chỉ chạy khi trạng thái kết nối mạng thay đổi
 
   // Lấy danh sách favorites từ API khi user thay đổi hoặc khi thao tác lưu/xóa
   const reloadFavorites = async () => {
@@ -102,7 +102,7 @@ const HomeScreen = () => {
       try {
         const favs = await getFavorites(user.token);
         setFavorites(favs);
-        setFavoriteIds(favs.map((f: any) => f.recipeId?._id || f.recipeId));
+        setFavoriteIds(favs.map((f: any) => f.recipeId?.id || f.recipeId)); // Changed _id to id
       } catch {
         // Không setFavorites([]) để giữ trạng thái cũ khi mất mạng
       }
@@ -142,7 +142,7 @@ const HomeScreen = () => {
 
   // Dữ liệu món ăn thịnh hành (top 5)
   const trendingData = recipes.slice(0, 5).map((item) => ({
-    id: item._id,
+    id: item.id, // Changed _id to id
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
@@ -152,7 +152,7 @@ const HomeScreen = () => {
 
   // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
   const todayData = recipes.slice(5, 10).map((item) => ({
-    id: item._id,
+    id: item.id, // Changed _id to id
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
@@ -193,73 +193,29 @@ const HomeScreen = () => {
 
   const renderSection = ({ item }) => {
     switch (item.type) {
-      case 'header_search':
-        return (
-          <>
-            <ImageBackground
-              source={require('../../assert/image/Header.png')}
-              style={styles.banner}
-              resizeMode="cover"
-              imageStyle={styles.bannerImg}
-            >
-              <View style={styles.headerProfileRow}>
-                <Image
-                  source={typeof user?.avatar === 'string' ? { uri: user?.avatar } : require('../../assert/image/avatar.png')}
-                  style={styles.headerAvatar}
-                />
-                <View style={{ marginLeft: 12 }}>
-                  <Text style={styles.headerGreeting}>
-                    {getGreeting()}, {t('what_to_cook_today')}
-                  </Text>
-                  <Text style={styles.headerName}>{user?.name || t('guest')}</Text>
-                </View>
-              </View>
-            </ImageBackground>
-            <View style={styles.searchRow}>
-              <View style={styles.searchBox}>
-                <Image
-                  source={require('../../assert/image/blacksearch.png')}
-                  style={styles.searchIcon}
-                />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder={t('search_recipe_placeholder')}
-                  placeholderTextColor="#888"
-                />
-              </View>
-              <View style={styles.pointBox}>
-                <View style={styles.pointIconWrap}>
-                  <Image
-                    source={require('../../assert/image/point.png')}
-                    style={styles.pointIcon}
-                  />
-                </View>
-                <View style={styles.pointInfo}>
-                  <Text style={styles.pointLabel}>{t('ranking_point')}</Text>
-                  <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
-                </View>
-              </View>
-            </View>
-          </>
-        );
+      case 'header_search': // Phần này đã được đưa ra ngoài FlatList để cố định
+        return null;
       case 'categories':
         return (
           <>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity >
+              <TouchableOpacity
+                onPress={goDiscovery} // Giữ lại nút "Xem thêm" cho Categories để đi đến màn hình Discovery chung
+              >
                 <Text style={styles.seeMore}>{t('see_more')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
               {(categories.length > 0 ? categories : categoriesCache).map(catItem => (
                 <TouchableOpacity
-                  key={catItem?._id || catItem.key}
+                  key={catItem?.id || catItem.key} // Changed _id to id
                   style={styles.categoryItem}
-                  disabled={!user}
+                  disabled={!user} // Vẫn disabled nếu chưa đăng nhập
                   onPress={() => {
                     if (user) {
-                      // navigation.navigate(nav.categoryDetail, { categoryKey: catItem.key, categoryName: catItem.name });
+                      // Chuyển đến DiscoveryScreen và truyền categoryId, categoryName
+                      navigation.navigate(nav.discovery, { categoryId: catItem.id, categoryName: catItem.name }); // Changed _id to id
                     } else {
                       handleGuestAccess();
                     }
@@ -403,12 +359,12 @@ const HomeScreen = () => {
   };
 
   const goDiscovery = () => {
-    navigation.navigate(nav.discovery)
-  }
+    navigation.navigate(nav.discovery);
+  };
 
   const goSearchScreen = () => {
-    navigation.navigate(nav.search)
-  }
+    navigation.navigate(nav.search);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -434,7 +390,7 @@ const HomeScreen = () => {
           </View>
         </ImageBackground>
         <View style={styles.searchRow}>
-          <TouchableOpacity style={styles.searchBox} onPress={goSearchScreen} >
+          <TouchableOpacity style={styles.searchBox} onPress={goSearchScreen}>
             <Image
               source={require('../../assert/image/blacksearch.png')}
               style={styles.searchIcon}

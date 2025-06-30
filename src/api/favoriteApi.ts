@@ -7,7 +7,7 @@ export const getFavorites = async (token: string) => {
   try {
     // GET /api/favorites/user/:userId
     if (!token) return [];
-    const res = await axios.get(`${API_URL}`,{
+    const res = await axios.get(`${API_URL}`, {
       headers: {
         Authorization: `Bearer ${token}`, // Sử dụng token để xác thực
       },
@@ -26,10 +26,10 @@ export const getFavorites = async (token: string) => {
 export const addFavorite = async (token: string, recipeId: string) => {
   try {
     if (!token || !recipeId) throw new Error('Missing token or recipeId');
-  
+
     const res = await axios.post(`${API_URL}`, { recipeId }, {
       headers: {
-        Authorization: `Bearer ${token}`, 
+        Authorization: `Bearer ${token}`,
       },
     });
     return res.data;
@@ -43,9 +43,11 @@ export const addFavorite = async (token: string, recipeId: string) => {
 export const removeFavorite = async (token: string, favoriteId: string) => {
   try {
     if (!favoriteId || !token) throw new Error('Missing favoriteId or token');
-    const res = await axios.delete(`${API_URL}/${favoriteId}`,{headers: {
-      Authorization: `Bearer ${token}`,
-   } });
+    const res = await axios.delete(`${API_URL}/${favoriteId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return res.data;
   } catch (e) {
     console.error('Error removing favorite:', e?.response?.data || e);
@@ -56,8 +58,10 @@ export const removeFavorite = async (token: string, favoriteId: string) => {
 // Tìm favoriteId theo userId và recipeId từ danh sách favorites
 export const findFavoriteId = (favorites: any[], recipeId: string) => {
   const fav = favorites.find((f: any) => {
-   // console.log('f.recipeId._id',  f.recipeId?._id=== recipeId);
-    return f.recipeId._id === recipeId
-  } );
-  return fav?._id ? fav._id : null;
+    // We are now expecting f.recipeId to be an object with an 'id' property,
+    // or directly the recipe ID if it's not populated.
+    return f.recipeId?.id === recipeId || f.recipeId === recipeId;
+  });
+  // Assuming the favorite object itself will have an 'id' property for its own ID
+  return fav?.id ? fav.id : null;
 };
