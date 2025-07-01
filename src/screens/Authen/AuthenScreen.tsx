@@ -1,14 +1,16 @@
-import React from 'react';
-import { Image, Platform, Text } from 'react-native';
+import React, { useContext } from 'react';
+import { Alert, Image, Platform, Text } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import AuthForm from '../../compoments/AuthForm';
 import { useTranslation } from 'react-i18next';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { loginGG } from '../../api/userApi';
+import { UserContext } from '../../context/UserContext';
 
 GoogleSignin.configure({
-  webClientId: Platform.OS==='android' ? "837671072053-s53hllajofn82ias2c4ed7072mdflte1.apps.googleusercontent.com" : ""
+  webClientId: Platform.OS === 'android' ? "837671072053-s53hllajofn82ias2c4ed7072mdflte1.apps.googleusercontent.com" : ""
 })
 
 const ICON_SIZE = 20;
@@ -16,28 +18,39 @@ const ICON_SIZE = 20;
 const AuthenScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { setUser } = useContext(UserContext);
 
-    const onGG = async () => {
-      console.log('vaooô')
-      try{
-        await GoogleSignin.hasPlayServices({
-          showPlayServicesUpdateDialog: true
-        });
-  
-        const signInRes = await GoogleSignin.signIn();
-  console.log('signInRes', signInRes);
-  
-      }catch(err){
-        console.log('SIGN_IN_GG_ERR', err)
-      
+  const onGG = async () => {
+    try {
+      const userGG = GoogleSignin.getCurrentUser();
+      if (userGG?.idToken) {
+        GoogleSignin.signOut()
       }
-  
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true
+      });
+
+      const signInRes = await GoogleSignin.signIn();
+      console.log('signInRes', signInRes);
+      if (signInRes?.data?.idToken) {
+        const resLoginWithSv = await loginGG(signInRes?.data?.idToken);
+        setUser(resLoginWithSv);
+        navigation.navigate(nav.home as never);
+
+      } else {
+        Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
+      }
+    } catch (err) {
+      console.log('SIGN_IN_GG_ERR', err)
+      Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
     }
+
+  }
 
   return (
     <AuthForm>
       <ButtonNavigation
-        title={t('loginwithemail') }
+        title={t('loginwithemail')}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -99,7 +112,7 @@ const AuthenScreen = () => {
         />
       </ButtonNavigation>
       <ButtonNavigation
-        title={t('loginwithfacebook') }
+        title={t('loginwithfacebook')}
         backgroundColor="#fff"
         color="#222"
         style={{
@@ -137,7 +150,7 @@ const AuthenScreen = () => {
           lineHeight: 18,
         }}
       >
-        {t('loginagreeterms') }
+        {t('loginagreeterms')}
       </Text>
     </AuthForm>
   );

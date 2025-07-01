@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,25 @@ import {
   Dimensions,
   SafeAreaView,
   Modal,
+  TextInput,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import InputNavigation from '../../compoments/InputNavigation';
 import { getRecipes } from '../../api/recipeApi';
 import { useTranslation } from 'react-i18next';
+import { getAllCategories } from '../../api/categoryApi';
 
 const { width } = Dimensions.get('window');
+
+type DiscoveryScreenRouteProp = RouteProp<{
+  Discovery: {
+    mealType?: string;
+    categoryName?: string;
+    category: any;
+  };
+}, 'Discovery'>;
 
 const MEAL_OPTIONS = [
   'Tất cả',
@@ -40,40 +50,69 @@ const TYPE_OPTIONS = [
 
 const DiscoveryScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<DiscoveryScreenRouteProp>();
+  const { mealType, category } = route.params || {};
   const { t } = useTranslation();
   const [showFilter, setShowFilter] = useState(false);
-  const [meal, setMeal] = useState('Tất cả');
+  const [meal, setMeal] = useState();
   const [type, setType] = useState('Món ăn thịnh hành');
+  const [ingredients, setIngredients] = useState('');
   const [showMealDialog, setShowMealDialog] = useState(false);
   const [showTypeDialog, setShowTypeDialog] = useState(false);
   const [mealSearch, setMealSearch] = useState('');
   const [typeSearch, setTypeSearch] = useState('');
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [pageTitle, setPageTitle] = useState(t('trending_recipes'));
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categorySelected, setCategorySelected] = useState<any>();
+  const [recipesFiltered, setRecipeFiltered] = useState<any[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     (async () => {
       try {
-        const data = await getRecipes(1, 20); // Lấy nhiều hơn để đủ hiển thị
+        const data = await getRecipes(1, 20);
         setRecipes(data);
       } catch (error) {
         console.error('Lỗi khi lấy danh sách món ăn:', error);
       }
     })();
-  }, []);
+
+    (async () => {
+      try {
+        const data = await getAllCategories();
+        if (data && data.length > 0) {
+          setCategories(data);
+          setCategorySelected(category?.id ? category : data?.[0]);
+        }
+      } catch (error) {
+        setCategories([]);
+      }
+    })();
+  }, [route.params, t]);
+
+  useEffect(() => {
+    const temp = recipes?.length
+      ? recipes?.filter(itemRe => {
+          const isInclude = itemRe?.categoryIds?.find(itemCa => {
+            return itemCa?._id === categorySelected?.id;
+          });
+          return isInclude?._id;
+        })
+      : [];
+    setRecipeFiltered(temp);
+  }, [recipes, categorySelected]);
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => {
         navigation.navigate(nav.buy as never, { item } as never);
-      }}
-    >
+      }}>
       <View style={styles.card}>
         <View style={styles.cardImgWrap}>
           <Image source={{ uri: item?.imageUrls?.[0] }} style={styles.cardImg} />
           <View style={styles.cardTimeRight}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-            {/* Lấy thời gian từ API (item.cookingTime) */}
             <Text style={styles.timeText}>{item.cookingTime || ''}</Text>
           </View>
         </View>
@@ -81,7 +120,9 @@ const DiscoveryScreen = () => {
           <View style={styles.markCircleTitle}>
             <Image source={require('../../assert/image/mark.png')} style={styles.markIconImg} />
           </View>
-          <Text style={styles.cardTitle} numberOfLines={2}>{item?.name}</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {item?.name}
+          </Text>
           <View style={styles.cardRow}>
             <View style={styles.ratingBox}>
               <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconBlue} />
@@ -98,10 +139,9 @@ const DiscoveryScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('discovery') }</Text>
+        <Text style={styles.headerTitle}>{t('discovery')}</Text>
         <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilter(true)}>
           <Image source={require('../../assert/image/filter.png')} style={styles.filterIcon} />
         </TouchableOpacity>
@@ -110,15 +150,15 @@ const DiscoveryScreen = () => {
         <Image
           source={require('../../assert/image/favorite.png')}
           style={styles.fireIcon}
-          resizeMode="contain" // Thêm dòng này để không bị cắt xén
+          resizeMode="contain"
         />
         <View>
-          <Text style={styles.sectionSubTitle}>{t('breakfast')}</Text>
-          <Text style={styles.sectionTitle}>{t('trending_recipes') }</Text>
+          <Text style={styles.sectionSubTitle}>{categorySelected?.name || ''}</Text>
+          <Text style={styles.sectionTitle}>{pageTitle}</Text>
         </View>
       </View>
       <FlatList
-        data={recipes}
+        data={recipesFiltered}
         keyExtractor={item => item?._id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
@@ -130,33 +170,58 @@ const DiscoveryScreen = () => {
         visible={showFilter}
         animationType="slide"
         transparent
-        onRequestClose={() => setShowFilter(false)}
-      >
+        onRequestClose={() => setShowFilter(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.filterModal}>
             <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
             <View style={styles.filterGroup}>
               <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('meal') }</Text>
+                <Text style={styles.filterLabel}>{t('meal')}</Text>
                 <TouchableOpacity
                   style={styles.filterSelect}
                   activeOpacity={0.7}
-                  onPress={() => setShowMealDialog(true)}
-                >
-                  <Text style={styles.filterSelectText}>{meal}</Text>
+                  onPress={() => setShowMealDialog(true)}>
+                  <Text style={styles.filterSelectText}>{categorySelected?.name}</Text>
                   <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                 </TouchableOpacity>
               </View>
               <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('type') }</Text>
+                <Text style={styles.filterLabel}>{t('type')}</Text>
                 <TouchableOpacity
                   style={styles.filterSelect}
                   activeOpacity={0.7}
-                  onPress={() => setShowTypeDialog(true)}
-                >
+                  onPress={() => setShowTypeDialog(true)}>
                   <Text style={styles.filterSelectText}>{type}</Text>
                   <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                 </TouchableOpacity>
+              </View>
+
+              {/* Premium Feature Section */}
+              <View style={styles.filterRowCol}>
+                <View style={styles.premiumHeader}>
+                  <Text style={styles.filterLabel}>{t('premium_features')}</Text>
+                  <TouchableOpacity>
+                    <Text style={styles.viewNowText}>{t('see_more')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Ingredients Input */}
+              <View style={styles.filterRowCol}>
+                <Text style={styles.filterLabel}>{t('ingredients')}</Text>
+                <View style={styles.inputSearchContainer}>
+                  <TextInput
+                    style={styles.ingredientsInput}
+                    placeholder={t('search_by_ingredients')}
+                    placeholderTextColor="#888"
+                    value={ingredients}
+                    onChangeText={setIngredients}
+                  />
+                  <Image
+                    source={require('../../assert/image/blacksearch.png')}
+                    style={styles.inputSearchIcon}
+                  />
+                </View>
               </View>
             </View>
             <ButtonNavigation
@@ -173,16 +238,15 @@ const DiscoveryScreen = () => {
         visible={showMealDialog}
         animationType="slide"
         transparent
-        onRequestClose={() => setShowMealDialog(false)}
-      >
+        onRequestClose={() => setShowMealDialog(false)}>
         <View style={styles.dialogOverlay}>
+          {/* Removed flex: 1 from dialogContainer for auto height */}
           <View style={styles.dialogContainer}>
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowMealDialog(false)}>
-                {/* Đổi icon thành ký tự '<' thay vì back.png */}
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('bymeal') }</Text>
+              <Text style={styles.dialogTitle}>{t('bymeal')}</Text>
             </View>
             <View style={styles.dialogInputWrap}>
               <Image
@@ -190,38 +254,44 @@ const DiscoveryScreen = () => {
                 style={styles.searchIcon}
               />
               <InputNavigation
-                placeholder={t('searchmeal') }
+                placeholder={t('searchmeal')}
                 style={[styles.dialogInput, { paddingLeft: 32 }]}
                 value={mealSearch}
                 onChangeText={setMealSearch}
                 placeholderTextColor="#888"
               />
             </View>
-            <FlatList
-              data={MEAL_OPTIONS.filter(opt => opt.toLowerCase().includes(mealSearch.toLowerCase()))}
-              keyExtractor={item => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dialogOption}
-                  onPress={() => {
-                    setMeal(item);
-                    setShowMealDialog(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.dialogOptionText,
-                    meal === item
-                      ? styles.dialogOptionTextActive
-                      : item === 'Tất cả' && meal === 'Tất cả'
-                        ? styles.dialogOptionTextAll
-                        : null
-                  ]}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              keyboardShouldPersistTaps="handled"
-            />
+            {/* Added maxHeight to this View for scrollability */}
+            <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
+              <FlatList
+                data={categories.filter(opt =>
+                  opt.name.toLowerCase().includes(mealSearch.toLowerCase())
+                )}
+                keyExtractor={item => item?.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.dialogOption}
+                    onPress={() => {
+                      setCategorySelected(item);
+                      setShowMealDialog(false);
+                      setMealSearch('');
+                    }}>
+                    <Text
+                      style={[
+                        styles.dialogOptionText,
+                        categorySelected?.id === item?.id
+                          ? styles.dialogOptionTextActive
+                          : styles.dialogOptionTextAll, // Apply this style for 'Tất cả' or default
+                      ]}>
+                      {item?.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                keyboardShouldPersistTaps="handled"
+                // Optional: For very few items, you might want this:
+                // contentContainerStyle={{ flexGrow: 1 }}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -231,13 +301,12 @@ const DiscoveryScreen = () => {
         visible={showTypeDialog}
         animationType="slide"
         transparent
-        onRequestClose={() => setShowTypeDialog(false)}
-      >
+        onRequestClose={() => setShowTypeDialog(false)}>
         <View style={styles.dialogOverlay}>
+          {/* Removed flex: 1 from dialogContainer for auto height */}
           <View style={styles.dialogContainer}>
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowTypeDialog(false)}>
-                {/* Đổi icon thành ký tự '<' thay vì back.png */}
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
               <Text style={styles.dialogTitle}>{t('bytype')}</Text>
@@ -248,38 +317,45 @@ const DiscoveryScreen = () => {
                 style={styles.searchIcon}
               />
               <InputNavigation
-                placeholder={t('searchtype') }
+                placeholder={t('searchtype')}
                 style={[styles.dialogInput, { paddingLeft: 32 }]}
                 value={typeSearch}
                 onChangeText={setTypeSearch}
                 placeholderTextColor="#888"
               />
             </View>
-            <FlatList
-              data={TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(typeSearch.toLowerCase()))}
-              keyExtractor={item => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.dialogOption}
-                  onPress={() => {
-                    setType(item);
-                    setShowTypeDialog(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.dialogOptionText,
-                    type === item
-                      ? styles.dialogOptionTextActive
-                      : item === 'Tất cả' && type === 'Tất cả'
-                        ? styles.dialogOptionTextAll
-                        : null
-                  ]}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              keyboardShouldPersistTaps="handled"
-            />
+            {/* Added maxHeight to this View for scrollability */}
+            <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
+              <FlatList
+                data={TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(typeSearch.toLowerCase()))}
+                keyExtractor={item => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.dialogOption}
+                    onPress={() => {
+                      setType(item);
+                      setShowTypeDialog(false);
+                      setPageTitle(item);
+                      setTypeSearch('');
+                    }}>
+                    <Text
+                      style={[
+                        styles.dialogOptionText,
+                        type === item
+                          ? styles.dialogOptionTextActive
+                          : item === 'Tất cả' && type === 'Tất cả'
+                          ? styles.dialogOptionTextAll
+                          : null,
+                      ]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                keyboardShouldPersistTaps="handled"
+                // Optional: For very few items, you might want this:
+                // contentContainerStyle={{ flexGrow: 1 }}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -313,7 +389,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginRight: 24, // để cân giữa khi có filter icon
+    marginRight: 24,
   },
   filterBtn: {
     padding: 8,
@@ -332,11 +408,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   fireIcon: {
-    width: 28, // tăng width
-    height: 28, // tăng height
-    marginRight: 10, // tăng margin cho cân đối
+    width: 28,
+    height: 28,
+    marginRight: 10,
     marginTop: 2,
-    resizeMode: 'contain', // Đảm bảo không bị cắt xén
+    resizeMode: 'contain',
   },
   sectionSubTitle: {
     fontSize: 12,
@@ -406,7 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     position: 'relative',
-    paddingTop: 8, // thêm padding để tránh bị mark che text
+    paddingTop: 8,
   },
   markCircleTitle: {
     position: 'absolute',
@@ -431,7 +507,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     marginBottom: 6,
-    paddingRight: 26, // chừa khoảng cho mark góc phải
+    paddingRight: 26,
   },
   cardRow: {
     flexDirection: 'row',
@@ -453,7 +529,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     marginRight: 2,
-    tintColor: '#4A90E2', // màu xanh da trời
+    tintColor: '#4A90E2',
   },
   ratingText: {
     color: '#00C48C',
@@ -500,7 +576,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   filterGroup: {
-    // dọc, cách đều các mục
     marginBottom: 10,
   },
   filterRowCol: {
@@ -530,7 +605,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     tintColor: '#888',
-    marginLeft: 2,
+    marginLeft: 'auto',
     marginTop: 1,
   },
   filterBtnConfirm: {
@@ -550,7 +625,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 0,
-    maxHeight: '90%',
+    // Removed maxHeight and flex: 1 from here
   },
   dialogHeader: {
     flexDirection: 'row',
@@ -599,9 +674,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0,
     color: '#222',
-    paddingLeft: 32, // để chừa chỗ cho icon kính lúp
-    flex:1,
-    marginLeft: 15
+    paddingLeft: 32,
+    flex: 1,
+    marginLeft: 15,
   },
   dialogOption: {
     flexDirection: 'row',
@@ -628,6 +703,37 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     tintColor: '#FF6600',
+  },
+  // New styles for Premium Feature and Ingredients Input
+  premiumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  viewNowText: {
+    color: '#FF6600',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  inputSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F6F6F6',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+  },
+  ingredientsInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 10,
+    color: '#222',
+  },
+  inputSearchIcon: {
+    width: 18,
+    height: 18,
+    tintColor: '#888',
+    marginLeft: 8,
   },
 });
 

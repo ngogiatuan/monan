@@ -14,11 +14,36 @@ export const getUserByEmailAndPassword = async (email: string, password: string)
       return {
         name: res.data.full_name,
         email: res.data.email,
-        avatar: require('../assert/image/avatar.png'),
+        avatar: res.data?.avatar || require('../assert/image/avatar.png'),
         joined,
         point: 0,
         token: res.data.token, // Lưu token vào user object
-        _id: res.data._id,     // Nếu API trả về _id thì lấy luôn
+        _id: res.data._id || res?.data?.id,     // Nếu API trả về _id thì lấy luôn
+      };
+    }
+    return null;
+  } catch (e) {
+    console.log('Error fetching user:', e);
+    return null;
+  }
+};
+
+export const loginGG = async (accessToken: string): Promise<IUser | null> => {
+  try {
+    const res = await axios.post(`${API_URL}/users/login-google`, {accessToken });
+    console.log('Response from API loginGG:', res.data);
+    if (res.data && res.data.token && res.data.email && res.data.full_name) {
+      // Lấy thời gian đăng nhập hiện tại (dd/mm/yyyy)
+      const now = new Date();
+      const joined = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+      return {
+        name: res.data.full_name,
+        email: res.data.email,
+        avatar: res.data?.avatar || require('../assert/image/avatar.png'),
+        joined,
+        point: 0,
+        token: res.data.token, // Lưu token vào user object
+        _id: res.data._id || res?.data?.id,     // Nếu API trả về _id thì lấy luôn
       };
     }
     return null;
@@ -44,11 +69,11 @@ export const registerUser = async (fullname: string, email: string, password: st
       return {
         name: res.data.fullName,
         email: res.data.email,
-        avatar: require('../assert/image/avatar.png'),
+        avatar: res.data?.avatar || require('../assert/image/avatar.png'),
         joined,
         point: 0,
         token: res.data.token,
-        _id: res.data._id, // Nếu API trả về _id thì lấy luôn
+        _id: res.data._id || res.data?.id, // Nếu API trả về _id thì lấy luôn
       };
     }
     return null;

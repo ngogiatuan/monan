@@ -1,11 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Platform, Alert } from 'react-native';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import AuthForm from '../../compoments/AuthForm';
-import { getUserByEmailAndPassword } from '../../api/userApi';
+import { getUserByEmailAndPassword, loginGG } from '../../api/userApi';
 import { useTranslation } from 'react-i18next';
 import {GoogleSignin}  from '@react-native-google-signin/google-signin'
 
@@ -43,19 +43,29 @@ const LoginScreen = () => {
     }
   };
 
-  const onGG = async () => {
-    console.log('vaooô')
-    try{
+ const onGG = async () => {
+    try {
+      const userGG = GoogleSignin.getCurrentUser();
+      if (userGG?.idToken) {
+        GoogleSignin.signOut()
+      }
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true
       });
 
       const signInRes = await GoogleSignin.signIn();
-console.log('signInRes', signInRes);
+      console.log('signInRes', signInRes);
+      if (signInRes?.data?.idToken) {
+        const resLoginWithSv = await loginGG(signInRes?.data?.idToken);
+        setUser(resLoginWithSv);
+        navigation.navigate(nav.home as never);
 
-    }catch(err){
+      } else {
+        Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
+      }
+    } catch (err) {
       console.log('SIGN_IN_GG_ERR', err)
-    
+      Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
     }
 
   }

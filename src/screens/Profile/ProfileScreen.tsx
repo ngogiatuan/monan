@@ -9,6 +9,7 @@ import ProfileInfo from '../../compoments/ProfileInfo';
 import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const DEFAULT_LABELS = {
   overview: 'Tổng quát',
@@ -240,6 +241,10 @@ const ProfileScreen = () => {
               title="Đăng xuất"
               backgroundColor="#FF6600"
               onPress={() => {
+                const userGG = GoogleSignin.getCurrentUser();
+                if(userGG?.idToken){
+                  GoogleSignin.signOut()
+                }
                 setShowLogout(false);
                 navigation.reset({
                   index: 0,

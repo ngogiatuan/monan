@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  ScrollView, // Đảm bảo bạn đã import ScrollView
+  ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent
 } from 'react-native';
@@ -20,14 +20,10 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import axios from 'axios';
 import Tts from 'react-native-tts';
 import { useTranslation } from 'react-i18next';
-// Đảm bảo bạn đã cài đặt và cấu hình @react-native-community/netinfo
-// npm install @react-native-community/netinfo
-// hoặc yarn add @react-native-community/netinfo
-// Sau đó chạy npx react-native link @react-native-community/netinfo
 const NetInfo = require('@react-native-community/netinfo');
 
 const { width } = Dimensions.get('window');
-const API_URL = 'http://103.72.99.132:3000'; // Đảm bảo địa chỉ API này có thể truy cập được từ thiết bị/emulator của bạn
+const API_URL = 'http://103.72.99.132:3000';
 
 const StepCookingViewer = ({
   steps,
@@ -63,15 +59,14 @@ const StepCookingViewer = ({
   setCurrentImageIdx: (v: number | ((prev: number) => number)) => void;
 }) => {
   const [stepIdx, setStepIdx] = useState(0);
-  const step = steps[stepIdx];
+  // Đảm bảo step luôn có giá trị mặc định để tránh lỗi Text string must be rendered
+  const step = steps[stepIdx] || { imageUrls: [], title: '', desc: '' };
+  
   const [isVisibleTts, setIsVisibleTts] = useState(false);
   const { t } = useTranslation();
 
   const stepImages = step.imageUrls || [];
   const scrollViewRef = useRef<ScrollView>(null); // Ref cho ScrollView của ảnh
-
-  // Ref cho ScrollView của mô tả bước
-  const descScrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     Tts.getInitStatus().then(
@@ -79,7 +74,6 @@ const StepCookingViewer = ({
       () => setIsVisibleTts(false)
     );
 
-    // Cleanup function to stop TTS when component unmounts
     return () => {
       Tts.stop();
     };
@@ -87,20 +81,16 @@ const StepCookingViewer = ({
 
   useEffect(() => {
     if (isVisibleTts && autoTts) {
-      Tts.stop(); // Dừng bất kỳ giọng nói nào đang diễn ra trước khi bắt đầu cái mới
-      Tts.speak(String(step.title));
-      Tts.speak(String(step.desc));
+      Tts.stop();
+      // Đảm bảo truyền chuỗi an toàn vào Tts.speak
+      Tts.speak(String(step.title || ''));
+      Tts.speak(String(step.desc || ''));
     }
     setCurrentImageIdx(0);
-    // Cuộn ảnh về đầu mỗi khi bước thay đổi
     if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ x: 0, animated: false });
+      scrollViewRef.current.scrollTo({ x: 0, animated: false });
     }
-    // Cuộn mô tả về đầu mỗi khi bước thay đổi
-    if (descScrollViewRef.current) {
-      descScrollViewRef.current.scrollTo({ y: 0, animated: false });
-    }
-  }, [stepIdx, isVisibleTts, autoTts, setCurrentImageIdx, step.title, step.desc]); // Thêm dependencies
+  }, [stepIdx, isVisibleTts, autoTts, setCurrentImageIdx, step.title, step.desc]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -110,15 +100,9 @@ const StepCookingViewer = ({
     }
   };
 
-  // CHỈNH SỬA: Nút back luôn thoát về màn hình DetailScreen
   const handleBack = async () => {
-    // Tùy chọn: Bạn có thể giữ cảnh báo nếu muốn, hoặc bỏ qua để luôn cho phép thoát
-    // if (!isConnected) {
-    //   Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để quay lại.');
-    //   return;
-    // }
-    Tts.stop(); // Dừng TTS trước khi quay lại
-    onBack?.(); // Luôn gọi onBack prop để quay về màn hình trước đó trên stack (DetailScreen)
+    Tts.stop();
+    onBack?.();
   };
 
   const handleNext = async () => {
@@ -130,7 +114,7 @@ const StepCookingViewer = ({
       Alert.alert('Không có kết nối mạng', 'Bạn đang tiếp tục nấu khi mất mạng. Khi có mạng lại, thời gian nấu sẽ được cập nhật.');
       if (offlineStart === null) setOfflineStart(Date.now());
     }
-    Tts.stop(); // Dừng TTS trước khi chuyển sang bước tiếp theo hoặc kết thúc
+    Tts.stop();
     if (stepIdx === steps.length - 1) onFinish();
     else {
       setStepIdx(stepIdx + 1);
@@ -138,21 +122,21 @@ const StepCookingViewer = ({
   };
 
   return (
-    <>
-      {/* Header */}
+    <View style={styles.container}>
+      {/* Header - CỐ ĐỊNH */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={handleBack} // Nút back gọi handleBack đã chỉnh sửa
+          onPress={handleBack}
         >
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{`${stepIdx + 1}/${steps.length}`}</Text>
       </View>
 
-      {/* Vùng ảnh chính có thể vuốt */}
+      {/* Vùng ảnh chính có thể vuốt - CỐ ĐỊNH */}
       <View style={styles.stepImgContainer}>
-        {stepImages.length > 0 ? (
+        {stepImages?.length > 0 ? (
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -179,34 +163,35 @@ const StepCookingViewer = ({
             ))}
           </ScrollView>
         ) : (
-          // Không có ảnh, hiển thị placeholder
           <View style={styles.noImagePlaceholder} />
         )}
 
         {/* Hiển thị số lượng ảnh (ví dụ: 1/3) */}
-        {stepImages.length > 0 && (
+        {stepImages?.length > 0 && (
           <View style={styles.imageCounter}>
             <Text style={styles.imageCounterText}>{currentImageIdx + 1}/{stepImages.length}</Text>
           </View>
         )}
       </View>
 
-      {/* Vùng nội dung (title và description) có thể cuộn */}
-      <ScrollView style={styles.contentWrap} ref={descScrollViewRef}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <Text style={styles.stepTitle}>{String(step.title)}</Text>
+      {/* Vùng chứa tiêu đề và nút loa - CỐ ĐỊNH */}
+      <View style={styles.contentAndTtsFixed}>
+        <View style={styles.titleAndTtsRow}>
+          {/* Đảm bảo step.title luôn là chuỗi */}
+          <Text style={styles.stepTitle}>{String(step.title || '')}</Text>
           <TouchableOpacity
-            style={{ marginLeft: 10 }}
+            style={styles.ttsButton}
             onPress={() => {
-              if (!isVisibleTts) return; // Không làm gì nếu TTS chưa sẵn sàng
+              if (!isVisibleTts) return;
               if (autoTts) {
                 setAutoTts(false);
                 Tts.stop();
               } else {
                 setAutoTts(true);
-                Tts.stop(); // Dừng TTS hiện tại trước khi nói cái mới
-                Tts.speak(String(step.title));
-                Tts.speak(String(step.desc));
+                Tts.stop();
+                // Đảm bảo truyền chuỗi an toàn vào Tts.speak
+                Tts.speak(String(step.title || ''));
+                Tts.speak(String(step.desc || ''));
               }
             }}
           >
@@ -216,18 +201,24 @@ const StepCookingViewer = ({
                   ? require('../../assert/image/loa.png')
                   : require('../../assert/image/muteloa.png')
               }
-              style={{ width: 28, height: 28, tintColor: '#FF6600' }}
+              style={styles.ttsIcon}
               resizeMode='contain'
             />
           </TouchableOpacity>
         </View>
-        <Text style={styles.stepDesc}>{String(step.desc)}</Text>
+      </View>
+
+      {/* ScrollView chỉ dành cho phần mô tả - CUỘN ĐƯỢC */}
+      <ScrollView style={styles.descScrollView}>
+        {/* Đảm bảo step.desc luôn là chuỗi */}
+        <Text style={styles.stepDesc}>{step.desc || ''}</Text>
       </ScrollView>
 
+      {/* Vùng nút điều hướng dưới cùng - CỐ ĐỊNH */}
       <View style={styles.bottomBtnRow}>
         <ButtonNavigation
           title={t('back')}
-          onPress={handleBack} // Nút "Back" dưới cùng cũng gọi handleBack
+          onPress={handleBack}
           backgroundColor="#00C48C"
           style={{ flex: 1, marginRight: 8 }}
         />
@@ -239,7 +230,7 @@ const StepCookingViewer = ({
         />
       </View>
 
-      {/* Modal xem ảnh full screen, vuốt qua lại */}
+      {/* Modal xem ảnh full screen, vuốt qua lại - Không thay đổi */}
       <Modal visible={showImageModal} transparent animationType="fade" onRequestClose={() => setShowImageModal(false)}>
         <View style={{ flex: 1, backgroundColor: '#000' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 36, paddingHorizontal: 16 }}>
@@ -257,7 +248,6 @@ const StepCookingViewer = ({
               />
             )}
           </View>
-          {/* Nút chuyển ảnh nếu có nhiều ảnh */}
           {stepImages.length > 1 && (
             <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8 }}>
               <TouchableOpacity disabled={currentImageIdx === 0} onPress={() => setCurrentImageIdx(idx => Math.max(0, idx - 1))} style={{ padding: 16, opacity: currentImageIdx === 0 ? 0.3 : 1 }}>
@@ -270,7 +260,7 @@ const StepCookingViewer = ({
           )}
         </View>
       </Modal>
-    </>
+    </View>
   );
 };
 
@@ -296,21 +286,17 @@ const TutorialCookingScreen = () => {
   const estimatedTime = route.params?.estimatedTime || 40;
 
   React.useEffect(() => {
-    // Đăng ký lắng nghe sự kiện thay đổi trạng thái mạng
     const unsubscribe = NetInfo.addEventListener((state: any) => {
       const connected = !!state.isConnected;
       setIsConnected(connected);
-      // Nếu mất kết nối và chưa ghi nhận thời gian offline, bắt đầu ghi nhận
       if (!connected && offlineStart === null) {
         setOfflineStart(Date.now());
       }
-      // Nếu có kết nối lại và đã ghi nhận thời gian offline, tính tổng thời gian offline
       if (connected && offlineStart !== null) {
         setOfflineDuration(prev => prev + (Date.now() - (offlineStart || 0)));
         setOfflineStart(null);
       }
     });
-    // Cleanup function: Hủy đăng ký lắng nghe khi component unmount
     return () => unsubscribe();
   }, [offlineStart]);
 
@@ -322,27 +308,26 @@ const TutorialCookingScreen = () => {
         const data = Array.isArray(res.data) ? res.data : [];
         let stepsData = data.map((stepObj: any, idx: number) => ({
           imageUrls: stepObj.imageUrls && stepObj.imageUrls.length > 0 ? stepObj.imageUrls : [],
-          title: t('step_title', { step: stepObj.step || (idx + 1) }),
-          desc: String(stepObj.tutorial || 'Không có hướng dẫn cho bước này.'),
+          // Đảm bảo title và desc luôn là chuỗi hoặc có giá trị mặc định ngay khi fetch
+          title: String(t('step_title', { step: stepObj.step || (idx + 1) })),
+          desc: String(stepObj.tutorial || t('no_tutorial')),
         }));
-        // Nếu không có bước nào từ API, hiển thị bước mặc định
         if (!stepsData.length) {
           stepsData = [
             {
               imageUrls: [],
-              title: t('step_title', { step: 1 }),
+              title: String(t('step_title', { step: 1 })),
               desc: String(t('no_tutorial')),
             },
           ];
         }
         setSteps(stepsData);
       } catch (e) {
-        console.error("Error fetching steps:", e); // In ra lỗi để dễ debug
-        // Xử lý lỗi: hiển thị bước mặc định nếu có lỗi tải dữ liệu
+        console.error("Error fetching steps:", e);
         setSteps([
           {
             imageUrls: [],
-            title: t('step_title', { step: 1 }),
+            title: String(t('step_title', { step: 1 })),
             desc: String(t('no_tutorial')),
           },
         ]);
@@ -353,7 +338,6 @@ const TutorialCookingScreen = () => {
     fetchSteps();
   }, [recipeId, t]);
 
-  // Dừng TTS khi màn hình TutorialCookingScreen bị unmount
   useEffect(() => {
     return () => {
       Tts.stop();
@@ -375,7 +359,7 @@ const TutorialCookingScreen = () => {
     }
     const now = Date.now();
     const totalDuration = now - startTime - totalOffline;
-    Tts.stop(); // Dừng TTS trước khi chuyển sang màn hình EndCookingScreen
+    Tts.stop();
     navigation.navigate(nav.endCooking, {
       startTime,
       cookedDuration: totalDuration > 0 ? totalDuration : 0,
@@ -391,8 +375,8 @@ const TutorialCookingScreen = () => {
         steps={steps}
         onFinish={handleFinish}
         onBack={() => {
-          Tts.stop(); // Dừng TTS trước khi quay lại từ StepCookingViewer
-          navigation.goBack(); // navigation.goBack() sẽ đưa bạn về màn hình DetailScreen
+          Tts.stop();
+          navigation.goBack();
         }}
         isConnected={isConnected}
         offlineStart={offlineStart}
@@ -410,6 +394,10 @@ const TutorialCookingScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   header: {
     backgroundColor: '#FF6600',
     flexDirection: 'row',
@@ -443,17 +431,17 @@ const styles = StyleSheet.create({
   },
   scrollViewContentContainer: {
     // Không cần đặt width ở đây vì các Image bên trong đã có width: width
+   // paddingBottom:100
   },
   stepImg: {
     width: width,
     height: '100%',
     resizeMode: 'cover',
   },
-  // Style cho placeholder khi không có ảnh
   noImagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#ccc', // Màu xám nhạt
+    backgroundColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -475,22 +463,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
-  contentWrap: {
-    flex: 1, // Rất quan trọng để ScrollView chiếm hết không gian còn lại
+  // Vùng chứa tiêu đề và nút loa, CỐ ĐỊNH
+  contentAndTtsFixed: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 16, // Padding trên cho toàn bộ phần này
     backgroundColor: '#fff',
+  },
+  titleAndTtsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8, // Khoảng cách giữa hàng tiêu đề/loa và ScrollView mô tả
   },
   stepTitle: {
     fontWeight: 'bold',
     fontSize: 16,
     color: '#222',
+    flexShrink: 1, // Cho phép text co lại nếu dài
+    marginRight: 10,
+  },
+  ttsButton: {
+    padding: 5,
+  },
+  ttsIcon: {
+    width: 28,
+    height: 28,
+    tintColor: '#FF6600',
+  },
+  // ScrollView chỉ dành riêng cho mô tả
+  descScrollView: {
+    flex: 1, // Quan trọng: để ScrollView này chiếm hết không gian còn lại
+    paddingHorizontal: 16, // Đặt padding ngang tại đây để chỉ mô tả bị ảnh hưởng
+    backgroundColor: '#fff',
   },
   stepDesc: {
     color: '#222',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 16, // Thêm khoảng cách dưới cùng cho Text
+    marginBottom: 16, // Khoảng cách cuối cùng cho text mô tả
   },
   bottomBtnRow: {
     flexDirection: 'row',
@@ -499,6 +509,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 8,
     backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
 });
 

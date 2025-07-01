@@ -142,7 +142,7 @@ const HomeScreen = () => {
 
   // Dữ liệu món ăn thịnh hành (top 5)
   const trendingData = recipes.slice(0, 5).map((item) => ({
-    id: item.id, // Changed _id to id
+    id: item?.id || item?._id, // Changed _id to id
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
@@ -152,13 +152,14 @@ const HomeScreen = () => {
 
   // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
   const todayData = recipes.slice(5, 10).map((item) => ({
-    id: item.id, // Changed _id to id
+    id: item?._id || item?.id, // Changed _id to id
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
     free: true,
   }));
+
 
   // Dữ liệu ưu đãi demo
   const offerData = [
@@ -211,14 +212,14 @@ const HomeScreen = () => {
                 <TouchableOpacity
                   key={catItem?.id || catItem.key} // Changed _id to id
                   style={styles.categoryItem}
-                  disabled={!user} // Vẫn disabled nếu chưa đăng nhập
+                //  disabled={!user} // Vẫn disabled nếu chưa đăng nhập
                   onPress={() => {
-                    if (user) {
+                  //  if (user) {
                       // Chuyển đến DiscoveryScreen và truyền categoryId, categoryName
-                      navigation.navigate(nav.discovery, { categoryId: catItem.id, categoryName: catItem.name }); // Changed _id to id
-                    } else {
-                      handleGuestAccess();
-                    }
+                      navigation.navigate(nav.discovery, {category: catItem }); // Changed _id to id
+                    // } else {
+                    //   handleGuestAccess();
+                    // }
                   }}
                 >
                   {catItem.imageUrl ? (
@@ -252,8 +253,9 @@ const HomeScreen = () => {
               {item.data.map((recipeItem, idx) => {
                 const isFav = favoriteIds.includes(recipeItem.id);
                 const favoriteId = findFavoriteId(favorites, recipeItem.id);
+
                 return (
-                  <View style={styles.productCard} key={recipeItem.id}>
+                  <View style={styles.productCard} key={recipeItem?.id}>
                     {/* Changed this section */}
                     <TouchableOpacity
                       activeOpacity={0.8}
@@ -277,10 +279,11 @@ const HomeScreen = () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
                             if (!user?.token) return;
+                            console.log('(user.token, recipeItem.id',user.token,'==', recipeItem.id)
                             try {
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
-                              } else {
+                              } else  {
                                 await removeFavorite(user.token, favoriteId);
                               }
                               await reloadFavorites();
