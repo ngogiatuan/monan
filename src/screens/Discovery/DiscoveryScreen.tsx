@@ -53,19 +53,24 @@ const DiscoveryScreen = () => {
   const route = useRoute<DiscoveryScreenRouteProp>();
   const { mealType, category } = route.params || {};
   const { t } = useTranslation();
-  const [showFilter, setShowFilter] = useState(false);
-  const [meal, setMeal] = useState();
+
   const [type, setType] = useState('Món ăn thịnh hành');
   const [ingredients, setIngredients] = useState('');
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [pageTitle, setPageTitle] = useState(t('trending_recipes'));
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categorySelected, setCategorySelected] = useState<any | null>(null);
+  const [recipesFiltered, setRecipeFiltered] = useState<any[]>([]);
+
+  const [showFilter, setShowFilter] = useState(false);
   const [showMealDialog, setShowMealDialog] = useState(false);
   const [showTypeDialog, setShowTypeDialog] = useState(false);
   const [mealSearch, setMealSearch] = useState('');
   const [typeSearch, setTypeSearch] = useState('');
-  const [recipes, setRecipes] = useState<any[]>([]);
-  const [pageTitle, setPageTitle] = useState(t('trending_recipes'));
-  const [categories, setCategories] = useState<any[]>([]);
-  const [categorySelected, setCategorySelected] = useState<any>();
-  const [recipesFiltered, setRecipeFiltered] = useState<any[]>([]);
+
+  const [categorySelectedTemp, setCategorySelectedTemp] = useState<any | null>(null);
+  const [typeTemp, setTypeTemp] = useState('Món ăn thịnh hành');
+  const [ingredientsTemp, setIngredientsTemp] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -82,38 +87,45 @@ const DiscoveryScreen = () => {
         const data = await getAllCategories();
         if (data && data.length > 0) {
           setCategories(data);
-          setCategorySelected(category?.id ? category : data?.[0]);
+          const initialCategory = category?.id ? category : data[0];
+          setCategorySelected(initialCategory);
+          setCategorySelectedTemp(initialCategory);
         }
       } catch (error) {
+        console.error('Lỗi khi lấy danh mục:', error);
         setCategories([]);
       }
     })();
   }, [route.params, t]);
 
   useEffect(() => {
-    const temp = recipes?.length
-      ? recipes?.filter(itemRe => {
-          const isInclude = itemRe?.categoryIds?.find(itemCa => {
-            return itemCa?._id === categorySelected?.id;
-          });
-          return isInclude?._id;
-        })
-      : [];
-    setRecipeFiltered(temp);
-  }, [recipes, categorySelected]);
+    if (recipes.length > 0) {
+      let filtered = [...recipes];
+
+      if (categorySelected && categorySelected.id) {
+        filtered = filtered.filter(itemRe => {
+          return itemRe?.categoryIds?.some((itemCa: any) => itemCa?._id === categorySelected.id);
+        });
+      }
+      setRecipeFiltered(filtered);
+    } else {
+      setRecipeFiltered([]);
+    }
+  }, [recipes, categorySelected, type, ingredients]);
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => {
-        navigation.navigate(nav.buy as never, { item } as never);
+        navigation.navigate(nav.detail, { recipeId: String(item?._id) });
       }}>
       <View style={styles.card}>
         <View style={styles.cardImgWrap}>
-          <Image source={{ uri: item?.imageUrls?.[0] }} style={styles.cardImg} />
+          <Image source={{ uri: item?.imageUrls?.[0] || 'https://via.placeholder.com/150' }} style={styles.cardImg} />
+          {/* Đã chỉnh lại kiểu dáng của phần hiển thị thời gian */}
           <View style={styles.cardTimeRight}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
-            <Text style={styles.timeText}>{item.cookingTime || ''}</Text>
+            <Text style={styles.timeText}>{String(item.cookingTime || '')}</Text>
           </View>
         </View>
         <View style={styles.cardContent}>
@@ -121,15 +133,14 @@ const DiscoveryScreen = () => {
             <Image source={require('../../assert/image/mark.png')} style={styles.markIconImg} />
           </View>
           <Text style={styles.cardTitle} numberOfLines={2}>
-            {item?.name}
+            {String(item?.name || '')}
           </Text>
           <View style={styles.cardRow}>
             <View style={styles.ratingBox}>
-              <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconBlue} />
-              <Text style={styles.ratingTextBlue}>4.8</Text>
+              <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconRatingBox} />
+              <Text style={styles.ratingTextRatingBox}>{item.rating ? String(item.rating) : '4.8'}</Text>
             </View>
           </View>
-          <Text style={styles.priceText}>{item.price}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -142,7 +153,12 @@ const DiscoveryScreen = () => {
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('discovery')}</Text>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilter(true)}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => {
+          setShowFilter(true);
+          setCategorySelectedTemp(categorySelected);
+          setTypeTemp(type);
+          setIngredientsTemp(ingredients);
+        }}>
           <Image source={require('../../assert/image/filter.png')} style={styles.filterIcon} />
         </TouchableOpacity>
       </View>
@@ -153,19 +169,25 @@ const DiscoveryScreen = () => {
           resizeMode="contain"
         />
         <View>
-          <Text style={styles.sectionSubTitle}>{categorySelected?.name || ''}</Text>
+          <Text style={styles.sectionSubTitle}>{String(categorySelected?.name || '')}</Text>
           <Text style={styles.sectionTitle}>{pageTitle}</Text>
         </View>
       </View>
       <FlatList
         data={recipesFiltered}
-        keyExtractor={item => item?._id}
+        keyExtractor={item => String(item?._id)}
         renderItem={renderItem}
+        style={{ backgroundColor: '#F2F2F2' }}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyListContainer}>
+            <Text style={styles.emptyListText}>{t('no_recipes_found')}</Text>
+          </View>
+        )}
       />
 
-      {/* Filter Modal */}
+      {/* Filter Modal (main filter screen) */}
       <Modal
         visible={showFilter}
         animationType="slide"
@@ -173,6 +195,9 @@ const DiscoveryScreen = () => {
         onRequestClose={() => setShowFilter(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.filterModal}>
+            {/* START - Modal Drag Handle */}
+            <View style={styles.modalDragHandle} />
+            {/* END - Modal Drag Handle */}
             <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
             <View style={styles.filterGroup}>
               <View style={styles.filterRowCol}>
@@ -181,7 +206,7 @@ const DiscoveryScreen = () => {
                   style={styles.filterSelect}
                   activeOpacity={0.7}
                   onPress={() => setShowMealDialog(true)}>
-                  <Text style={styles.filterSelectText}>{categorySelected?.name}</Text>
+                  <Text style={styles.filterSelectText}>{String(categorySelectedTemp?.name || t('all'))}</Text>
                   <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                 </TouchableOpacity>
               </View>
@@ -191,7 +216,7 @@ const DiscoveryScreen = () => {
                   style={styles.filterSelect}
                   activeOpacity={0.7}
                   onPress={() => setShowTypeDialog(true)}>
-                  <Text style={styles.filterSelectText}>{type}</Text>
+                  <Text style={styles.filterSelectText}>{typeTemp}</Text>
                   <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                 </TouchableOpacity>
               </View>
@@ -214,8 +239,8 @@ const DiscoveryScreen = () => {
                     style={styles.ingredientsInput}
                     placeholder={t('search_by_ingredients')}
                     placeholderTextColor="#888"
-                    value={ingredients}
-                    onChangeText={setIngredients}
+                    value={ingredientsTemp}
+                    onChangeText={setIngredientsTemp}
                   />
                   <Image
                     source={require('../../assert/image/blacksearch.png')}
@@ -227,21 +252,29 @@ const DiscoveryScreen = () => {
             <ButtonNavigation
               title={t('confirm')}
               style={styles.filterBtnConfirm}
-              onPress={() => setShowFilter(false)}
+              onPress={() => {
+                setCategorySelected(categorySelectedTemp);
+                setType(typeTemp);
+                setPageTitle(typeTemp);
+                setIngredients(ingredientsTemp);
+                setShowFilter(false);
+              }}
             />
           </View>
         </View>
       </Modal>
 
-      {/* Meal Dialog */}
+      {/* Meal Dialog (sub-dialog for meal selection) */}
       <Modal
         visible={showMealDialog}
         animationType="slide"
         transparent
         onRequestClose={() => setShowMealDialog(false)}>
         <View style={styles.dialogOverlay}>
-          {/* Removed flex: 1 from dialogContainer for auto height */}
           <View style={styles.dialogContainer}>
+            {/* START - Modal Drag Handle */}
+            <View style={styles.modalDragHandle} />
+            {/* END - Modal Drag Handle */}
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowMealDialog(false)}>
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
@@ -253,58 +286,58 @@ const DiscoveryScreen = () => {
                 source={require('../../assert/image/blacksearch.png')}
                 style={styles.searchIcon}
               />
-              <InputNavigation
+              <TextInput
                 placeholder={t('searchmeal')}
-                style={[styles.dialogInput, { paddingLeft: 32 }]}
+                style={styles.dialogInput}
                 value={mealSearch}
                 onChangeText={setMealSearch}
                 placeholderTextColor="#888"
               />
             </View>
-            {/* Added maxHeight to this View for scrollability */}
             <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
               <FlatList
                 data={categories.filter(opt =>
-                  opt.name.toLowerCase().includes(mealSearch.toLowerCase())
+                  String(opt.name || '').toLowerCase().includes(mealSearch.toLowerCase())
                 )}
-                keyExtractor={item => item?.id}
+                keyExtractor={item => String(item?.id || item?._id)}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.dialogOption}
+                    style={[
+                      styles.dialogOption,
+                      categorySelectedTemp?.id === item?.id ? styles.dialogOptionSelected : null,
+                    ]}
                     onPress={() => {
-                      setCategorySelected(item);
-                      setShowMealDialog(false);
+                      setCategorySelectedTemp(item);
                       setMealSearch('');
+                      setShowMealDialog(false);
                     }}>
                     <Text
                       style={[
                         styles.dialogOptionText,
-                        categorySelected?.id === item?.id
-                          ? styles.dialogOptionTextActive
-                          : styles.dialogOptionTextAll, // Apply this style for 'Tất cả' or default
+                        categorySelectedTemp?.id === item?.id ? styles.dialogOptionTextActive : null,
                       ]}>
-                      {item?.name}
+                      {String(item?.name || '')}
                     </Text>
                   </TouchableOpacity>
                 )}
                 keyboardShouldPersistTaps="handled"
-                // Optional: For very few items, you might want this:
-                // contentContainerStyle={{ flexGrow: 1 }}
               />
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Type Dialog */}
+      {/* Type Dialog (sub-dialog for type selection) */}
       <Modal
         visible={showTypeDialog}
         animationType="slide"
         transparent
         onRequestClose={() => setShowTypeDialog(false)}>
         <View style={styles.dialogOverlay}>
-          {/* Removed flex: 1 from dialogContainer for auto height */}
           <View style={styles.dialogContainer}>
+            {/* START - Modal Drag Handle */}
+            <View style={styles.modalDragHandle} />
+            {/* END - Modal Drag Handle */}
             <View style={styles.dialogHeader}>
               <TouchableOpacity onPress={() => setShowTypeDialog(false)}>
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
@@ -316,44 +349,39 @@ const DiscoveryScreen = () => {
                 source={require('../../assert/image/blacksearch.png')}
                 style={styles.searchIcon}
               />
-              <InputNavigation
+              <TextInput
                 placeholder={t('searchtype')}
-                style={[styles.dialogInput, { paddingLeft: 32 }]}
+                style={styles.dialogInput}
                 value={typeSearch}
                 onChangeText={setTypeSearch}
                 placeholderTextColor="#888"
               />
             </View>
-            {/* Added maxHeight to this View for scrollability */}
             <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
               <FlatList
                 data={TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(typeSearch.toLowerCase()))}
                 keyExtractor={item => item}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.dialogOption}
+                    style={[
+                      styles.dialogOption,
+                      typeTemp === item ? styles.dialogOptionSelected : null,
+                    ]}
                     onPress={() => {
-                      setType(item);
-                      setShowTypeDialog(false);
-                      setPageTitle(item);
+                      setTypeTemp(item);
                       setTypeSearch('');
+                      setShowTypeDialog(false);
                     }}>
                     <Text
                       style={[
                         styles.dialogOptionText,
-                        type === item
-                          ? styles.dialogOptionTextActive
-                          : item === 'Tất cả' && type === 'Tất cả'
-                          ? styles.dialogOptionTextAll
-                          : null,
+                        typeTemp === item ? styles.dialogOptionTextActive : null,
                       ]}>
                       {item}
                     </Text>
                   </TouchableOpacity>
                 )}
                 keyboardShouldPersistTaps="handled"
-                // Optional: For very few items, you might want this:
-                // contentContainerStyle={{ flexGrow: 1 }}
               />
             </View>
           </View>
@@ -446,7 +474,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: CARD_HEIGHT - 10,
     borderRadius: 10,
-    overflow: 'hidden',
+    // Vẫn giữ không có 'overflow: 'hidden'' ở đây để borderRadius của cardTimeRight không bị cắt
     marginRight: 12,
     position: 'relative',
     backgroundColor: '#f6f6f6',
@@ -454,16 +482,16 @@ const styles = StyleSheet.create({
   cardImg: {
     width: '100%',
     height: '100%',
-    borderRadius: 10,
+    borderRadius: 10, // Đảm bảo ảnh vẫn bo góc
   },
   cardTimeRight: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 0, // Đã điều chỉnh lên trên (giảm top)
+    right: 0, // Đã điều chỉnh sang phải hơn (giảm right)
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(34,34,34,0.8)',
-    borderRadius: 8,
+    backgroundColor: '#4A5E6D', // Giữ nguyên màu nền
+    borderRadius: 8, // Giữ nguyên bo góc
     paddingHorizontal: 6,
     paddingVertical: 2,
     zIndex: 2,
@@ -491,7 +519,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(136,136,136,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -518,7 +546,23 @@ const styles = StyleSheet.create({
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#1CB0F6',
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
+  starIconRatingBox: {
+    width: 16,
+    height: 16,
+    marginRight: 2,
+    tintColor: '#fff',
+  },
+  ratingTextRatingBox: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  // Các style cũ không dùng nữa, có thể xóa nếu không cần
   starIcon: {
     width: 16,
     height: 16,
@@ -548,13 +592,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 2,
   },
-  priceText: {
-    color: '#00C48C',
-    fontWeight: 'bold',
-    fontSize: 15,
-    marginTop: 2,
-  },
-  // Filter modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.18)',
@@ -612,7 +649,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: '#FF6600',
   },
-  // Dialog styles
   dialogOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.18)',
@@ -625,7 +661,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 0,
-    // Removed maxHeight and flex: 1 from here
   },
   dialogHeader: {
     flexDirection: 'row',
@@ -663,48 +698,47 @@ const styles = StyleSheet.create({
     height: 18,
     tintColor: '#888',
     position: 'absolute',
-    left: 16,
+    left: 12,
     zIndex: 2,
   },
   dialogInput: {
+    flex: 1,
     fontSize: 15,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#F6F6F6',
+    backgroundColor: '#fff',
     borderRadius: 8,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     color: '#222',
-    paddingLeft: 32,
-    flex: 1,
-    marginLeft: 15,
+    paddingLeft: 40,
   },
   dialogOption: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 13,
     paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderColor: '#f2f2f2',
     backgroundColor: '#fff',
+  },
+  dialogOptionSelected: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 0,
+    marginHorizontal: 0,
   },
   dialogOptionText: {
     fontSize: 15,
-    color: '#222',
+    color: '#000',
     flex: 1,
   },
   dialogOptionTextActive: {
     color: '#FF6600',
     fontWeight: 'bold',
   },
-  dialogOptionTextAll: {
-    color: '#FF6600',
-  },
   dialogCheckIcon: {
     width: 18,
     height: 18,
     tintColor: '#FF6600',
   },
-  // New styles for Premium Feature and Ingredients Input
   premiumHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -734,6 +768,25 @@ const styles = StyleSheet.create({
     height: 18,
     tintColor: '#888',
     marginLeft: 8,
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  modalDragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#CCCCCC',
+    borderRadius: 2.5,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 10,
   },
 });
 

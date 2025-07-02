@@ -35,16 +35,12 @@ const HomeScreen = () => {
   const [recipesCache, setRecipesCache] = useState<any[]>([]);
   const [categoriesCache, setCategoriesCache] = useState<any[]>([]);
 
-  // State lưu các id món đã được "lưu" (chỉ trên UI, cho user)
   const [localFavoriteIds, setLocalFavoriteIds] = useState<string[]>([]);
-
-  // State lưu các id món đã được lưu (favorite) từ API cho user
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
 
-  // Theo dõi trạng thái mạng
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(!!state.isConnected);
@@ -52,7 +48,6 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, []);
 
-  // Fetch danh sách món ăn và category chỉ khi có mạng
   useEffect(() => {
     let ignore = false;
     if (isConnected) {
@@ -65,6 +60,7 @@ const HomeScreen = () => {
             setHasLoadedRecipes(true);
           }
         } catch (error) {
+          console.error('Error fetching recipes:', error);
           if (!ignore && recipesCache.length > 0) {
             setRecipes(recipesCache);
             setHasLoadedRecipes(true);
@@ -80,43 +76,38 @@ const HomeScreen = () => {
             setCategoriesCache(data);
           }
         } catch (error) {
+          console.error('Error fetching categories:', error);
           if (!ignore && categoriesCache.length > 0) {
             setCategories(categoriesCache);
           }
         }
       })();
     } else {
-      // Nếu mất mạng, dùng cache nếu có
       if (recipesCache.length > 0) setRecipes(recipesCache);
       if (categoriesCache.length > 0) setCategories(categoriesCache);
       setHasLoadedRecipes(true);
     }
     return () => { ignore = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]); // chỉ chạy khi trạng thái kết nối mạng thay đổi
+  }, [isConnected]);
 
-  // Lấy danh sách favorites từ API khi user thay đổi hoặc khi thao tác lưu/xóa
   const reloadFavorites = async () => {
-    if (!isConnected) return; // Không gọi API khi offline
+    if (!isConnected) return;
     if (user?.token) {
       try {
         const favs = await getFavorites(user.token);
         setFavorites(favs);
-        setFavoriteIds(favs.map((f: any) => f.recipeId?.id || f.recipeId)); // Changed _id to id
-      } catch {
-        // Không setFavorites([]) để giữ trạng thái cũ khi mất mạng
+        setFavoriteIds(favs.map((f: any) => f.recipeId?.id || f.recipeId));
+      } catch (error) {
+        console.error('Error reloading favorites:', error);
       }
     }
   };
 
   useEffect(() => {
     if (isConnected) reloadFavorites();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isConnected]);
 
-  // Hàm tạo lời chào dựa trên thời gian trong ngày, đa ngôn ngữ
   const getGreeting = () => {
-    // Luôn trả về tiếng Việt nếu chưa đổi ngôn ngữ (i18n.language === 'vi' hoặc không tồn tại key)
     const hour = new Date().getHours();
     if (i18n.language === 'en') {
       if (hour >= 5 && hour < 11) return t('good_morning');
@@ -124,25 +115,21 @@ const HomeScreen = () => {
       if (hour >= 13 && hour < 18) return t('good_afternoon');
       return t('good_evening', { defaultValue: 'Good evening' });
     }
-    // Mặc định tiếng Việt
     if (hour >= 5 && hour < 11) return t('good_morning');
     if (hour >= 11 && hour < 13) return t('good_noon');
     if (hour >= 13 && hour < 18) return t('good_afternoon');
     return t('good_evening', { defaultValue: 'Chào buổi tối' });
   };
 
-  // Hàm trả về ảnh món ăn từ API (ưu tiên imageUrls[0])
   const getProductImage = (item: any) => {
     if (item.imageUrls && item.imageUrls.length > 0) {
       return { uri: item.imageUrls[0] };
     }
-    // Nếu không có ảnh, có thể trả về một ảnh mặc định khác nếu muốn
     return undefined;
   };
 
-  // Dữ liệu món ăn thịnh hành (top 5)
   const trendingData = recipes.slice(0, 5).map((item) => ({
-    id: item?.id || item?._id, // Changed _id to id
+    id: item?.id || item?._id,
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
@@ -150,9 +137,8 @@ const HomeScreen = () => {
     free: true,
   }));
 
-  // Dữ liệu món ăn cảm hứng hàng ngày (5 món tiếp theo)
   const todayData = recipes.slice(5, 10).map((item) => ({
-    id: item?._id || item?.id, // Changed _id to id
+    id: item?._id || item?.id,
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
@@ -160,8 +146,6 @@ const HomeScreen = () => {
     free: true,
   }));
 
-
-  // Dữ liệu ưu đãi demo
   const offerData = [
     {
       id: '1',
@@ -183,80 +167,33 @@ const HomeScreen = () => {
     Alert.alert('Khách hàng cần đăng nhập để xem chi tiết.');
   };
 
-  // Dùng FlatList cho toàn bộ màn hình, các section ngang dùng ScrollView ngang hoặc FlatList ngang bên trong
-  const homeScreenSections = [
-    { type: 'categories', title: t('categories'), data: categories },
+  const scrollableSections = [
     { type: 'trending_recipes', title: t('trending_recipes'), data: trendingData },
     { type: 'today_recipes', title: t('today_recipes'), data: todayData },
     { type: 'offers', title: t('offers'), data: offerData },
     { type: 'daily_inspiration', title: t('daily_inspiration'), data: todayData },
   ];
 
-  const renderSection = ({ item }) => {
+  const renderScrollableSection = ({ item }) => {
     switch (item.type) {
-      case 'header_search': // Phần này đã được đưa ra ngoài FlatList để cố định
-        return null;
-      case 'categories':
-        return (
-          <>
-            <View style={styles.sectionRow}>
-              <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity
-                onPress={goDiscovery} // Giữ lại nút "Xem thêm" cho Categories để đi đến màn hình Discovery chung
-              >
-                <Text style={styles.seeMore}>{t('see_more')}</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
-              {(categories.length > 0 ? categories : categoriesCache).map(catItem => (
-                <TouchableOpacity
-                  key={catItem?.id || catItem.key} // Changed _id to id
-                  style={styles.categoryItem}
-                //  disabled={!user} // Vẫn disabled nếu chưa đăng nhập
-                  onPress={() => {
-                  //  if (user) {
-                      // Chuyển đến DiscoveryScreen và truyền categoryId, categoryName
-                      navigation.navigate(nav.discovery, {category: catItem }); // Changed _id to id
-                    // } else {
-                    //   handleGuestAccess();
-                    // }
-                  }}
-                >
-                  {catItem.imageUrl ? (
-                    <Image
-                      source={{ uri: catItem.imageUrl }}
-                      style={styles.categoryIcon}
-                    />
-                  ) : (
-                    <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
-                      <Text style={{ color: '#bbb', fontSize: 12 }}>?</Text>
-                    </View>
-                  )}
-                  <Text style={styles.categoryText}>{catItem.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </>
-        );
       case 'trending_recipes':
       case 'today_recipes':
       case 'daily_inspiration':
         return (
-          <>
+          <View style={styles.contentBlock}>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
               <TouchableOpacity onPress={goDiscovery}>
                 <Text style={styles.seeMore}>{t('see_more')}</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8, marginBottom: item.type === 'daily_inspiration' ? 20 : 0 }}>
-              {item.data.map((recipeItem, idx) => {
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}>
+              {item.data.map((recipeItem) => {
                 const isFav = favoriteIds.includes(recipeItem.id);
                 const favoriteId = findFavoriteId(favorites, recipeItem.id);
 
                 return (
                   <View style={styles.productCard} key={recipeItem?.id}>
-                    {/* Changed this section */}
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
@@ -278,12 +215,14 @@ const HomeScreen = () => {
                           onPress={async () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
-                            if (!user?.token) return;
-                            console.log('(user.token, recipeItem.id',user.token,'==', recipeItem.id)
+                            if (!user?.token) {
+                                Alert.alert(t('login_required_title'), t('login_required_message'));
+                                return;
+                            }
                             try {
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
-                              } else  {
+                              } else {
                                 await removeFavorite(user.token, favoriteId);
                               }
                               await reloadFavorites();
@@ -307,9 +246,10 @@ const HomeScreen = () => {
                           <Text style={styles.timeText}>{recipeItem.time}</Text>
                         </View>
                       </View>
-                      <Text style={styles.productTitle} numberOfLines={2}>{recipeItem.title}</Text>
+                      <Text style={styles.productTitle} numberOfLines={2}>
+                        {recipeItem.title}
+                      </Text>
                     </TouchableOpacity>
-                    {/* End of changed section */}
                     <View style={styles.productInfoRow}>
                       <View style={styles.ratingBox}>
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
@@ -320,11 +260,11 @@ const HomeScreen = () => {
                 );
               })}
             </ScrollView>
-          </>
+          </View>
         );
       case 'offers':
         return (
-          <View style={styles.offerSection}>
+          <View style={styles.contentBlock}>
             <Text style={styles.offerSectionTitle}>{item.title}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 16, paddingVertical: 8 }}>
               {item.data.map(offerItem => (
@@ -370,9 +310,10 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header cố định */}
-      <>
+    // View ngoài cùng của HomeScreen sẽ có nền xám nhạt
+    <View style={{ flex: 1, backgroundColor: '#F6F6F6' }}>
+      {/* KHỐI LỚN ĐẦU TIÊN: Header, Search, Categories - Cùng một nền trắng */}
+      <View style={styles.topSectionBlock}>
         <ImageBackground
           source={typeof user?.cover === 'string' ? { uri: user?.cover } : require('../../assert/image/Header.png')}
           style={styles.banner}
@@ -405,38 +346,66 @@ const HomeScreen = () => {
               editable={false}
             />
           </TouchableOpacity>
-          <View style={styles.pointBox}>
-            <View style={styles.pointIconWrap}>
-              <Image
-                source={require('../../assert/image/point.png')}
-                style={styles.pointIcon}
-              />
-            </View>
-            <View style={styles.pointInfo}>
-              <Text style={styles.pointLabel}>{t('ranking_point')}</Text>
-              <Text style={styles.pointText}>{user ? 0 : '-'}</Text>
-            </View>
-          </View>
+          <TouchableOpacity style={styles.notificationIconContainer}>
+            <Image
+              source={require('../../assert/image/notification.png')}
+              style={styles.notificationIcon}
+            />
+          </TouchableOpacity>
         </View>
-      </>
-      {/* Các section cuộn được */}
+
+        {/* Categories cố định và cuộn ngang */}
+        <View>
+          <View style={styles.sectionRow}>
+            <Text style={styles.sectionTitle}>{t('categories')}</Text>
+            <TouchableOpacity onPress={goDiscovery}>
+              <Text style={styles.seeMore}>{t('see_more')}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
+            {(categories.length > 0 ? categories : categoriesCache).map(catItem => (
+              <TouchableOpacity
+                key={catItem?.id || catItem.key}
+                style={styles.categoryItem}
+                onPress={() => {
+                  navigation.navigate(nav.discovery, { category: catItem });
+                }}
+              >
+                {catItem.imageUrl ? (
+                  <Image
+                    source={{ uri: catItem.imageUrl }}
+                    style={styles.categoryIcon}
+                  />
+                ) : (
+                  <View style={[styles.categoryIcon, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                    <Text style={{ color: '#bbb', fontSize: 12 }}>?</Text>
+                  </View>
+                )}
+                <Text style={styles.categoryText}>{catItem.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View> {/* END of topSectionBlock */}
+
+      {/* Các section cuộn dọc (Món ăn thịnh hành, Cảm hứng, Ưu đãi) */}
       {!isConnected && recipes.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
           <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center' }}>
             {t('nonetworkhome')}
           </Text>
         </View>
       ) : hasLoadedRecipes ? (
         <FlatList
-          data={homeScreenSections}
+          data={scrollableSections}
           keyExtractor={(item, index) => item.type + index}
           showsVerticalScrollIndicator={false}
-          renderItem={renderSection}
-          contentContainerStyle={{ paddingBottom: 0 }}
-          style={{ flex: 1 }}
+          renderItem={renderScrollableSection}
+          // contentContainerStyle={{ paddingBottom: 0 }} // Bỏ paddingBottom ở đây
+          style={{ flex: 1, backgroundColor: 'transparent' }} // Đảm bảo FlatList trong suốt
         />
       ) : (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
           <Text>
             {t('loadingData')}
           </Text>
@@ -448,9 +417,21 @@ const HomeScreen = () => {
 };
 
 // Định nghĩa các StyleSheet
-const CARD_WIDTH = 180; // Chiều rộng cố định của thẻ sản phẩm
+const PRODUCT_CARD_MAIN_WIDTH = 260; // Chiều rộng cố định của thẻ sản phẩm chính
 
 const styles = StyleSheet.create({
+  // Style chung cho khối đầu tiên (Header + Search + Categories)
+  topSectionBlock: {
+    backgroundColor: '#fff',
+    marginBottom: 8, // Khoảng cách màu xám bên dưới khối này
+  },
+  // Style chung cho các khối nội dung sau đó (Món ăn thịnh hành, Ưu đãi, Cảm hứng)
+  contentBlock: {
+    backgroundColor: '#fff',
+    marginBottom: 8, // Khoảng cách màu xám giữa các khối này
+  },
+
+  // Header and Search Bar Styles (giữ nguyên)
   banner: {
     width: '100%',
     height: 120,
@@ -503,6 +484,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
+    justifyContent: 'space-between',
   },
   searchBox: {
     flex: 1,
@@ -512,6 +494,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     height: 40,
+    marginRight: 10,
   },
   searchIcon: {
     width: 18,
@@ -520,55 +503,28 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 12, // giảm font size để placeholder gọn hơn
+    fontSize: 12,
     color: '#222',
   },
-  pointBox: {
-    flexDirection: 'row',
+  notificationIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EAF7F3',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
-    marginLeft: 10,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.03,
     shadowRadius: 2,
     elevation: 1,
-    borderWidth: 0,
-    minWidth: 120,
   },
-  pointIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EAF7F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  pointIcon: {
+  notificationIcon: {
     width: 22,
     height: 22,
     tintColor: '#1ABC9C',
   },
-  pointInfo: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  pointLabel: {
-    color: '#888',
-    fontSize: 12,
-    fontWeight: '400',
-    marginBottom: 0,
-  },
-  pointText: {
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginTop: 0,
-  },
+
+  // Section Headers (giữ nguyên)
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -587,9 +543,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 13,
   },
+
+  // Category List (giữ nguyên, chỉ cần View bọc bên ngoài có style topSectionBlock)
   categoryListContainer: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingBottom: 12, // Điều chỉnh paddingBottom thay vì marginBottom
   },
   categoryItem: {
     alignItems: 'center',
@@ -610,28 +568,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+
+  // Styles cho productCard (áp dụng cho Trending, Daily Inspiration - đã được chỉnh sửa như lần trước)
   productCard: {
-    width: CARD_WIDTH,
+    width: PRODUCT_CARD_MAIN_WIDTH,
+    marginRight: 12,
     backgroundColor: '#fff',
     borderRadius: 16,
-    marginRight: 12,
-    padding: 10,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
-    position: 'relative',
+    alignItems: 'center',
+    padding: 10,
   },
   productImgWrap: {
-    position: 'relative',
-    width: '100%',
-    height: 100,
-    marginBottom: 8,
+    width: PRODUCT_CARD_MAIN_WIDTH - 20,
+    height: PRODUCT_CARD_MAIN_WIDTH - 20,
+    borderRadius: 8,
+    marginBottom: 6,
+    backgroundColor: '#eee',
+    overflow: 'hidden',
   },
   productImg: {
     width: '100%',
     height: '100%',
-    borderRadius: 12,
+    borderRadius: 8,
+  },
+  productTitle: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: '#222',
+    marginBottom: 4,
+    textAlign: 'center',
   },
   productMarkCircle: {
     position: 'absolute',
@@ -672,16 +641,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  productTitle: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#222',
-    marginBottom: 4,
-  },
   productInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 5,
   },
   ratingBox: {
     flexDirection: 'row',
@@ -702,23 +667,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: 'hidden',
   },
-  pointRow: {
-    display: 'none',
-  },
-  icon: {
-    width: 13,
-    height: 12,
-    marginRight: 6,
-  },
-  point: {
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+
+  // Offer Section Styles (giữ nguyên)
   offerSection: {
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    marginBottom: 8,
+    // Không cần background hay padding riêng ở đây nữa vì đã có contentBlock
   },
   offerSectionTitle: {
     fontWeight: 'bold',
@@ -783,22 +735,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 0,
     marginTop: 2,
-  },
-  rankContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    marginLeft: 16,
-  },
-  rankLabel: {
-    fontSize: 15,
-    color: '#888',
-    marginRight: 8,
-  },
-  rankValue: {
-    fontSize: 18,
-    color: '#FF6600',
-    fontWeight: 'bold',
   },
 });
 
