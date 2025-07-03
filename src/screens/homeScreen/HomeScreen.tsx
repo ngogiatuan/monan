@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Alert,
+  Alert, // Import Alert for confirmation dialogs
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
@@ -438,7 +438,7 @@ const HomeScreen = () => {
           keyExtractor={(item, index) => item.type + index}
           showsVerticalScrollIndicator={false}
           renderItem={renderScrollableSection}
-          style={{ backgroundColor: 'transparent'}}
+          style={{ backgroundColor: '#F6F6F6'}} // Đặt màu nền cho FlatList để thấy rõ khoảng cách
         />
       ) : (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
@@ -457,13 +457,13 @@ const PRODUCT_CARD_MAIN_WIDTH = 260;
 const styles = StyleSheet.create({
   topSectionBlock: {
     backgroundColor: '#fff',
-    marginBottom: 8,
+    // Đã xóa marginBottom ở đây vì nó sẽ bị borderTop của contentBlock che mất
   },
   contentBlock: {
     backgroundColor: '#fff',
-    borderTopWidth: 6,
+    borderTopWidth: 10, // Tăng độ dày của đường kẻ xám
     borderTopColor:"#f6f6f6",
-    marginBottom: 8,
+    marginBottom: 8, // Thêm khoảng cách dưới cho mỗi khối
   },
 
   banner: {

@@ -174,18 +174,7 @@ const EndCookingScreen = () => {
             </Text>
           </View>
         ) : null}
-        <Text style={styles.sectionLabel}>{t('you_got')}</Text>
-        <View style={styles.rewardRowCenter}>
-          <View style={styles.rewardIconCircle}>
-            <Image source={require('../../assert/image/point.png')} style={styles.rewardIconCenter} />
-          </View>
-          <Text style={styles.rewardValueCenter}>+1500</Text>
-        </View>
-        <View style={styles.rewardNoteContainer}>
-          <Text style={styles.rewardNote}>
-            {t('exp_point_notice')}
-          </Text>
-        </View>
+        {/* Removed the "You Got" section related to points */}
       </View>
       {/* Button cố định dưới cùng */}
       <View style={styles.fixedBottomBtnRow}>
@@ -231,13 +220,7 @@ const EndCookingScreen = () => {
                 // ...submit logic nếu có...
               }}
             />
-            <View style={styles.modalPointRow}>
-              <Text style={styles.modalPointText}>
-                {t('you_will_get_more')} <Text style={{ color: '#00C48C', fontWeight: 'bold' }}>+50</Text>
-              </Text>
-              <Image source={require('../../assert/image/point.png')} style={styles.modalPointIcon} />
-              <Text style={styles.modalPointText}> {t('from_rating_recipe')}</Text>
-            </View>
+            {/* Removed the point information in the rating modal */}
             <TouchableOpacity
               style={styles.modalButton}
               onPress={async () => {
@@ -387,34 +370,10 @@ const styles = StyleSheet.create({
     height: 10,
     tintColor: '#fff',
   },
-  rewardRowCenter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    marginBottom: 2,
-    gap: 8,
-  },
-  rewardIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E6F8F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 0,
-  },
-  rewardIconCenter: {
-    width: 18,
-    height: 18,
-    tintColor: '#00C48C',
-  },
-  rewardValueCenter: {
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: 22,
-    marginLeft: 8,
-  },
+  // Removed rewardRowCenter and its related styles
+  // Removed rewardIconCircle and its related styles
+  // Removed rewardIconCenter and its related styles
+  // Removed rewardValueCenter and its related styles
   rewardNoteContainer: {
     width: '100%',
     alignItems: 'center',
@@ -498,22 +457,9 @@ const styles = StyleSheet.create({
     color: '#222',
     backgroundColor: '#FAFAFA',
   },
-  modalPointRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18,
-    marginTop: 2,
-  },
-  modalPointText: {
-    fontSize: 13,
-    color: '#888',
-  },
-  modalPointIcon: {
-    width: 16,
-    height: 16,
-    marginHorizontal: 2,
-    tintColor: '#00C48C',
-  },
+  // Removed modalPointRow and its related styles
+  // Removed modalPointText and its related styles
+  // Removed modalPointIcon and its related styles
   modalButton: {
     backgroundColor: '#FF6600',
     borderRadius: 8,

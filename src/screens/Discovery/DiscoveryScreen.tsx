@@ -102,16 +102,53 @@ const DiscoveryScreen = () => {
     if (recipes.length > 0) {
       let filtered = [...recipes];
 
+      // Filter by category
       if (categorySelected && categorySelected.id) {
         filtered = filtered.filter(itemRe => {
           return itemRe?.categoryIds?.some((itemCa: any) => itemCa?._id === categorySelected.id);
         });
       }
+
+      // Filter by type (using the 'type' state to determine which recipes to show)
+      // This part depends on how your 'type' options relate to recipe properties.
+      // For now, assuming 'Món ăn thịnh hành' shows all, others might require specific flags/data on recipes.
+      if (type === 'Món ăn thịnh hành') {
+        // No specific filter for "trending recipes" based on the recipe data provided.
+        // You might need a 'isTrending' flag on your recipe objects, or a separate API.
+        // For now, it will just show the category-filtered recipes.
+      } else if (type === 'Hôm nay bạn nấu gì?') {
+        // Add logic to filter recipes for "What are you cooking today?"
+        // This might involve filtering by recipes with ingredients the user has, or popular daily recipes.
+        // For demonstration, let's assume it doesn't filter further unless specific logic is added.
+      } else if (type === 'Cảm hứng hàng ngày') {
+        // Add logic for "Daily Inspiration"
+      }
+      // If 'Tất cả' is selected, no type filtering occurs.
+
+      // Filter by ingredients
+      if (ingredients) {
+        const searchTerms = ingredients.toLowerCase().split(' ').filter(term => term.length > 0);
+        filtered = filtered.filter(itemRe => {
+          // Assuming each recipe has an 'ingredients' array, and each ingredient has a 'name' property
+          // Or, if ingredients are just a string in the recipe, you'd adjust this.
+          // Example: recipe.ingredients = [{ name: 'flour' }, { name: 'sugar' }]
+          // Or: recipe.ingredients = "flour, sugar, eggs"
+
+          const recipeIngredients = itemRe?.ingredients?.map((ing: any) => String(ing.name || '').toLowerCase()).join(' ') || '';
+          const recipeName = String(itemRe?.name || '').toLowerCase();
+
+          // Check if any search term is present in the recipe's ingredients or name
+          return searchTerms.some(term =>
+            recipeIngredients.includes(term) || recipeName.includes(term)
+          );
+        });
+      }
+
       setRecipeFiltered(filtered);
     } else {
       setRecipeFiltered([]);
     }
-  }, [recipes, categorySelected, type, ingredients]);
+  }, [recipes, categorySelected, type, ingredients]); // Add 'ingredients' to dependency array
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
@@ -255,7 +292,16 @@ const DiscoveryScreen = () => {
               onPress={() => {
                 setCategorySelected(categorySelectedTemp);
                 setType(typeTemp);
-                setPageTitle(typeTemp);
+                // Update pageTitle based on the selected type, or a combination if needed
+                if (typeTemp === 'Món ăn thịnh hành') {
+                  setPageTitle(t('trending_recipes'));
+                } else if (typeTemp === 'Hôm nay bạn nấu gì?') {
+                  setPageTitle(t('what_to_cook_today')); // Assuming you have this translation key
+                } else if (typeTemp === 'Cảm hứng hàng ngày') {
+                  setPageTitle(t('daily_inspiration')); // Assuming you have this translation key
+                } else {
+                  setPageTitle(typeTemp); // Fallback to raw type if no specific translation
+                }
                 setIngredients(ingredientsTemp);
                 setShowFilter(false);
               }}
@@ -474,7 +520,6 @@ const styles = StyleSheet.create({
     width: 90,
     height: CARD_HEIGHT - 10,
     borderRadius: 10,
-    // Vẫn giữ không có 'overflow: 'hidden'' ở đây để borderRadius của cardTimeRight không bị cắt
     marginRight: 12,
     position: 'relative',
     backgroundColor: '#f6f6f6',
@@ -482,16 +527,16 @@ const styles = StyleSheet.create({
   cardImg: {
     width: '100%',
     height: '100%',
-    borderRadius: 10, // Đảm bảo ảnh vẫn bo góc
+    borderRadius: 10,
   },
   cardTimeRight: {
     position: 'absolute',
-    top: 0, // Đã điều chỉnh lên trên (giảm top)
-    right: 0, // Đã điều chỉnh sang phải hơn (giảm right)
+    top: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4A5E6D', // Giữ nguyên màu nền
-    borderRadius: 8, // Giữ nguyên bo góc
+    backgroundColor: '#4A5E6D',
+    borderRadius: 8,
     paddingHorizontal: 6,
     paddingVertical: 2,
     zIndex: 2,
@@ -562,7 +607,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 13,
   },
-  // Các style cũ không dùng nữa, có thể xóa nếu không cần
   starIcon: {
     width: 16,
     height: 16,
@@ -760,7 +804,7 @@ const styles = StyleSheet.create({
   ingredientsInput: {
     flex: 1,
     fontSize: 15,
-   
+    paddingVertical: 10, // Added vertical padding to match other inputs better
     color: '#222',
   },
   inputSearchIcon: {

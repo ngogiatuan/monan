@@ -253,7 +253,7 @@ const BuyScreen = () => {
         )}
         {step === 2 && (
           <ButtonNavigation
-            title={t('payment')} 
+            title={t('payment')}
             backgroundColor="#FF6600"
             onPress={() => {
               // Logic xử lý thanh toán thực tế sẽ ở đây
@@ -274,11 +274,13 @@ const BuyScreen = () => {
         <View style={styles.successOverlay}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 28, width: '90%', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 10 }}>
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success')}</Text>
-            <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('successbuydesc')}</Text>
-            <View style={{ backgroundColor: '#00C48C', borderRadius: 48, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}>
+            <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('successbuydes')}</Text>
+            {/* Đã xóa background xanh lá cây ở đây, chỉ giữ lại background màu trắng mặc định hoặc không set */}
+            <View style={{ borderRadius: 48, width: 90, height: 90, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}> {/* Tăng kích thước bao quanh icon */}
               <Image
-                source={require('../../assert/image/check.png')}
-                style={{ width: 44, height: 44 }}
+                source={require('../../assert/image/success.png')}
+                // Tăng kích thước ảnh
+                style={{ width: 150, height: 80 }} // Tăng từ 60x60 lên 80x80
               />
             </View>
             <ButtonNavigation
@@ -668,27 +670,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  successModal: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 28,
-    width: '80%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  successIconWrap: {
-    backgroundColor: '#F0FFF8',
-    borderRadius: 40,
-    width: 64,
-    height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  successIcon: {
+  // Đã xóa style 'successModal' vì không còn dùng.
+  // Đã xóa 'successIconWrap' vì không còn dùng hoặc đã chỉnh sửa inline
+  successIcon: { // Đây là style cũ, đã bị ghi đè bởi inline style
     width: 40,
     height: 40,
     tintColor: '#00C48C',
