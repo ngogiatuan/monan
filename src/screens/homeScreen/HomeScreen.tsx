@@ -128,13 +128,27 @@ const HomeScreen = () => {
     return undefined;
   };
 
-  const trendingData = recipes.slice(0, 5).map((item) => ({
+  // --- LOGIC MỚI ĐỂ ƯU TIÊN MÓN PREMIUM ---
+  const sortedRecipes = [...recipes].sort((a, b) => {
+    // isPrevailing = true nghĩa là Premium, false nghĩa là Free
+    // Sắp xếp các món Premium (isPrevailing: true) lên trước
+    if (a.isPrevailing && !b.isPrevailing) {
+      return -1; // a comes before b
+    }
+    if (!a.isPrevailing && b.isPrevailing) {
+      return 1; // b comes before a
+    }
+    return 0; // maintain original order for same type
+  });
+
+  const trendingData = sortedRecipes.slice(0, 5).map((item) => ({
     id: item?.id || item?._id,
     image: getProductImage(item),
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
-    free: true,
+    free: !item?.isPrevailing, // 'free' is true if isPrevailing is false (meaning it's free)
+    isPremiumRecipe: item?.isPrevailing, // Add this property to identify premium recipes
   }));
 
   const todayData = recipes.slice(5, 10).map((item) => ({
@@ -143,8 +157,10 @@ const HomeScreen = () => {
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
-    free: true,
+    free: !item?.isPrevailing,
+    isPremiumRecipe: item?.isPrevailing, // Add this property to identify premium recipes
   }));
+  // --- KẾT THÚC LOGIC MỚI ---
 
   const offerData = [
     {
@@ -215,10 +231,31 @@ const HomeScreen = () => {
                           onPress={async () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
+
                             if (!user?.token) {
-                                Alert.alert(t('login_required_title'), t('login_required_message'));
-                                return;
+                              Alert.alert(t('login_required_title'), t('login_required_message'));
+                              return;
                             }
+
+                            // New logic: Check if premium recipe and user is not premium
+                            if (recipeItem.isPremiumRecipe && !user?.isPremium) {
+                              Alert.alert(
+                                t('premiumrequiredtitle'),
+                                t('premiumrequiredmessage'),
+                                [
+                                  {
+                                    text: t('cancel'),
+                                    style: 'cancel',
+                                  },
+                                  {
+                                    text: t('buypremiumbutton'),
+                                    onPress: () => navigation.navigate(nav.buy), // Re-enabled navigation
+                                  },
+                                ]
+                              );
+                              return; // Stop the favorite action
+                            }
+
                             try {
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
@@ -227,6 +264,7 @@ const HomeScreen = () => {
                               }
                               await reloadFavorites();
                             } catch (e) {
+                              console.error('Error adding/removing favorite:', e); // Log the error for debugging
                               Alert.alert('Lỗi', t('cannotsaverecipe'));
                             }
                           }}
@@ -241,7 +279,6 @@ const HomeScreen = () => {
                             style={styles.productMark}
                           />
                         </TouchableOpacity>
-                        {/* Đã chỉnh sửa style cho productTimeOverlay */}
                         <View style={styles.productTimeOverlay}>
                           <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
                           <Text style={styles.timeText}>{recipeItem.time}</Text>
@@ -255,7 +292,10 @@ const HomeScreen = () => {
                       <View style={styles.ratingBox}>
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
                       </View>
-                      <Text style={styles.freeTag}>{t('free')}</Text>
+                      {/* Đã điều chỉnh text thành "Premium" và giữ nguyên fontSize */}
+                      <Text style={recipeItem.free ? styles.freeTag : styles.premiumTag}>
+                        {recipeItem.free ? t('free') : "Premium"}
+                      </Text>
                     </View>
                   </View>
                 );
@@ -311,9 +351,7 @@ const HomeScreen = () => {
   };
 
   return (
-    // View ngoài cùng của HomeScreen sẽ có nền xám nhạt
-    <View style={{ flex: 1, backgroundColor: '#F6F6F6' }}>
-      {/* KHỐI LỚN ĐẦU TIÊN: Header, Search, Categories - Cùng một nền trắng */}
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.topSectionBlock}>
         <ImageBackground
           source={typeof user?.cover === 'string' ? { uri: user?.cover } : require('../../assert/image/Header.png')}
@@ -349,13 +387,12 @@ const HomeScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.notificationIconContainer}>
             <Image
-              source={require('../../assert/image/notification.png')}
+              source={require('../../assert/image/notfication2.png')}
               style={styles.notificationIcon}
             />
           </TouchableOpacity>
         </View>
 
-        {/* Categories cố định và cuộn ngang */}
         <View>
           <View style={styles.sectionRow}>
             <Text style={styles.sectionTitle}>{t('categories')}</Text>
@@ -387,9 +424,8 @@ const HomeScreen = () => {
             ))}
           </ScrollView>
         </View>
-      </View> {/* END of topSectionBlock */}
+      </View>
 
-      {/* Các section cuộn dọc (Món ăn thịnh hành, Cảm hứng, Ưu đãi) */}
       {!isConnected && recipes.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
           <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 16, textAlign: 'center' }}>
@@ -402,8 +438,7 @@ const HomeScreen = () => {
           keyExtractor={(item, index) => item.type + index}
           showsVerticalScrollIndicator={false}
           renderItem={renderScrollableSection}
-          // contentContainerStyle={{ paddingBottom: 0 }} // Bỏ paddingBottom ở đây
-          style={{ flex: 1, backgroundColor: 'transparent' }} // Đảm bảo FlatList trong suốt
+          style={{ backgroundColor: 'transparent'}}
         />
       ) : (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
@@ -417,22 +452,20 @@ const HomeScreen = () => {
   );
 };
 
-// Định nghĩa các StyleSheet
-const PRODUCT_CARD_MAIN_WIDTH = 260; // Chiều rộng cố định của thẻ sản phẩm chính
+const PRODUCT_CARD_MAIN_WIDTH = 260;
 
 const styles = StyleSheet.create({
-  // Style chung cho khối đầu tiên (Header + Search + Categories)
   topSectionBlock: {
     backgroundColor: '#fff',
-    marginBottom: 8, // Khoảng cách màu xám bên dưới khối này
+    marginBottom: 8,
   },
-  // Style chung cho các khối nội dung sau đó (Món ăn thịnh hành, Ưu đãi, Cảm hứng)
   contentBlock: {
     backgroundColor: '#fff',
-    marginBottom: 8, // Khoảng cách màu xám giữa các khối này
+    borderTopWidth: 6,
+    borderTopColor:"#f6f6f6",
+    marginBottom: 8,
   },
 
-  // Header and Search Bar Styles (giữ nguyên)
   banner: {
     width: '100%',
     height: 120,
@@ -490,7 +523,8 @@ const styles = StyleSheet.create({
   searchBox: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#F6F6F6',
+    borderWidth:1,
+    borderColor:"#E8E8E8",
     borderRadius: 12,
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -503,29 +537,23 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   searchInput: {
-    flex: 1,
-    fontSize: 12,
-    color: '#222',
+    fontSize: 15,
+    color: '#222'
   },
   notificationIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EAF7F3',
+    backgroundColor: '#F1F1F1',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
   },
   notificationIcon: {
     width: 22,
     height: 22,
-    tintColor: '#1ABC9C',
+    tintColor: '#000',
   },
 
-  // Section Headers (giữ nguyên)
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -545,10 +573,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Category List (giữ nguyên, chỉ cần View bọc bên ngoài có style topSectionBlock)
   categoryListContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 12, // Điều chỉnh paddingBottom thay vì marginBottom
   },
   categoryItem: {
     alignItems: 'center',
@@ -570,7 +596,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Styles cho productCard (áp dụng cho Trending, Daily Inspiration - đã được chỉnh sửa như lần trước)
   productCard: {
     width: PRODUCT_CARD_MAIN_WIDTH,
     marginRight: 12,
@@ -622,11 +647,11 @@ const styles = StyleSheet.create({
   },
   productTimeOverlay: {
     position: 'absolute',
-    left: 0, // Đã thay đổi từ 8 thành 0 để sát lề trái
+    left: 0,
     bottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4A5E6D', // Đã thay đổi màu nền
+    backgroundColor: '#4A5E6D',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -672,11 +697,17 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: 'hidden',
   },
-
-  // Offer Section Styles (giữ nguyên)
-  offerSection: {
-    // Không cần background hay padding riêng ở đây nữa vì đã có contentBlock
+  premiumTag: {
+    color: '#FF4500', // Giữ màu chữ đỏ cam
+    fontWeight: 'bold', // Giữ đậm
+    fontSize: 12, // Đã điều chỉnh để trùng với fontSize của freeTag
+    backgroundColor: '#FFECDF', // Giữ nền hơi hồng cam
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
+
   offerSectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
@@ -732,7 +763,6 @@ const styles = StyleSheet.create({
   },
   offerBtnTextFull: {
     color: '#fff',
-    fontWeight: 'bold',
     fontSize: 13,
   },
   offerDescFull: {

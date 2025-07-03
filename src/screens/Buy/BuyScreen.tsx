@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   Image,
-  Switch,
-  TextInput,
   TouchableOpacity,
   Dimensions,
   SafeAreaView,
@@ -21,8 +19,8 @@ const { width } = Dimensions.get('window');
 
 const STEPS = [
   { label: 'Bạn chọn' },
-  { label: 'Thông tin' },
-  { label: 'Thanh toán' },
+  { label: 'Phương thức' }, // Changed label for clarity
+  { label: 'Thanh toán' }, // New step for payment summary
 ];
 
 const PAYMENT_METHODS = [
@@ -43,6 +41,14 @@ const PAYMENT_METHODS = [
   },
 ];
 
+const PREMIUM_FEATURES = [
+  { key: 'exclusiverecipes', free: false },
+  { key: 'unlimitedfavorites', free: false },
+  { key: 'unlimitedrecipes', free: false },
+  { key: 'exclusivevideoguides', free: false },
+  // Thêm các tính năng khác nếu có, với trường `free` = true/false
+];
+
 const BuyScreen = () => {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
@@ -51,25 +57,25 @@ const BuyScreen = () => {
 
   const { t } = useTranslation();
 
-  const [step, setStep] = useState(1);  
-  const [promoEnabled, setPromoEnabled] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
+  const [step, setStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState('momo');
+  const [selectedPackage, setSelectedPackage] = useState('monthly'); // 'monthly' hoặc 'yearly'
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Tính tổng tiền (giả lập, có thể thêm logic giảm giá nếu cần)
-  const price = item?.price || 0; // Giả sử giá mặc định là 100000đ
-  const discount = 0;
-  const total = price - discount;
+  // Tính tổng tiền
+  const monthlyPrice = 50000;
+  const yearlyPrice = 300000;
+  const price = selectedPackage === 'monthly' ? monthlyPrice : yearlyPrice;
+  const discount = 0; // Không có promo code ở đây nữa
+  // const total = price - discount; // Total không còn được hiển thị trên màn hình riêng
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('buyrecipe') }</Text>
+        <Text style={styles.headerTitle}>{t('Premium')}</Text>
       </View>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {/* Steps */}
@@ -79,7 +85,12 @@ const BuyScreen = () => {
               <TouchableOpacity
                 style={styles.stepCircleWrap}
                 activeOpacity={0.8}
-                onPress={() => setStep(idx + 1)}
+                onPress={() => {
+                  // Allow navigation back to previous steps, but not past the current step
+                  if (idx + 1 <= step) {
+                    setStep(idx + 1);
+                  }
+                }}
               >
                 <View
                   style={[
@@ -100,7 +111,7 @@ const BuyScreen = () => {
                     step === idx + 1 && { color: '#00C48C', fontWeight: 'bold' },
                   ]}
                 >
-                  {t(`buystep`) + ` ${idx + 1}`}
+                  {t('step_title') + ` ${idx + 1}`}
                 </Text>
               </TouchableOpacity>
               {idx < STEPS.length - 1 && (
@@ -109,69 +120,97 @@ const BuyScreen = () => {
             </React.Fragment>
           ))}
         </View>
-        {/* Bước 1: Thông tin đơn hàng */}
+        {/* Bước 1: Thông tin gói Premium */}
         {step === 1 && (
-          <>
-            {/* Info Card */}
-            <View style={styles.infoCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image
-                  source={{uri: item?.imageUrls[0] }}
-                  style={styles.foodImg}
-                />
-                <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Text style={styles.infoLabel}>{t('buyselectedrecipe') }</Text>
-                  <Text style={styles.infoTitle} numberOfLines={2}>
-                    {item?.name || ''}
-                  </Text>
+          <View style={styles.step1Container}>
+            {/* Văn bản "Mở khóa quyền truy cập Premium..." */}
+            <Text style={styles.premiumTextHeadline}>
+              {t('unlockpremiumaccess')}
+            </Text>
+            <Text style={styles.premiumTextDescription}>
+              {t('premiumdescription')}
+            </Text>
+            {/* Hình ảnh */}
+            <Image
+              source={require('../../assert/image/premiumpayment.png')}
+              style={styles.premiumImageCentered}
+              resizeMode="contain"
+            />
+
+            {/* Chọn gói của bạn */}
+            <Text style={styles.sectionTitle}>{t('chooseyourpackage')}</Text>
+            <View style={styles.packageOptionsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.packageOption,
+                  selectedPackage === 'monthly' && styles.packageOptionActive,
+                ]}
+                onPress={() => setSelectedPackage('monthly')}
+              >
+                <View style={[
+                  styles.radioOuter,
+                  selectedPackage === 'monthly' && styles.radioOuterActivePackage,
+                ]}>
+                  {selectedPackage === 'monthly' && <View style={styles.radioInnerActivePackage} />}
                 </View>
-              </View>
-            </View>
-            {/* Promo code */}
-            <View style={styles.promoRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Image source={require('../../assert/image/ticket.png')} style={styles.promoIcon} />
-                <Text style={styles.promoLabel}>{t('enterpromocode') }</Text>
-              </View>
-              <Switch
-                value={promoEnabled}
-                onValueChange={setPromoEnabled}
-                trackColor={{ false: '#ccc', true: '#00C48C' }}
-                thumbColor={promoEnabled ? '#00C48C' : '#f4f3f4'}
-              />
-            </View>
-            {promoEnabled && (
-              <TextInput
-                style={styles.promoInput}
-                placeholder={t('enterpromocodeplaceholder') }
-                value={promoCode}
-                onChangeText={setPromoCode}
-                placeholderTextColor="#888"
-              />
-            )}
-            {/* Payment Info */}
-            <View style={styles.paymentCard}>
-              <Text style={styles.paymentTitle}>{t('payment')}</Text>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('unitprice')}</Text>
-                <Text style={styles.paymentValue}>{price.toLocaleString('vi-VN')}đ</Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('discount')}</Text>
-                <Text style={styles.paymentValue}>{discount.toLocaleString('vi-VN')}</Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabelBold}>{t('total')}</Text>
-                <Text style={styles.paymentValueBold}>{total.toLocaleString('vi-VN')}đ</Text>
-              </View>
-              <TouchableOpacity>
-                <Text style={styles.policyText}>
-                  {t('refundpolicy') }{' '}
-                  <Image source={require('../../assert/image/link.png')} style={styles.linkIcon} />
-                </Text>
+                <View>
+                  <Text style={styles.packageLabel}>{t('monthly')}</Text>
+                  <Text style={styles.packagePrice}>50.000đ/ {t('month')}</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.packageOption,
+                  selectedPackage === 'yearly' && styles.packageOptionActive,
+                ]}
+                onPress={() => setSelectedPackage('yearly')}
+              >
+                <View style={[
+                  styles.radioOuter,
+                  selectedPackage === 'yearly' && styles.radioOuterActivePackage,
+                ]}>
+                  {selectedPackage === 'yearly' && <View style={styles.radioInnerActivePackage} />}
+                </View>
+                <View>
+                  <Text style={styles.packageLabel}>{t('yearly')}</Text>
+                  <Text style={styles.packagePrice}>300.000đ/ {t('year')}</Text>
+                </View>
               </TouchableOpacity>
             </View>
-          </>
+
+            {/* Các tính năng nổi bật */}
+            <Text style={styles.sectionTitle}>{t('outstandingfeatures')}</Text>
+            <View style={styles.featuresContainer}>
+              <View style={[styles.featureRow, styles.featureHeaderRow]}>
+                <Text style={styles.featureLabel}></Text>
+                <Text style={styles.featureColumnHeader}>{t('free')}</Text>
+                <View style={styles.featureColumnHeaderImageContainer}>
+                  <Image
+                    source={require('../../assert/image/premium.png')}
+                    style={styles.premiumHeaderIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+              </View>
+              {PREMIUM_FEATURES.map((feature) => (
+                <View key={feature.key} style={styles.featureRow}>
+                  <Text style={styles.featureLabel}>{t(feature.key)}</Text>
+                  <View style={styles.featureColumn}>
+                    <Image
+                      source={feature.free ? require('../../assert/image/greencheck.png') : require('../../assert/image/cancel.png')}
+                      style={styles.featureComparisonIcon}
+                    />
+                  </View>
+                  <View style={styles.featureColumn}>
+                    <Image
+                      source={require('../../assert/image/greencheck.png')}
+                      style={styles.featureComparisonIcon}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
         )}
         {/* Bước 2: Chọn phương thức thanh toán */}
         {step === 2 && (
@@ -197,46 +236,33 @@ const BuyScreen = () => {
                 <Text style={styles.paymentMethodLabel}>{t(`${method.key}`) || method.label}</Text>
               </TouchableOpacity>
             ))}
-            {/* Payment Info */}
-            <View style={styles.paymentCard}>
-              <Text style={styles.paymentTitle}>{t('payment')}</Text>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('unitprice')}</Text>
-                <Text style={styles.paymentValue}>{price.toLocaleString('vi-VN')}đ</Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabel}>{t('discount')}</Text>
-                <Text style={styles.paymentValue}>{discount.toLocaleString('vi-VN')}</Text>
-              </View>
-              <View style={styles.paymentRow}>
-                <Text style={styles.paymentLabelBold}>{t('total') }</Text>
-                <Text style={styles.paymentValueBold}>{total.toLocaleString('vi-VN')}đ</Text>
-              </View>
-              <TouchableOpacity>
-                <Text style={styles.policyText}>
-                  {t('refundpolicy')}{' '}
-                  <Image source={require('../../assert/image/link.png')} style={styles.linkIcon} />
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
+        {/* Bước 3 không còn là màn hình tóm tắt riêng, nó sẽ dẫn đến dialog thành công */}
+        {/* Phần hiển thị chi tiết thanh toán trước đây đã bị loại bỏ */}
+
       </ScrollView>
       {/* Button */}
       <View style={styles.bottomBtnRow}>
-        {step === 1 ? (
+        {step === 1 && (
           <ButtonNavigation
-            title={`${t('continue')} - ${total.toLocaleString('vi-VN')}đ`}
+            title={t('payment')}
             backgroundColor="#FF6600"
             onPress={() => setStep(2)}
           />
-        ) : step === 2 ? (
+        )}
+        {step === 2 && (
           <ButtonNavigation
-            title={t('pay')}
+            title={t('payment')} 
             backgroundColor="#FF6600"
-            onPress={() => setShowSuccess(true)}
+            onPress={() => {
+              // Logic xử lý thanh toán thực tế sẽ ở đây
+              setStep(3); // Kích hoạt Bước 3 trên thanh tiến trình
+              setShowSuccess(true); // Hiển thị dialog thành công
+            }}
           />
-        ) : null}
+        )}
+        {/* Nút ở Bước 3 đã bị loại bỏ vì không còn màn hình riêng cho Bước 3 */}
       </View>
       {/* Dialog thành công */}
       <Modal
@@ -247,7 +273,7 @@ const BuyScreen = () => {
       >
         <View style={styles.successOverlay}>
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 28, width: '90%', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 10 }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success') }</Text>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success')}</Text>
             <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('successbuydesc')}</Text>
             <View style={{ backgroundColor: '#00C48C', borderRadius: 48, width: 72, height: 72, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}>
               <Image
@@ -260,7 +286,7 @@ const BuyScreen = () => {
               backgroundColor="#FF6600"
               onPress={() => {
                 setShowSuccess(false);
-                navigation.navigate(nav.detail, { recipeId: item?._id });
+                navigation.navigate(nav.home); // Điều hướng về trang công thức hoặc trang chính
               }}
               style={{ marginTop: 0, borderRadius: 12, width: '100%' }}
               textStyle={{ fontWeight: 'bold', fontSize: 16 }}
@@ -271,7 +297,7 @@ const BuyScreen = () => {
               color="#222"
               onPress={() => {
                 setShowSuccess(false);
-                navigation.navigate(nav.home);
+                navigation.navigate(nav.home); // Điều hướng về trang chủ
               }}
               style={{ marginTop: 10, borderRadius: 12, width: '100%' }}
               textStyle={{ color: '#222', fontWeight: 'bold', fontSize: 16 }}
@@ -353,47 +379,134 @@ const styles = StyleSheet.create({
     marginHorizontal: -2,
     marginTop: CIRCLE_SIZE / 2 - 1,
   },
-  infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 14,
+  step1Container: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  premiumTextHeadline: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#222',
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 8,
+    lineHeight: 28,
+  },
+  premiumTextDescription: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  premiumImageCentered: {
+    width: width * 0.5,
+    height: width * 0.5,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    marginTop: 15,
+  },
+  packageOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  packageOption: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E6F8F3',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    marginHorizontal: 5,
+    backgroundColor: '#fff',
   },
-  foodImg: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#eee',
+  packageOptionActive: {
+    borderColor: '#FF6600', // Changed to orange
+    backgroundColor: '#FFF2E0', // Light orange background
   },
-  infoLabel: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  infoTitle: {
-    color: '#222',
+  packageLabel: {
+    fontSize: 15,
     fontWeight: 'bold',
-    fontSize: 16,
+    color: '#222',
+  },
+  packagePrice: {
+    fontSize: 13,
+    color: '#888',
+  },
+  featuresContainer: {
+    width: '100%',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F2',
+    paddingHorizontal: 10,
+  },
+  featureHeaderRow: {
+    backgroundColor: '#F8F8F8',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  featureLabel: {
+    fontSize: 15,
+    color: '#222',
+    flex: 2,
+    fontWeight: '500',
+  },
+  featureColumnHeader: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#222',
+    textAlign: 'center',
+  },
+  featureColumnHeaderImageContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumHeaderIcon: {
+    width: 60,
+    height: 20,
+  },
+  featureColumn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureComparisonIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
   promoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginBottom: 8,
     marginTop: 0,
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: '#F2F2F2',
+    width: '100%',
   },
   promoIcon: {
     width: 22,
@@ -407,7 +520,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   promoInput: {
-    marginHorizontal: 16,
+    width: '100%',
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -417,10 +530,10 @@ const styles = StyleSheet.create({
     color: '#222',
     backgroundColor: '#FAFAFA',
   },
-  paymentCard: {
+  paymentCard: { // This style block is no longer directly used for step 3 content, but could be useful if other summary is added.
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginBottom: 16,
     padding: 14,
     borderWidth: 1,
@@ -481,7 +594,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     backgroundColor: '#fff',
   },
-  // Thêm style cho radio và payment method
   paymentStep2Wrap: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -500,7 +612,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 10,
     paddingVertical: 12,
-    paddingHorizontal: 8, // giảm padding ngang
+    paddingHorizontal: 8,
     marginBottom: 12,
     backgroundColor: '#fff',
   },
@@ -528,6 +640,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#00C48C',
   },
+  radioOuterActivePackage: {
+    borderColor: '#FF6600',
+  },
+  radioInnerActivePackage: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF6600',
+  },
   paymentMethodIcon: {
     width: 22,
     height: 22,
@@ -535,13 +656,12 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodLabel: {
-    fontSize: 14, // giảm font size
+    fontSize: 14,
     color: '#222',
     fontWeight: '500',
-    flexShrink: 1, // cho text co lại nếu dài
+    flexShrink: 1,
     flexWrap: 'wrap',
   },
-  // Success modal styles
   successOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.18)',

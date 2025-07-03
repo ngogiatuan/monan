@@ -5,7 +5,7 @@ import ProfileScreen from '../screens/Profile/ProfileScreen';
 import DeleteAccountScreen from '../screens/DeleteAccount/DeleteAccountScreen';
 import LanguageScreen from '../screens/Language/LanguagueScreen';
 import RecipeScreen from '../screens/Recipe/RecipeScreen';
-import RankingScreen from '../screens/Ranking/RankingScreen';
+import AddStepScreen from '../screens/AddStep/AddStepScreen';
 import { nav } from './navigationName';
 import OnBoardingScreen from '../screens/OnBoarding/OnBoardingScreen';
 import AuthenScreen from '../screens/Authen/AuthenScreen';
@@ -39,7 +39,7 @@ const RootNavigation = () => {
         <Stack.Screen name={nav.deleteAccount} component={DeleteAccountScreen} />
         <Stack.Screen name={nav.language} component={LanguageScreen} />
         <Stack.Screen name={nav.recipe} component={RecipeScreen} />
-        <Stack.Screen name={nav.rank} component={RankingScreen} />
+        <Stack.Screen name={nav.rank} component={AddStepScreen} />
         <Stack.Screen name={nav.forgot} component={ForgotPasswordScreen} />
         <Stack.Screen name={nav.validate} component={ValidateEmailScreen} />
         <Stack.Screen name={nav.resetPassword} component={ResetPasswordScreen} />

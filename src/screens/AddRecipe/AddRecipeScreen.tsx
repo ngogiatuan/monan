@@ -1,8 +1,11 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import ButtonNavigation from '../../compoments/ButtonNavigation';
+import ButtonNavigation from '../../compoments/ButtonNavigation'; // Đảm bảo component này tồn tại nếu bạn dùng ở đâu đó
 import InputNavigation from '../../compoments/InputNavigation';
+import { nav } from '../../navigation/navigationName'; // Import đối tượng nav để điều hướng
+// import DashedView from 'react-native-dashed-border'; // Đã bỏ import DashedView
 
 const AddRecipeScreen = () => {
   const navigation = useNavigation();
@@ -15,17 +18,23 @@ const AddRecipeScreen = () => {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [tempUrl, setTempUrl] = useState('');
 
+  // Hàm điều hướng đến RankScreen
+  const goToRankScreen = () => {
+    navigation.navigate(nav.rank as never); 
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
-          {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tổng quan công thức</Text>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
         {/* Tên công thức */}
         <Text style={styles.label}>
           Tên công thức <Text style={styles.required}>*</Text>
@@ -37,7 +46,7 @@ const AddRecipeScreen = () => {
             placeholderTextColor="#bdbdbd"
             value={name}
             onChangeText={setName}
-            style={[styles.input, { fontSize: 14, height: 36, minHeight: 36, maxHeight: 36 }]} // nhỏ lại, cùng size với input thời gian
+            style={[styles.input, { fontSize: 14,  minHeight: 36, }]}
           />
           {name.length > 0 && (
             <TouchableOpacity onPress={() => setName('')}>
@@ -48,7 +57,8 @@ const AddRecipeScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-        {/* Thêm hình ảnh */}
+
+        {/* Thêm hình ảnh - ĐÃ HOÀN TÁC VỀ TouchableOpacity VỚI borderStyle: 'dashed' */}
         <Text style={styles.label}>
           Thêm hình ảnh <Text style={styles.required}>*</Text>
         </Text>
@@ -62,11 +72,13 @@ const AddRecipeScreen = () => {
             </>
           )}
         </TouchableOpacity>
+        {/* KẾT THÚC HOÀN TÁC */}
+
         {/* Mô tả công thức */}
         <Text style={styles.label}>Mô tả công thức</Text>
         <View style={styles.inputWrap}>
           <InputNavigation
-            style={[styles.input, { height: 80, textAlignVertical: 'top', fontSize: 14 }]} // nhỏ hơn
+            style={[styles.input, { height: 80, textAlignVertical: 'top', fontSize: 14 }]}
             placeholder="Mô tả về công thức của bạn"
             placeholderTextColor="#bdbdbd"
             value={desc}
@@ -104,7 +116,7 @@ const AddRecipeScreen = () => {
           Thời gian ước tính cần thiết để hoàn thành món ăn của bạn (theo đơn vị phút).
         </Text>
         <InputNavigation
-          style={[styles.input, { fontSize: 14, height: 36, minHeight: 36, maxHeight: 36 }]} // nhỏ lại, đồng bộ với tên công thức
+          style={[styles.input, { fontSize: 14,  minHeight: 36 }]}
           keyboardType="numeric"
           value={time}
           onChangeText={setTime}
@@ -115,18 +127,24 @@ const AddRecipeScreen = () => {
         {/* Thêm nguyên liệu */}
         <Text style={styles.label}>Thêm nguyên liệu</Text>
         <InputNavigation
-          style={[styles.input, { height: 80, fontSize: 14 }]} // nhỏ hơn
+          style={[styles.input, { height: 80, fontSize: 14, textAlignVertical:'top' }]}
           placeholder="Thêm nguyên liệu của bạn ở đây"
           value={ingredients}
           onChangeText={setIngredients}
           multiline
         />
+      </ScrollView>
 
-        {/* Tiếp tục */}
-        <TouchableOpacity style={styles.submitBtn}>
+      {/* Fixed Button Container - GIỮ NGUYÊN VÀ CỐ ĐỊNH Ở ĐÂY */}
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity
+          style={styles.submitBtn}
+          onPress={goToRankScreen}
+        >
           <Text style={styles.submitBtnText}>Tiếp tục</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+
       {/* Dialog nhập URL ảnh */}
       <Modal
         visible={showImageDialog}
@@ -170,7 +188,7 @@ const AddRecipeScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -179,9 +197,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6f2c',
     height: 60,
     flexDirection: 'row',
-    alignItems: 'center', // Đã căn giữa theo chiều dọc
+    alignItems: 'center',
     paddingHorizontal: 16,
-    // paddingBottom đã loại bỏ vì không còn cần thiết khi alignItems là center
   },
   headerBackBtn: {
     marginRight: 12,
@@ -196,8 +213,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    flex: 1, // Chiếm toàn bộ không gian còn lại
-    textAlign: 'center', // Căn giữa nội dung text trong không gian nó chiếm
+    flex: 1,
+    textAlign: 'center',
+  },
+  scrollContentContainer: {
+    padding: 16,
+    paddingBottom: 24, // Thêm padding dưới để tránh nội dung bị che bởi nút cố định
   },
   label: {
     fontWeight: 'bold',
@@ -211,7 +232,7 @@ const styles = StyleSheet.create({
   },
   note: {
     color: '#bbb',
-    fontSize: 11, // nhỏ hơn
+    fontSize: 11,
     marginBottom: 4,
     marginTop: -4,
     marginLeft: 2,
@@ -231,6 +252,7 @@ const styles = StyleSheet.create({
     tintColor: '#bbb',
     marginLeft: 4,
   },
+  // HOÀN TÁC style `imageUpload` về trạng thái ban đầu với borderStyle: 'dashed'
   imageUpload: {
     borderWidth: 1,
     borderColor: '#eee',
@@ -243,6 +265,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     minWidth: 120,
     overflow: 'hidden',
+    borderStyle: 'dashed', // Dòng này là điểm mấu chốt được hoàn tác
   },
   imageUploadIcon: {
     width: 40,
@@ -284,7 +307,7 @@ const styles = StyleSheet.create({
   servingInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // đảm bảo các nút và số nằm giữa
+    justifyContent: 'center',
   },
   servingBtn: {
     width: 32,
@@ -324,20 +347,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 6,
   },
+  // Container cho nút cố định ở dưới cùng - GIỮ NGUYÊN
+  bottomButtonContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+    borderTopWidth: 1,
+    borderColor: '#eee',
+  },
   submitBtn: {
     backgroundColor: '#ff6f2c',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 24,
   },
   submitBtnText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
   },
-  // Dialog styles
   dialogOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.25)',

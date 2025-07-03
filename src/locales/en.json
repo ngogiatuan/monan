@@ -172,5 +172,8 @@
     "turnonnetwork":"Please turn on wifi or mobile data to search for accounts.",
     "unitprice":"Unit price",
     "buystep":"Step",
-    "choosepaymentmethod":"Choose payment method"
+    "choosepaymentmethod":"Choose payment method",
+    "buypremiumbutton":"buy premium",
+    "premiumrequiredtitle":"You don't have premium",
+    "premiumrequiredmessage":"Please buy premium to use more"
 }

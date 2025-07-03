@@ -6,9 +6,13 @@ import { useTranslation } from 'react-i18next';
 
 const icons = {
   home: require('../assert/image/home.png'),
-  rank: require('../assert/image/addrecipe.png'), // Lên món
-  recipe: require('../assert/image/recipe.png'), // Công thức
-  profile: require('../assert/image/account.png'),
+  homeActive: require('../assert/image/homeactive.png'), // Assuming you have this active icon
+  rank: require('../assert/image/addrecipe.png'), // Lên món (default)
+  rankActive: require('../assert/image/addrecipeactive.png'), // Assuming you have this active icon
+  recipe: require('../assert/image/recipe.png'), // Công thức (default)
+  recipeActive: require('../assert/image/recipeactive.png'), // Now using your specified active icon
+  profile: require('../assert/image/account.png'), // (default)
+  profileActive: require('../assert/image/accountactive.png'), // Assuming you have this active icon
 };
 
 const BottomNavigation = ({ current = 'profile' }: { current?: string }) => {
@@ -17,27 +21,42 @@ const BottomNavigation = ({ current = 'profile' }: { current?: string }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.home)}>
-        <Image source={icons.home} style={[styles.icon, current === 'home' && styles.iconActive]} />
+        <Image
+          source={current === 'home' ? icons.homeActive : icons.home}
+          style={styles.icon} // No longer need iconActive style for tintColor
+        />
         <Text style={[styles.label, current === 'home' && styles.labelActive]}>
           {t('tab_home')}
         </Text>
       </TouchableOpacity>
-      {/* Đã đảo vị trí: Công thức lên trên */}
+
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.recipe)}>
-        <Image source={icons.recipe} style={[styles.icon, current === 'recipe' && styles.iconActive]} />
+        <Image
+          source={current === 'recipe' ? icons.recipeActive : icons.recipe}
+          style={styles.icon} // No longer need iconActive style for tintColor
+        />
         <Text style={[styles.label, current === 'recipe' && styles.labelActive]}>
           {t('tab_recipe')}
         </Text>
       </TouchableOpacity>
-      {/* Lên món xuống dưới */}
+
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.addRecipe)}>
-        <Image source={icons.rank} style={[styles.icon, current === 'addrecipe' && styles.iconActive]} />
-        <Text style={[styles.label, current === 'rank' && styles.labelActive]}>
+        <Image
+          source={current === 'addrecipe' ? icons.rankActive : icons.rank}
+          style={styles.icon} // No longer need iconActive style for tintColor
+        />
+        {/* Note: Your `current` prop for this tab in HomeScreen is 'addrecipe', but your label active check is 'rank'. 
+            I've updated the label check to 'addrecipe' for consistency. */}
+        <Text style={[styles.label, current === 'addrecipe' && styles.labelActive]}>
           {t('add_recipe')}
         </Text>
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.profile)}>
-        <Image source={icons.profile} style={[styles.icon, current === 'profile' && styles.iconActive]} />
+        <Image
+          source={current === 'profile' ? icons.profileActive : icons.profile}
+          style={styles.icon} // No longer need iconActive style for tintColor
+        />
         <Text style={[styles.label, current === 'profile' && styles.labelActive]}>
           {t('tab_profile', { defaultValue: 'Tài khoản' })}
         </Text>
@@ -65,12 +84,14 @@ const styles = StyleSheet.create({
   icon: {
     width: 24,
     height: 24,
-    tintColor: '#888',
     marginBottom: 2,
+    // Removed tintColor here, as images will handle active state visually
   },
-  iconActive: {
-    tintColor: '#FF6600',
-  },
+  // iconActive is no longer needed for tintColor directly on the image
+  // It could be used for other styling if desired, but not for color tint.
+  // iconActive: {
+  //   // No tintColor anymore
+  // },
   label: {
     fontSize: 12,
     color: '#888',

@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
   ingredientsInput: {
     flex: 1,
     fontSize: 15,
-    paddingVertical: 10,
+   
     color: '#222',
   },
   inputSearchIcon: {

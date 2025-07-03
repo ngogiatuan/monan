@@ -6049,6 +6049,11 @@ react-is@^19.0.0, react-is@^19.1.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.1.0.tgz#805bce321546b7e14c084989c77022351bbdd11b"
   integrity sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==
 
+react-native-dashed-border@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/react-native-dashed-border/-/react-native-dashed-border-2.1.1.tgz#137664080ed41de49a72b81f1ffc8c0c2b496743"
+  integrity sha512-VdgiCiMCknf58jsqkYBTyhZfRVHxJYqhf3j1dpjspbDJm7V/CmufF8dA3OqyBTQ3zOw8wbY9ezI/kTayS1ZiOw==
+
 react-native-gesture-handler@^2.25.0:
   version "2.26.0"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.26.0.tgz#e8774c8cd90f7e72c0ecade0ac1b4f7160fcbd5f"

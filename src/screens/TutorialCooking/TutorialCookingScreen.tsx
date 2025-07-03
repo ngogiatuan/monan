@@ -20,6 +20,7 @@ import ButtonNavigation from '../../compoments/ButtonNavigation';
 import axios from 'axios';
 import Tts from 'react-native-tts';
 import { useTranslation } from 'react-i18next';
+import { countRecipe } from '../../api/recipeApi';
 const NetInfo = require('@react-native-community/netinfo');
 
 const { width } = Dimensions.get('window');
@@ -353,6 +354,7 @@ const TutorialCookingScreen = () => {
   }
 
   const handleFinish = async () => {
+    countRecipe(recipeId);
     let totalOffline = offlineDuration;
     if (!isConnected && offlineStart !== null) {
       totalOffline += Date.now() - offlineStart;

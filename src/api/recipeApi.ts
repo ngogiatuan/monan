@@ -27,3 +27,13 @@ export const getRecipeById = async (id) => {
     return null;
   }
 };
+
+export const countRecipe = async (id: string) => {
+  try {
+    const res = await  axios.get(`${API_URL}/recipes/cook/${id}`);
+    return res.data?.data || null
+  } catch (error) {
+     console.log('Error fetching recipe count by ID:', error);
+    return null;
+  }
+};

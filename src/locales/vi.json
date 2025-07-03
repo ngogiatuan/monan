@@ -55,7 +55,7 @@
     "top_week": "Top tuần",
     "top_month": "Top tháng",
     "ranking": "Xếp hạng",
-    "step_title": "Bước {{step}}",
+    "step_title": "Bước",
     "no_tutorial": "Không có hướng dẫn nấu ăn cho món này.",
     "back": "Quay lại",
     "continue": "Tiếp tục",
@@ -143,7 +143,7 @@
     "searchmeal": "Tìm theo bữa ăn",
     "bytype": "Theo thể loại",
     "searchtype": "Tìm theo thể loại",
-    "buyrecipe": "Mua công thức",
+    "buyrecipe": "Premium",
     "buyselectedrecipe": "Công thức chọn mua",
     "enterpromocode": "Nhập mã khuyến mã",
     "enterpromocodeplaceholder": "Nhập mã khuyến mã",
@@ -168,5 +168,13 @@
     "recipe":"Công thức",
     "unitprice":"Đơn giá",
     "buystep":"Bước",
-    "choosepaymentmethod":"Chọn phương thức thanh toán"
+    "choosepaymentmethod":"Chọn phương thức thanh toán",
+    "buypremiumbutton":"Mua gói premium",
+    "premiumrequiredtitle":"Bạn chưa có gói premium",
+    "premiumrequiredmessage":"Vui lòng mua gói premium để được sử dụng nhiều tính năng nhé",
+    "chooseyourpackage":"Chọn gói của bạn",
+    "unlockpremiumaccess":"Mở khóa quyền truy cập Premium vào các công thức độc quyền!",
+    "premiumdescription":"Đăng ký ngay để trải nghiệm nấu ăn thú vị hơn với các tính năng cao cấp.",
+    "outstandingfeatures":"Các tính năng nổi bật"
+    
 }
