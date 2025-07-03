@@ -6,8 +6,8 @@ import { useTranslation } from 'react-i18next';
 
 const icons = {
   home: require('../assert/image/home.png'),
-  rank: require('../assert/image/ranking.png'),
-  recipe: require('../assert/image/recipe.png'),
+  rank: require('../assert/image/addrecipe.png'), // Lên món
+  recipe: require('../assert/image/recipe.png'), // Công thức
   profile: require('../assert/image/account.png'),
 };
 
@@ -19,19 +19,21 @@ const BottomNavigation = ({ current = 'profile' }: { current?: string }) => {
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.home)}>
         <Image source={icons.home} style={[styles.icon, current === 'home' && styles.iconActive]} />
         <Text style={[styles.label, current === 'home' && styles.labelActive]}>
-          {t('tab_home', { defaultValue: 'Trang chủ' })}
+          {t('tab_home')}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.rank)}>
-        <Image source={icons.rank} style={[styles.icon, current === 'rank' && styles.iconActive]} />
-        <Text style={[styles.label, current === 'rank' && styles.labelActive]}>
-          {t('tab_rank', { defaultValue: 'Xếp hạng' })}
-        </Text>
-      </TouchableOpacity>
+      {/* Đã đảo vị trí: Công thức lên trên */}
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.recipe)}>
         <Image source={icons.recipe} style={[styles.icon, current === 'recipe' && styles.iconActive]} />
         <Text style={[styles.label, current === 'recipe' && styles.labelActive]}>
-          {t('tab_recipe', { defaultValue: 'Công thức' })}
+          {t('tab_recipe')}
+        </Text>
+      </TouchableOpacity>
+      {/* Lên món xuống dưới */}
+      <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.addRecipe)}>
+        <Image source={icons.rank} style={[styles.icon, current === 'addrecipe' && styles.iconActive]} />
+        <Text style={[styles.label, current === 'rank' && styles.labelActive]}>
+          {t('add_recipe')}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate(nav.profile)}>

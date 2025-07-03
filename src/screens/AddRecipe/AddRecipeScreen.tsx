@@ -23,7 +23,7 @@ const AddRecipeScreen = () => {
           {/* Đổi icon thành ký tự '<' thay vì back.png */}
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tổng quan</Text>
+        <Text style={styles.headerTitle}>Tổng quan công thức</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {/* Tên công thức */}
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6f2c',
     height: 60,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center', // Đã căn giữa theo chiều dọc
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    // paddingBottom đã loại bỏ vì không còn cần thiết khi alignItems là center
   },
   headerBackBtn: {
     marginRight: 12,
@@ -196,6 +196,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    flex: 1, // Chiếm toàn bộ không gian còn lại
+    textAlign: 'center', // Căn giữa nội dung text trong không gian nó chiếm
   },
   label: {
     fontWeight: 'bold',

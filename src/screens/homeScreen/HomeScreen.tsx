@@ -241,6 +241,7 @@ const HomeScreen = () => {
                             style={styles.productMark}
                           />
                         </TouchableOpacity>
+                        {/* Đã chỉnh sửa style cho productTimeOverlay */}
                         <View style={styles.productTimeOverlay}>
                           <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
                           <Text style={styles.timeText}>{recipeItem.time}</Text>
@@ -621,11 +622,11 @@ const styles = StyleSheet.create({
   },
   productTimeOverlay: {
     position: 'absolute',
-    left: 8,
+    left: 0, // Đã thay đổi từ 8 thành 0 để sát lề trái
     bottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(34,34,34,0.8)',
+    backgroundColor: '#4A5E6D', // Đã thay đổi màu nền
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -651,9 +652,13 @@ const styles = StyleSheet.create({
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#1CB0F6',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   ratingText: {
-    color: '#4A90E2',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 13,
   },
