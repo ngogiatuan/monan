@@ -18,8 +18,11 @@ import InputNavigation from '../../compoments/InputNavigation';
 import { getRecipes } from '../../api/recipeApi';
 import { useTranslation } from 'react-i18next';
 import { getAllCategories } from '../../api/categoryApi';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 type DiscoveryScreenRouteProp = RouteProp<{
   Discovery: {
@@ -71,6 +74,8 @@ const DiscoveryScreen = () => {
   const [categorySelectedTemp, setCategorySelectedTemp] = useState<any | null>(null);
   const [typeTemp, setTypeTemp] = useState('Món ăn thịnh hành');
   const [ingredientsTemp, setIngredientsTemp] = useState('');
+  const refRBSheet = React.useRef<null>(null);
+   const bottomSheetRef = React.useRef<BottomSheet>(null);
 
   useEffect(() => {
     (async () => {
@@ -224,7 +229,14 @@ const DiscoveryScreen = () => {
         )}
       />
 
+   
+
       {/* Filter Modal (main filter screen) */}
+
+ <GestureHandlerRootView style={{flex:1}}>
+      
+    </GestureHandlerRootView>
+
       <Modal
         visible={showFilter}
         animationType="slide"
@@ -388,7 +400,7 @@ const DiscoveryScreen = () => {
               <TouchableOpacity onPress={() => setShowTypeDialog(false)}>
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('bytype')}</Text>
+              {/* <Text style={styles.dialogTitle}>{t('bytype')}</Text> */}
             </View>
             <View style={styles.dialogInputWrap}>
               <Image
