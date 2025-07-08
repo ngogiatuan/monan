@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { getAllCategories } from '../../api/categoryApi';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -74,8 +74,9 @@ const DiscoveryScreen = () => {
   const [categorySelectedTemp, setCategorySelectedTemp] = useState<any | null>(null);
   const [typeTemp, setTypeTemp] = useState('Món ăn thịnh hành');
   const [ingredientsTemp, setIngredientsTemp] = useState('');
-  const refRBSheet = React.useRef<null>(null);
-   const bottomSheetRef = React.useRef<BottomSheet>(null);
+  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
+  const bottomSheetCategoryRef = React.useRef<BottomSheetModal>(null);
+  const bottomSheetTypeRef = React.useRef<BottomSheetModal>(null);
 
   useEffect(() => {
     (async () => {
@@ -196,10 +197,11 @@ const DiscoveryScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('discovery')}</Text>
         <TouchableOpacity style={styles.filterBtn} onPress={() => {
-          setShowFilter(true);
+          //  setShowFilter(true);
           setCategorySelectedTemp(categorySelected);
           setTypeTemp(type);
           setIngredientsTemp(ingredients);
+          bottomSheetRef.current?.present()
         }}>
           <Image source={require('../../assert/image/filter.png')} style={styles.filterIcon} />
         </TouchableOpacity>
@@ -229,112 +231,105 @@ const DiscoveryScreen = () => {
         )}
       />
 
-   
+
 
       {/* Filter Modal (main filter screen) */}
 
- <GestureHandlerRootView style={{flex:1}}>
-      
-    </GestureHandlerRootView>
-
-      <Modal
-        visible={showFilter}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowFilter(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.filterModal}>
-            {/* START - Modal Drag Handle */}
-            <View style={styles.modalDragHandle} />
-            {/* END - Modal Drag Handle */}
-            <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
-            <View style={styles.filterGroup}>
-              <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('meal')}</Text>
-                <TouchableOpacity
-                  style={styles.filterSelect}
-                  activeOpacity={0.7}
-                  onPress={() => setShowMealDialog(true)}>
-                  <Text style={styles.filterSelectText}>{String(categorySelectedTemp?.name || t('all'))}</Text>
-                  <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('type')}</Text>
-                <TouchableOpacity
-                  style={styles.filterSelect}
-                  activeOpacity={0.7}
-                  onPress={() => setShowTypeDialog(true)}>
-                  <Text style={styles.filterSelectText}>{typeTemp}</Text>
-                  <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Premium Feature Section */}
-              <View style={styles.filterRowCol}>
-                <View style={styles.premiumHeader}>
-                  <Text style={styles.filterLabel}>{t('premium_features')}</Text>
-                  <TouchableOpacity>
-                    <Text style={styles.viewNowText}>{t('see_more')}</Text>
+      <BottomSheetModal ref={bottomSheetRef} enablePanDownToClose backdropComponent={
+        (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
+      } >
+        <BottomSheetView style={{ flex: 1 }} >
+          <View style={styles.modalOverlay}>
+            <View style={styles.filterModal}>
+              {/* END - Modal Drag Handle */}
+              <Text style={styles.filterTitle}>{t('filterrecipe')}</Text>
+              <View style={styles.filterGroup}>
+                <View style={styles.filterRowCol}>
+                  <Text style={styles.filterLabel}>{t('meal')}</Text>
+                  <TouchableOpacity
+                    style={styles.filterSelect}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      bottomSheetCategoryRef.current?.present()
+                      
+                    }}>
+                    <Text style={styles.filterSelectText}>{String(categorySelectedTemp?.name || t('all'))}</Text>
+                    <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                   </TouchableOpacity>
                 </View>
-              </View>
+                <View style={styles.filterRowCol}>
+                  <Text style={styles.filterLabel}>{t('type')}</Text>
+                  <TouchableOpacity
+                    style={styles.filterSelect}
+                    activeOpacity={0.7}
+                    onPress={() => bottomSheetTypeRef.current?.present() }>
+                    <Text style={styles.filterSelectText}>{typeTemp}</Text>
+                    <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
+                  </TouchableOpacity>
+                </View>
 
-              {/* Ingredients Input */}
-              <View style={styles.filterRowCol}>
-                <Text style={styles.filterLabel}>{t('ingredients')}</Text>
-                <View style={styles.inputSearchContainer}>
-                  <TextInput
-                    style={styles.ingredientsInput}
-                    placeholder={t('search_by_ingredients')}
-                    placeholderTextColor="#888"
-                    value={ingredientsTemp}
-                    onChangeText={setIngredientsTemp}
-                  />
-                  <Image
-                    source={require('../../assert/image/blacksearch.png')}
-                    style={styles.inputSearchIcon}
-                  />
+                {/* Premium Feature Section */}
+                <View style={styles.filterRowCol}>
+                  <View style={styles.premiumHeader}>
+                    <Text style={styles.filterLabel}>{t('premium_features')}</Text>
+                    <TouchableOpacity>
+                      <Text style={styles.viewNowText}>{t('see_more')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Ingredients Input */}
+                <View style={styles.filterRowCol}>
+                  <Text style={styles.filterLabel}>{t('ingredients')}</Text>
+                  <View style={styles.inputSearchContainer}>
+                    <TextInput
+                      style={styles.ingredientsInput}
+                      placeholder={t('search_by_ingredients')}
+                      placeholderTextColor="#888"
+                      value={ingredientsTemp}
+                      onChangeText={setIngredientsTemp}
+                    />
+                    <Image
+                      source={require('../../assert/image/blacksearch.png')}
+                      style={styles.inputSearchIcon}
+                    />
+                  </View>
                 </View>
               </View>
+              <ButtonNavigation
+                title={t('confirm')}
+                style={styles.filterBtnConfirm}
+                onPress={() => {
+                  setCategorySelected(categorySelectedTemp);
+                  setType(typeTemp);
+                  // Update pageTitle based on the selected type, or a combination if needed
+                  if (typeTemp === 'Món ăn thịnh hành') {
+                    setPageTitle(t('trending_recipes'));
+                  } else if (typeTemp === 'Hôm nay bạn nấu gì?') {
+                    setPageTitle(t('what_to_cook_today')); // Assuming you have this translation key
+                  } else if (typeTemp === 'Cảm hứng hàng ngày') {
+                    setPageTitle(t('daily_inspiration')); // Assuming you have this translation key
+                  } else {
+                    setPageTitle(typeTemp); // Fallback to raw type if no specific translation
+                  }
+                  setIngredients(ingredientsTemp);
+                  bottomSheetRef.current?.dismiss()
+                }}
+              />
             </View>
-            <ButtonNavigation
-              title={t('confirm')}
-              style={styles.filterBtnConfirm}
-              onPress={() => {
-                setCategorySelected(categorySelectedTemp);
-                setType(typeTemp);
-                // Update pageTitle based on the selected type, or a combination if needed
-                if (typeTemp === 'Món ăn thịnh hành') {
-                  setPageTitle(t('trending_recipes'));
-                } else if (typeTemp === 'Hôm nay bạn nấu gì?') {
-                  setPageTitle(t('what_to_cook_today')); // Assuming you have this translation key
-                } else if (typeTemp === 'Cảm hứng hàng ngày') {
-                  setPageTitle(t('daily_inspiration')); // Assuming you have this translation key
-                } else {
-                  setPageTitle(typeTemp); // Fallback to raw type if no specific translation
-                }
-                setIngredients(ingredientsTemp);
-                setShowFilter(false);
-              }}
-            />
           </View>
-        </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       {/* Meal Dialog (sub-dialog for meal selection) */}
-      <Modal
-        visible={showMealDialog}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowMealDialog(false)}>
+      <BottomSheetModal ref={bottomSheetCategoryRef} enablePanDownToClose backdropComponent={
+        (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
+      } >
+         <BottomSheetView style={{ flex: 1 }} >
         <View style={styles.dialogOverlay}>
           <View style={styles.dialogContainer}>
-            {/* START - Modal Drag Handle */}
-            <View style={styles.modalDragHandle} />
-            {/* END - Modal Drag Handle */}
             <View style={styles.dialogHeader}>
-              <TouchableOpacity onPress={() => setShowMealDialog(false)}>
+              <TouchableOpacity onPress={() => bottomSheetCategoryRef?.current?.dismiss()}>
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
               <Text style={styles.dialogTitle}>{t('bymeal')}</Text>
@@ -367,7 +362,7 @@ const DiscoveryScreen = () => {
                     onPress={() => {
                       setCategorySelectedTemp(item);
                       setMealSearch('');
-                      setShowMealDialog(false);
+                     bottomSheetCategoryRef?.current?.dismiss()
                     }}>
                     <Text
                       style={[
@@ -383,24 +378,22 @@ const DiscoveryScreen = () => {
             </View>
           </View>
         </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       {/* Type Dialog (sub-dialog for type selection) */}
-      <Modal
-        visible={showTypeDialog}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowTypeDialog(false)}>
+      <BottomSheetModal ref={bottomSheetTypeRef} enablePanDownToClose backdropComponent={
+        (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
+      } >
+         <BottomSheetView style={{ flex: 1 }} >
         <View style={styles.dialogOverlay}>
           <View style={styles.dialogContainer}>
-            {/* START - Modal Drag Handle */}
-            <View style={styles.modalDragHandle} />
             {/* END - Modal Drag Handle */}
             <View style={styles.dialogHeader}>
-              <TouchableOpacity onPress={() => setShowTypeDialog(false)}>
+              <TouchableOpacity onPress={() => bottomSheetTypeRef?.current?.dismiss()}>
                 <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
               </TouchableOpacity>
-              {/* <Text style={styles.dialogTitle}>{t('bytype')}</Text> */}
+              <Text style={styles.dialogTitle}>{t('bytype')}</Text>
             </View>
             <View style={styles.dialogInputWrap}>
               <Image
@@ -428,7 +421,7 @@ const DiscoveryScreen = () => {
                     onPress={() => {
                       setTypeTemp(item);
                       setTypeSearch('');
-                      setShowTypeDialog(false);
+                     bottomSheetTypeRef.current?.dismiss()
                     }}>
                     <Text
                       style={[
@@ -444,7 +437,8 @@ const DiscoveryScreen = () => {
             </View>
           </View>
         </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 };
@@ -649,8 +643,8 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    //  flex: 1,
+    // backgroundColor: 'rgba(0,0,0,0.18)',
     justifyContent: 'flex-end',
   },
   filterModal: {
@@ -707,7 +701,6 @@ const styles = StyleSheet.create({
   },
   dialogOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.18)',
     justifyContent: 'flex-end',
   },
   dialogContainer: {
