@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,14 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
+  Linking,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { nav } from '../../navigation/navigationName';
+import { requestPaymentZP } from '../../api/payment';
+import { UserContext } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -61,6 +64,7 @@ const BuyScreen = () => {
   const [selectedPayment, setSelectedPayment] = useState('momo');
   const [selectedPackage, setSelectedPackage] = useState('monthly'); // 'monthly' hoặc 'yearly'
   const [showSuccess, setShowSuccess] = useState(false);
+   const { user } = useContext(UserContext);
 
   // Tính tổng tiền
   const monthlyPrice = 50000;
@@ -68,6 +72,26 @@ const BuyScreen = () => {
   const price = selectedPackage === 'monthly' ? monthlyPrice : yearlyPrice;
   const discount = 0; // Không có promo code ở đây nữa
   // const total = price - discount; // Total không còn được hiển thị trên màn hình riêng
+
+  const onPayment = React.useCallback(async ()=>{
+    console.log('priiccee', price, selectedPayment)
+  //  setStep(3)
+    //setShowSuccess(true)
+    try{
+ if(selectedPayment==='zalopay'){
+  const responsePaymentAPI = await requestPaymentZP(price,user?.token);
+  console.log('respóneee', responsePaymentAPI)
+  if(responsePaymentAPI?.order_url){
+    Linking.openURL(responsePaymentAPI.order_url)
+  }
+
+    }
+    }catch(err){
+      console.log('payment err', err)
+    }
+   
+
+  },[price, selectedPayment, user])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -255,11 +279,7 @@ const BuyScreen = () => {
           <ButtonNavigation
             title={t('payment')}
             backgroundColor="#FF6600"
-            onPress={() => {
-              // Logic xử lý thanh toán thực tế sẽ ở đây
-              setStep(3); // Kích hoạt Bước 3 trên thanh tiến trình
-              setShowSuccess(true); // Hiển thị dialog thành công
-            }}
+            onPress={onPayment}
           />
         )}
         {/* Nút ở Bước 3 đã bị loại bỏ vì không còn màn hình riêng cho Bước 3 */}
@@ -276,11 +296,11 @@ const BuyScreen = () => {
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#222', marginBottom: 8, textAlign: 'center' }}>{t('success')}</Text>
             <Text style={{ fontSize: 15, color: '#888', textAlign: 'center', marginBottom: 0 }}>{t('successbuydes')}</Text>
             {/* Đã xóa background xanh lá cây ở đây, chỉ giữ lại background màu trắng mặc định hoặc không set */}
-            <View style={{ borderRadius: 48, width: 90, height: 90, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}> {/* Tăng kích thước bao quanh icon */}
+            <View style={{ borderRadius: 48, width: 118, height: 128, alignItems: 'center', justifyContent: 'center', marginTop: 18, marginBottom: 18 }}> {/* Tăng kích thước bao quanh icon */}
               <Image
                 source={require('../../assert/image/success.png')}
                 // Tăng kích thước ảnh
-                style={{ width: 150, height: 80 }} // Tăng từ 60x60 lên 80x80
+                style={{ width: 119, height:128}} // Tăng từ 60x60 lên 80x80
               />
             </View>
             <ButtonNavigation

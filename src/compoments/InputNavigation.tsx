@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   // Giữ các style chung cho TextInput ở đây, nhưng loại bỏ chiều cao và padding dọc cố định.
   // Các style này sẽ là "base" cho mọi InputNavigation.
   input: {
-    flex: 1, // Để nó tự co giãn theo không gian
+
     borderWidth: 1.5, // Border được áp dụng trực tiếp lên TextInput
     borderColor: '#E0E0E0',
     borderRadius: 12,

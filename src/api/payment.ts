@@ -2,12 +2,17 @@ import axios from 'axios';
 
 const API_URL = 'http://103.72.99.132:3000/api'; // Đảm bảo đây là URL API chính xác của bạn
 
-export const requestPaymentZP = async (price: number) => {
+export const requestPaymentZP = async (price: number, token: string) => {
   try {
-    const res = await axios.post(`${API_URL}/orders/create`,{
-        price
+    const res = await axios.post(`${API_URL}/orders/create`, {
+      price
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Sử dụng token để xác thực
+      },
     });
-    return res.data?.data || [];
+    console.log('resssss', res)
+    return res.data || null;
   } catch (e) {
     console.log('Error request Payment ZP:', e);
     return [];
