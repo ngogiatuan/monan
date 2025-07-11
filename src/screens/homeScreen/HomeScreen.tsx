@@ -670,9 +670,10 @@ const styles = StyleSheet.create({
   productInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start', // Adjusted to align items to the start
     width: '100%',
     paddingHorizontal: 5,
+    marginTop: 4, // Added a slight margin top
   },
   ratingBox: {
     flexDirection: 'row',
@@ -681,6 +682,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
+    marginRight: 8, // Added margin to create space between rating and tag
   },
   ratingText: {
     color: '#fff',

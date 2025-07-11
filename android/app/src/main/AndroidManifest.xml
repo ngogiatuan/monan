@@ -21,6 +21,13 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <!-- Thêm intent-filter để ứng dụng có thể xử lý các intent với scheme "demozpdk" -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="demozpdk" android:host="app" />
+            </intent-filter>
       </activity>
     </application>
 </manifest>

@@ -5,8 +5,8 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import android.os.Bundle
-import com.zalopay.sdk.ZaloPaySDK
-import com.zalopay.sdk.Environment
+import vn.zalopay.sdk.ZaloPaySDK;
+import vn.zalopay.sdk.Environment
 
 class MainActivity : ReactActivity() {
 
@@ -25,6 +25,6 @@ class MainActivity : ReactActivity() {
       
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(null)
-    ZaloPaySDK.init(<appID>, Environment);
+    ZaloPaySDK.init(554, Environment.SANDBOX);
   }
 }
