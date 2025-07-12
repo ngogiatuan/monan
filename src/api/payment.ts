@@ -19,12 +19,17 @@ export const requestPaymentZP = async (price: number, token: string) => {
   }
 };
 
-export const getStatusPaymentZP = async (apptransid: string) => {
+export const getStatusPaymentZP = async (apptransid: string, token: string) => {
   try {
-    const res = await axios.get(`${API_URL}/status/${apptransid}`);
-    return res.data?.data || [];
+    const res = await axios.get(`${API_URL}/orders/status/${apptransid}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Sử dụng token để xác thực
+      },
+    });
+    console.log('ress status', res)
+    return res.data || null;
   } catch (e) {
     console.log('Error get Status Payment ZP:', e);
-    return [];
+    return null;
   }
 };

@@ -24,6 +24,8 @@ import BuyScreen from '../screens/Buy/BuyScreen';
 import AddRecipeScreen from '../screens/AddRecipe/AddRecipeScreen';
 import EditProfileScreen from '../screens/EditProfile/EditProfileScreen';
 import SearchScreen from '../screens/Search/Searchscreen';
+import NotificationScreen from '../screens/Notification/NotificationScreen';
+import PaymentScreen from '../screens/Payment/PaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +55,8 @@ const RootNavigation = () => {
         <Stack.Screen name={nav.addRecipe} component={AddRecipeScreen} />
         <Stack.Screen name={nav.editProfile} component={EditProfileScreen} />
          <Stack.Screen name={nav.search} component={SearchScreen} />
+         <Stack.Screen name={nav.notification} component={NotificationScreen}/>
+         <Stack.Screen name={nav.payment} component={PaymentScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

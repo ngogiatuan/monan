@@ -20,7 +20,9 @@ export const nav = {
     buy: 'Buy',
     addRecipe: 'AddRecipe',
     editProfile: 'EditProfile', 
-    search:'SearchScreen'
+    search:'SearchScreen',
+    notification:'NotificationScreen',
+    payment:'Payment'
 }
 export const tab = {
     search: 'SearchScreen'

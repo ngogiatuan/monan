@@ -175,5 +175,17 @@
     "choosepaymentmethod":"Choose payment method",
     "buypremiumbutton":"buy premium",
     "premiumrequiredtitle":"You don't have premium",
-    "premiumrequiredmessage":"Please buy premium to use more"
+    "premiumrequiredmessage":"Please buy premium to use more",
+    "exclusiverecipes": "Exclusive Recipes",
+  "unlimitedfavorites": "Unlimited Favorites",
+  "unlimitedrecipes": "Unlimited Recipes",
+  "exclusivevideoguides": "Exclusive Video Guides",
+  "monthly": "Monthly",
+  "Payment":"Paymemt",
+  "month": "month",
+  "year": "year", 
+  "momo": "Pay with MoMo",
+  "zalopay": "Pay with ZaloPay",
+  "card": "Pay with Credit/Debit Card",
+  "loginrequiredtitle":"You don't login"
 }

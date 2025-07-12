@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,10 +11,10 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Alert, // Import Alert for confirmation dialogs
+  Alert,
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { UserContext } from '../../context/UserContext';
 import { getRecipes } from '../../api/recipeApi';
@@ -23,8 +23,21 @@ import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../..
 import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
+
+interface AppOpenNotificationItem {
+  id: string;
+  type: 'app_open';
+  timestamp: number;
+  message?: string;
+}
+
+const NOTIFICATION_STORAGE_KEY = '@app_notifications';
+const LAST_APP_ACCESS_TIMESTAMP_PREFIX = '@last_app_access_timestamp_';
+const LAST_USER_ID_KEY = '@last_logged_user_id';
+const HAS_UNREAD_NOTIFICATIONS_KEY = '@has_unread_notifications';
 
 const HomeScreen = () => {
   const { user } = useContext(UserContext);
@@ -34,13 +47,15 @@ const HomeScreen = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [recipesCache, setRecipesCache] = useState<any[]>([]);
   const [categoriesCache, setCategoriesCache] = useState<any[]>([]);
-
-  const [localFavoriteIds, setLocalFavoriteIds] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false); // State for notification icon
 
+  const isFocused = useIsFocused(); // To detect when HomeScreen comes into focus
+
+  // Network connectivity check
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(!!state.isConnected);
@@ -48,32 +63,28 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, []);
 
+  // Fetch recipes and categories (and use cache if offline)
   useEffect(() => {
     let ignore = false;
-    if (isConnected) {
-      (async () => {
+    const fetchData = async () => {
+      if (isConnected) {
         try {
-          const data = await getRecipes(1, 10);
-          if (!ignore && data && data.length > 0) {
-            setRecipes(data);
-            setRecipesCache(data);
-            setHasLoadedRecipes(true);
+          const recipeData = await getRecipes(1, 10);
+          if (!ignore && recipeData && recipeData.length > 0) {
+            setRecipes(recipeData);
+            setRecipesCache(recipeData);
           }
         } catch (error) {
           console.error('Error fetching recipes:', error);
           if (!ignore && recipesCache.length > 0) {
             setRecipes(recipesCache);
-            setHasLoadedRecipes(true);
           }
         }
-      })();
-
-      (async () => {
         try {
-          const data = await getAllCategories();
-          if (!ignore && data && data.length > 0) {
-            setCategories(data);
-            setCategoriesCache(data);
+          const categoryData = await getAllCategories();
+          if (!ignore && categoryData && categoryData.length > 0) {
+            setCategories(categoryData);
+            setCategoriesCache(categoryData);
           }
         } catch (error) {
           console.error('Error fetching categories:', error);
@@ -81,14 +92,16 @@ const HomeScreen = () => {
             setCategories(categoriesCache);
           }
         }
-      })();
-    } else {
-      if (recipesCache.length > 0) setRecipes(recipesCache);
-      if (categoriesCache.length > 0) setCategories(categoriesCache);
-      setHasLoadedRecipes(true);
-    }
+      } else {
+        if (recipesCache.length > 0) setRecipes(recipesCache);
+        if (categoriesCache.length > 0) setCategories(categoriesCache);
+      }
+      setHasLoadedRecipes(true); // Mark as loaded whether from API or cache
+    };
+
+    fetchData();
     return () => { ignore = true; };
-  }, [isConnected]);
+  }, [isConnected, recipesCache, categoriesCache]); // Depend on isConnected and caches
 
   const reloadFavorites = async () => {
     if (!isConnected) return;
@@ -106,6 +119,80 @@ const HomeScreen = () => {
   useEffect(() => {
     if (isConnected) reloadFavorites();
   }, [user, isConnected]);
+
+  // --- Logic for logging app access and setting unread notification flag ---
+  useEffect(() => {
+    const logAppAccessAndSetNotification = async () => {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+      try {
+        const lastLoggedUserId = await AsyncStorage.getItem(LAST_USER_ID_KEY);
+        const currentUserId = user?.id || 'guest';
+
+        if (user?.token && user?.id) { // User is logged in
+          const lastAccessTimestampStr = await AsyncStorage.getItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + user.id);
+          const lastAccessTimestamp = lastAccessTimestampStr ? parseInt(lastAccessTimestampStr, 10) : 0;
+
+          // Condition 1: It's a new day OR
+          // Condition 2: This is a new login session for this user (e.g., they logged out and logged back in)
+          if (lastAccessTimestamp < todayStart || lastLoggedUserId !== currentUserId) {
+            const newAppOpenNotification: AppOpenNotificationItem = {
+              id: `app_open_${now.getTime()}`,
+              type: 'app_open',
+              timestamp: now.getTime(),
+              message: 'Bạn đã truy cập ứng dụng.',
+            };
+
+            const storedNotificationsString = await AsyncStorage.getItem(NOTIFICATION_STORAGE_KEY);
+            let storedNotifications: AppOpenNotificationItem[] = storedNotificationsString ? JSON.parse(storedNotificationsString) : [];
+
+            const updatedNotifications = [newAppOpenNotification, ...storedNotifications];
+            await AsyncStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(updatedNotifications));
+            console.log('Logged app access notification:', newAppOpenNotification.timestamp);
+
+            // Set the flag for new notifications
+            await AsyncStorage.setItem(HAS_UNREAD_NOTIFICATIONS_KEY, 'true');
+            // No need to setHasNewNotifications(true) here, as the checkNewNotifications effect will handle it.
+
+            await AsyncStorage.setItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + user.id, now.getTime().toString());
+            await AsyncStorage.setItem(LAST_USER_ID_KEY, user.id);
+          }
+        } else { // User is not logged in (guest) or user context is null
+          // If a user was previously logged in, clear their last access timestamp upon "logout"
+          if (lastLoggedUserId && lastLoggedUserId !== 'guest') {
+            await AsyncStorage.removeItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + lastLoggedUserId);
+            console.log('Cleared last app access for previous user:', lastLoggedUserId);
+          }
+          await AsyncStorage.setItem(LAST_USER_ID_KEY, 'guest'); // Mark current session as guest
+        }
+      } catch (error) {
+        console.error('Failed to log app access notification:', error);
+      }
+    };
+
+    // This effect runs once when component mounts or user/token changes, to log access.
+    // It is not dependent on `isFocused` of HomeScreen.
+    logAppAccessAndSetNotification();
+  }, [user?.id, user?.token]); // Dependencies: user ID and token
+
+  // --- Effect to check and update notification icon when HomeScreen is focused ---
+  useEffect(() => {
+    const checkNotificationIconStatus = async () => {
+      if (isFocused) {
+        try {
+          const unreadStatus = await AsyncStorage.getItem(HAS_UNREAD_NOTIFICATIONS_KEY);
+          setHasNewNotifications(unreadStatus === 'true');
+          console.log('Notification icon status updated:', unreadStatus === 'true' ? 'new' : 'no new');
+        } catch (error) {
+          console.error('Failed to read unread notifications flag:', error);
+        }
+      }
+    };
+
+    checkNotificationIconStatus();
+  }, [isFocused]); // Depend only on isFocused to re-check when returning to screen
+
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -128,17 +215,14 @@ const HomeScreen = () => {
     return undefined;
   };
 
-  // --- LOGIC MỚI ĐỂ ƯU TIÊN MÓN PREMIUM ---
   const sortedRecipes = [...recipes].sort((a, b) => {
-    // isPrevailing = true nghĩa là Premium, false nghĩa là Free
-    // Sắp xếp các món Premium (isPrevailing: true) lên trước
     if (a.isPrevailing && !b.isPrevailing) {
-      return -1; // a comes before b
+      return -1;
     }
     if (!a.isPrevailing && b.isPrevailing) {
-      return 1; // b comes before a
+      return 1;
     }
-    return 0; // maintain original order for same type
+    return 0;
   });
 
   const trendingData = sortedRecipes.slice(0, 5).map((item) => ({
@@ -147,8 +231,8 @@ const HomeScreen = () => {
     title: item.name,
     time: item.cookingTime || '',
     rating: 4.8,
-    free: !item?.isPrevailing, // 'free' is true if isPrevailing is false (meaning it's free)
-    isPremiumRecipe: item?.isPrevailing, // Add this property to identify premium recipes
+    free: !item?.isPrevailing,
+    isPremiumRecipe: item?.isPrevailing,
   }));
 
   const todayData = recipes.slice(5, 10).map((item) => ({
@@ -158,9 +242,8 @@ const HomeScreen = () => {
     time: item.cookingTime || '',
     rating: 4.8,
     free: !item?.isPrevailing,
-    isPremiumRecipe: item?.isPrevailing, // Add this property to identify premium recipes
+    isPremiumRecipe: item?.isPrevailing,
   }));
-  // --- KẾT THÚC LOGIC MỚI ---
 
   const offerData = [
     {
@@ -232,29 +315,36 @@ const HomeScreen = () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
 
+                            // Bắt đầu logic mới tại đây:
+
+                            // 1. Kiểm tra người dùng đã đăng nhập chưa
                             if (!user?.token) {
-                              Alert.alert(t('login_required_title'), t('login_required_message'));
+                              Alert.alert(t('loginrequiredtitle'), t('loginrequiredmessage'));
                               return;
                             }
 
-                            // New logic: Check if premium recipe and user is not premium
-                            if (recipeItem.isPremiumRecipe && !user?.isPremium) {
-                              Alert.alert(
-                                t('premiumrequiredtitle'),
-                                t('premiumrequiredmessage'),
-                                [
-                                  {
-                                    text: t('cancel'),
-                                    style: 'cancel',
-                                  },
-                                  {
-                                    text: t('buypremiumbutton'),
-                                    onPress: () => navigation.navigate(nav.buy), // Re-enabled navigation
-                                  },
-                                ]
-                              );
-                              return; // Stop the favorite action
+                            // 2. Nếu món ăn là Premium
+                            if (recipeItem.isPremiumRecipe) {
+                              // Kiểm tra xem người dùng có tài khoản Premium không
+                              if (!user?.isPremium) {
+                                Alert.alert(
+                                  t('premiumrequiredtitle'),
+                                  t('premiumrequiredmessage'),
+                                  [
+                                    {
+                                      text: t('cancel'),
+                                      style: 'cancel',
+                                    },
+                                    {
+                                      text: t('buypremiumbutton'),
+                                      onPress: () => navigation.navigate(nav.buy),
+                                    },
+                                  ]
+                                );
+                                return; // Ngừng thực hiện nếu không có premium
+                              }
                             }
+                            // Nếu món ăn không phải premium, hoặc là premium nhưng user có premium, thì tiếp tục lưu/hủy lưu
 
                             try {
                               if (!isFav) {
@@ -264,7 +354,7 @@ const HomeScreen = () => {
                               }
                               await reloadFavorites();
                             } catch (e) {
-                              console.error('Error adding/removing favorite:', e); // Log the error for debugging
+                              console.error('Error adding/removing favorite:', e);
                               Alert.alert('Lỗi', t('cannotsaverecipe'));
                             }
                           }}
@@ -292,7 +382,6 @@ const HomeScreen = () => {
                       <View style={styles.ratingBox}>
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
                       </View>
-                      {/* Đã điều chỉnh text thành "Premium" và giữ nguyên fontSize */}
                       <Text style={recipeItem.free ? styles.freeTag : styles.premiumTag}>
                         {recipeItem.free ? t('free') : "Premium"}
                       </Text>
@@ -350,6 +439,10 @@ const HomeScreen = () => {
     navigation.navigate(nav.search);
   };
 
+  const goNotification = () => {
+    navigation.navigate(nav.notification);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.topSectionBlock}>
@@ -385,9 +478,9 @@ const HomeScreen = () => {
               editable={false}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.notificationIconContainer}>
+          <TouchableOpacity style={styles.notificationIconContainer} onPress={goNotification}>
             <Image
-              source={require('../../assert/image/notfication2.png')}
+              source={hasNewNotifications ? require('../../assert/image/notification1.png') : require('../../assert/image/notfication2.png')}
               style={styles.notificationIcon}
             />
           </TouchableOpacity>
@@ -438,7 +531,7 @@ const HomeScreen = () => {
           keyExtractor={(item, index) => item.type + index}
           showsVerticalScrollIndicator={false}
           renderItem={renderScrollableSection}
-          style={{ backgroundColor: '#F6F6F6'}} // Đặt màu nền cho FlatList để thấy rõ khoảng cách
+          style={{ backgroundColor: '#F6F6F6'}}
         />
       ) : (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
@@ -457,13 +550,12 @@ const PRODUCT_CARD_MAIN_WIDTH = 260;
 const styles = StyleSheet.create({
   topSectionBlock: {
     backgroundColor: '#fff',
-    // Đã xóa marginBottom ở đây vì nó sẽ bị borderTop của contentBlock che mất
   },
   contentBlock: {
     backgroundColor: '#fff',
-    borderTopWidth: 10, // Tăng độ dày của đường kẻ xám
+    borderTopWidth: 10,
     borderTopColor:"#f6f6f6",
-    marginBottom: 8, // Thêm khoảng cách dưới cho mỗi khối
+    marginBottom: 8,
   },
 
   banner: {
@@ -670,10 +762,10 @@ const styles = StyleSheet.create({
   productInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Adjusted to align items to the start
+    justifyContent: 'flex-start',
     width: '100%',
     paddingHorizontal: 5,
-    marginTop: 4, // Added a slight margin top
+    marginTop: 4,
   },
   ratingBox: {
     flexDirection: 'row',
@@ -682,7 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    marginRight: 8, // Added margin to create space between rating and tag
+    marginRight: 8,
   },
   ratingText: {
     color: '#fff',
@@ -700,16 +792,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   premiumTag: {
-    color: '#FF4500', // Giữ màu chữ đỏ cam
-    fontWeight: 'bold', // Giữ đậm
-    fontSize: 12, // Đã điều chỉnh để trùng với fontSize của freeTag
-    backgroundColor: '#FFECDF', // Giữ nền hơi hồng cam
+    color: '#FF4500',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#FFECDF',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
     overflow: 'hidden',
   },
-
   offerSectionTitle: {
     fontWeight: 'bold',
     fontSize: 16,
