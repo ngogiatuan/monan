@@ -187,5 +187,7 @@
   "momo": "Pay with MoMo",
   "zalopay": "Pay with ZaloPay",
   "card": "Pay with Credit/Debit Card",
-  "loginrequiredtitle":"You don't login"
+  "loginrequiredtitle":"You don't login",
+  "achievements":"Achievements",
+  "purchasedrecipes":"Purchased Recipes"
 }

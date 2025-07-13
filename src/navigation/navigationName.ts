@@ -22,7 +22,8 @@ export const nav = {
     editProfile: 'EditProfile', 
     search:'SearchScreen',
     notification:'NotificationScreen',
-    payment:'Payment'
+    payment:'Payment',
+    detailprofile:'DetailProfile'
 }
 export const tab = {
     search: 'SearchScreen'

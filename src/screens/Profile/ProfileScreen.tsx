@@ -41,7 +41,6 @@ const ProfileScreen = () => {
   ]);
 
   useEffect(() => {
-    // Nếu là tiếng Việt mặc định (chưa đổi), dùng base label
     if (i18n.language === 'vi') {
       setLabels(DEFAULT_LABELS);
       setSupportList([
@@ -71,8 +70,7 @@ const ProfileScreen = () => {
         { label: t('support_terms'), icon: require('../../assert/image/Conditions.png') },
       ]);
     }
-    // eslint-disable-next-line
-  }, [i18n.language]);
+  }, [i18n.language, t]);
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
@@ -81,36 +79,33 @@ const ProfileScreen = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- Header cố định, tổng quát scroll theo ---
   return (
-    <View style={{flex: 1, backgroundColor: '#fff'}}>
-      {/* Header cố định */}
+    <View style={styles.container}>
       <View style={styles.fixedHeaderWrap}>
         <ProfileInfo
           onCreateAccount={async () => {
             const ok = await checkNetworkAndAlert(
               t('network_create_account') ||
-                'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.'
+              'Không có kết nối mạng. Vui lòng bật wifi hoặc dữ liệu di động để tạo tài khoản.'
             );
             if (!ok) return;
             navigation.navigate(nav.authen);
           }}
         />
       </View>
-      {/* ScrollView cho phần còn lại, gồm tổng quát và các section khác */}
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
         {user && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{labels.overview}</Text>
+            {/* Mã ưu đãi - có dải phân cách xám */}
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
                 Alert.alert(
-                  t('networkfeature') ,
-                  t('networkfeaturedetail') 
+                  t('networkfeature'),
+                  t('networkfeaturedetail')
                 );
                 return;
               }
-              // ...existing code nếu có...
             }}>
               <Image
                 source={require('../../assert/image/code.png')}
@@ -118,12 +113,15 @@ const ProfileScreen = () => {
                 resizeMode="contain"
               />
               <Text style={styles.rowText}>{labels.promo_code}</Text>
+              {/* Dải phân cách */}
+              <View style={styles.internalSeparator} />
             </TouchableOpacity>
+            {/* Giới thiệu bạn bè - không có dải phân cách (mục cuối của nhóm này) */}
             <TouchableOpacity style={styles.row} onPress={() => {
               if (!isConnected) {
                 Alert.alert(
-                  t('networkfeature') ,
-                  t('networkfeaturedetail') 
+                  t('networkfeature'),
+                  t('networkfeaturedetail')
                 );
                 return;
               }
@@ -137,8 +135,10 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           </View>
         )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{labels.settings}</Text>
+          {/* Ngôn ngữ - không có dải phân cách (mục duy nhất) */}
           <TouchableOpacity
             style={styles.row}
             onPress={async () => {
@@ -157,18 +157,25 @@ const ProfileScreen = () => {
             <Text style={styles.rowText}>{t('language')}</Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{labels.support}</Text>
-          {supportList.map((item) => (
-            <TouchableOpacity style={styles.row} key={item.label}>
+          {/* Các mục từ supportList - có dải phân cách xám */}
+          {supportList.map((item, index) => (
+            <TouchableOpacity
+              style={styles.row}
+              key={item.label}
+            >
               <Image
                 source={item.icon}
                 style={styles.supportIcon}
                 resizeMode="contain"
               />
               <Text style={styles.rowText}>{item.label}</Text>
+              <View style={styles.internalSeparator} />
             </TouchableOpacity>
           ))}
+          {/* Về chúng tôi - có dải phân cách xám */}
           <TouchableOpacity style={styles.row}>
             <Image
               source={require('../../assert/image/aboutus.png')}
@@ -176,7 +183,9 @@ const ProfileScreen = () => {
               resizeMode="contain"
             />
             <Text style={styles.rowText}>{labels.about_us}</Text>
+            <View style={styles.internalSeparator} />
           </TouchableOpacity>
+          {/* Đánh giá ứng dụng - không có dải phân cách (mục cuối cùng của phần Hỗ trợ) */}
           <TouchableOpacity style={styles.row}>
             <Image
               source={require('../../assert/image/star.png')}
@@ -186,8 +195,10 @@ const ProfileScreen = () => {
             <Text style={styles.rowText}>{labels.rate_app}</Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{labels.security}</Text>
+          {/* Xóa tài khoản - không có dải phân cách (mục duy nhất) */}
           <TouchableOpacity
             style={styles.row}
             onPress={async () => {
@@ -206,12 +217,12 @@ const ProfileScreen = () => {
             <Text style={styles.rowText}>{labels.delete_account}</Text>
           </TouchableOpacity>
         </View>
+
         <TouchableOpacity style={styles.logoutBtn} onPress={() => setShowLogout(true)}>
           <Text style={styles.logoutText}>{labels.logout}</Text>
         </TouchableOpacity>
       </ScrollView>
       <BottomNavigation current="profile" />
-      {/* Dialog xác nhận đăng xuất */}
       <Modal
         visible={showLogout}
         transparent
@@ -242,10 +253,12 @@ const ProfileScreen = () => {
               backgroundColor="#FF6600"
               onPress={() => {
                 const userGG = GoogleSignin.getCurrentUser();
-                if(userGG?.idToken){
+                if (userGG?.idToken) {
                   GoogleSignin.signOut()
                 }
                 setShowLogout(false);
+                // If you have `setUser` from UserContext, you'd call it here:
+                // setUser(null);
                 navigation.reset({
                   index: 0,
                   routes: [{ name: nav.authen }],
@@ -269,7 +282,66 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollViewContentContainer: {
+    paddingBottom: 20,
+  },
+  fixedHeaderWrap: {
+    backgroundColor: '#f5f5f5',
+    zIndex: 2,
+    elevation: 2,
+  },
+  section: {
+    marginTop: 10,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16, // Padding để căn icon và text vào trong
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  sectionTitle: {
+    color: '#474747',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#fff', // Đảm bảo nền của hàng là màu trắng
+    position: 'relative', // Cần cho internalSeparator sử dụng absolute
+  },
+  // Style cho dải phân cách xám nhỏ, không full width
+  internalSeparator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 34, // <--- ĐÃ ĐIỀU CHỈNH: Bắt đầu sớm hơn để bao phủ hết text
+    right: 0, // Kéo dài hết mép phải của ô trắng
+    height: 1.5, // Độ dày của dải phân cách
+    backgroundColor: '#ededed', // Màu xám nhạt
+  },
+  rowText: { fontSize: 16, color: '#222', marginLeft: 12 },
+  settingIcon: { width: 22, height: 22 },
+  supportIcon: { width: 22, height: 22 },
+  starIcon: { width: 22, height: 22 },
+  groupIcon: { width: 22, height: 22 },
+  generalIcon: { width: 20, height: 20, tintColor: '#00AEEF' },
+  logoutBtn: {
+    marginTop: 10,
+    backgroundColor: '#fff',
+    borderWidth: 0,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: {
+    color: '#C03744',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Unused or old styles
   coverContainer: { width: '100%', height: 180, backgroundColor: '#eee' },
   coverImg: { width: '100%', height: 180, resizeMode: 'cover' },
   avatarWrapper: {
@@ -290,50 +362,6 @@ const styles = StyleSheet.create({
   loginText: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   subText: { color: '#888', fontSize: 14 },
   linkText: { color: '#007aff', fontWeight: 'bold' },
-  section: { marginTop: 18, backgroundColor: '#fff', paddingHorizontal: 20 },
-  sectionTitle: { color: '#888', fontSize: 14, marginBottom: 8, marginTop: 12 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  rowInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 0,
-  },
-  rowText: { fontSize: 16, color: '#222', marginLeft: 12 },
-  settingIcon: { width: 22, height: 22 },
-  supportIcon: { width: 22, height: 22 },
-  starIcon: { width: 22, height: 22 },
-  groupIcon: { width: 22, height: 22 },
-  logoutBtn: {
-    marginTop: 24,
-    marginHorizontal: 20,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ffeaea',
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutText: {
-    color: '#e53935',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  generalIcon: { width: 20, height: 20, tintColor: '#00AEEF' },
-  fixedHeaderWrap: {
-    backgroundColor: '#fff',
-    // Đảm bảo header và tổng quát không bị kéo theo khi scroll
-    // Có thể thêm shadow nếu muốn nổi bật
-    zIndex: 2,
-    elevation: 2,
-  },
 });
 
 export default ProfileScreen;
-

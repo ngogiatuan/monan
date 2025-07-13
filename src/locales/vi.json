@@ -101,7 +101,7 @@
     "noaccount": "Bạn chưa có tài khoản?",
     "register": "Đăng ký",
     "enterfullname": "Nhập họ và tên",
-    "fullname": "Họ và tên",
+    "fullname": "Tên",
     "password": "Mật khẩu",
     "enterrepassword": "Nhập lại mật khẩu",
     "haveaccount": "Đã có tài khoản?",
@@ -189,5 +189,7 @@
   "zalopay": "Thanh toán bằng ZaloPay",
   "card": "Thanh toán bằng thẻ Tín dụng/Ghi nợ",
   "loginrequiredtitle":"Bạn chưa đăng nhập",
-  "loginrequiredmessage":"Vui lòng đăng nhập để sử dụng chức năng này!"
+  "loginrequiredmessage":"Vui lòng đăng nhập để sử dụng chức năng này!",
+  "achievements":"Thành tích",
+  "purchasedrecipes":"Công thức đã mua"
 }

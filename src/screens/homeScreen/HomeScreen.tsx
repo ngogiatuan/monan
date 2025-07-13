@@ -584,8 +584,9 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
-    borderWidth: 2,
-    borderColor: '#fff',
+    // Loại bỏ border tại đây
+    borderWidth: 0, // Đặt borderWidth về 0
+    borderColor: 'transparent', // Hoặc transparent nếu bạn muốn giữ thuộc tính nhưng không hiển thị
   },
   headerGreeting: {
     color: '#fff',

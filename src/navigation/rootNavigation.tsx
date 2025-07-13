@@ -26,6 +26,7 @@ import EditProfileScreen from '../screens/EditProfile/EditProfileScreen';
 import SearchScreen from '../screens/Search/Searchscreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
 import PaymentScreen from '../screens/Payment/PaymentScreen';
+import DetailProfile from '../screens/DetailProfile/DetailProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +58,7 @@ const RootNavigation = () => {
          <Stack.Screen name={nav.search} component={SearchScreen} />
          <Stack.Screen name={nav.notification} component={NotificationScreen}/>
          <Stack.Screen name={nav.payment} component={PaymentScreen}/>
+         <Stack.Screen name={nav.detailprofile} component={DetailProfile}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -11,7 +11,6 @@ const EditProfileScreen = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
 
-  // --- SỬA: Khởi tạo avatarUrl và cover từ user.avatar và user.cover (nếu có) ---
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
@@ -25,7 +24,7 @@ const EditProfileScreen = () => {
   const [showAvatarPickerModal, setShowAvatarPickerModal] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  // --- SỬA: Khi user thay đổi (ví dụ sau khi lưu), đồng bộ lại state ---
+
   useEffect(() => {
     setName(user?.name || '');
     setEmail(user?.email || '');
@@ -47,7 +46,6 @@ const EditProfileScreen = () => {
     };
   }, []);
 
-  // --- SỬA: Khi chọn/chụp ảnh mới, chỉ setAvatarUrl (không dùng avatar state phụ) ---
   const pickAvatarFromLibrary = () => {
     setShowAvatarPickerModal(false);
     launchImageLibrary(
@@ -118,7 +116,7 @@ const EditProfileScreen = () => {
     (cover && cover !== (typeof user?.cover === 'string' ? user.cover : null));
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -129,162 +127,144 @@ const EditProfileScreen = () => {
       </View>
       {/* Cover image */}
       <ScrollView>
-      <View style={styles.bannerWrap}>
-        <Image
-          source={
-            cover
-              ? { uri: cover }
-              : require('../../assert/image/cover.png')
-          }
-          style={styles.bannerImg}
-        />
-        {/* Camera icon ở chính giữa cover */}
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: [{ translateX: -12 }, { translateY: -12 }], // icon 24x24
-            zIndex: 2,
-            padding: 0,
-            backgroundColor: 'transparent',
-            borderRadius: 0,
-            elevation: 0,
-          }}
-          onPress={() => setShowCoverPickerModal(true)}
-        >
+        <View style={styles.bannerWrap}>
           <Image
-            source={require('../../assert/image/camera.png')}
-            style={{ width: 24, height: 24, tintColor: undefined }}
+            source={
+              cover
+                ? { uri: cover }
+                : require('../../assert/image/cover.png')
+            }
+            style={styles.bannerImg}
           />
-        </TouchableOpacity>
-      </View>
-      {/* Avatar + Thay ảnh */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F6F6F6', paddingVertical: 20, paddingHorizontal: 20 }}>
-        <Image
-          source={
-            avatarUrl
-              ? { uri: avatarUrl }
-              : require('../../assert/image/avatar.png')
-          }
-          style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#eee', marginRight: 16 }}
-        />
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#E5E5E5',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 24,
-          }}
-          onPress={() => setShowAvatarPickerModal(true)}
+          {/* Camera icon ở chính giữa cover */}
+          <TouchableOpacity
+            style={styles.cameraBtnCenter}
+            onPress={() => setShowCoverPickerModal(true)}
+          >
+            <Image
+              source={require('../../assert/image/camera.png')}
+              style={{ width: 24, height: 24, tintColor: undefined }}
+            />
+          </TouchableOpacity>
+        </View>
+        {/* Avatar + Thay ảnh */}
+        <View style={styles.avatarSection}>
+          <Image
+            source={
+              avatarUrl
+                ? { uri: avatarUrl }
+                : require('../../assert/image/avatar.png')
+            }
+            style={styles.avatar}
+          />
+          <TouchableOpacity
+            style={styles.changeAvatarBtn}
+            onPress={() => setShowAvatarPickerModal(true)}
+          >
+            <Text style={styles.changeAvatarText}>{t('changeavatar')}</Text>
+          </TouchableOpacity>
+        </View>
+        <Modal
+          visible={showPickerModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowPickerModal(false)}
         >
-          <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('changeavatar') }</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Modal chọn ảnh/camera */}
-      <Modal
-        visible={showPickerModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowPickerModal(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('chooseavatar')}</Text>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromLibrary}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromCamera}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('takephoto')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowPickerModal(false)}>
-              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel') }</Text>
-            </TouchableOpacity>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+            <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('chooseavatar')}</Text>
+              <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromLibrary}>
+                <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickAvatarFromCamera}>
+                <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('takephoto')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowPickerModal(false)}>
+                <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-      {/* Modal chọn ảnh/camera cho cover */}
-      <Modal
-        visible={showCoverPickerModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCoverPickerModal(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choosecover')}</Text>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromLibrary}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromCamera}>
-              <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('takephoto')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowCoverPickerModal(false)}>
-              <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel')}</Text>
-            </TouchableOpacity>
+        </Modal>
+        <Modal
+          visible={showCoverPickerModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowCoverPickerModal(false)}
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+            <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 20, width: 320 }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>{t('choosecover')}</Text>
+              <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromLibrary}>
+                <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('choosefromlibrary')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ marginBottom: 12 }} onPress={pickCoverFromCamera}>
+                <Text style={{ color: '#ff6f2c', fontWeight: 'bold', fontSize: 15 }}>{t('takephoto')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowCoverPickerModal(false)}>
+                <Text style={{ color: '#888', fontWeight: 'bold', fontSize: 15 }}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-      {/* Modal chọn ảnh/camera cho avatar */}
-      <Modal
-        visible={showAvatarPickerModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAvatarPickerModal(false)}
-      >
-        <View style={styles.dialogOverlay}>
-          <View style={styles.dialogBox}>
-            <Text style={styles.dialogTitle}>{t('chooseavatar')}</Text>
-            <TouchableOpacity
-              style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
-              onPress={pickAvatarFromLibrary}
-            >
-              <Text style={styles.dialogBtnText}>{t('choosefromlibrary') }</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
-              onPress={pickAvatarFromCamera}
-            >
-              <Text style={styles.dialogBtnText}>{t('takephoto') }</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dialogBtn, { backgroundColor: '#eee' }]}
-              onPress={() => setShowAvatarPickerModal(false)}
-            >
-              <Text style={[styles.dialogBtnText, { color: '#888' }]}>{t('cancel') }</Text>
-            </TouchableOpacity>
+        </Modal>
+        <Modal
+          visible={showAvatarPickerModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowAvatarPickerModal(false)}
+        >
+          <View style={styles.dialogOverlay}>
+            <View style={styles.dialogBox}>
+              <Text style={styles.dialogTitle}>{t('chooseavatar')}</Text>
+              <TouchableOpacity
+                style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
+                onPress={pickAvatarFromLibrary}
+              >
+                <Text style={styles.dialogBtnText}>{t('choosefromlibrary')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dialogBtn, { backgroundColor: '#ff6f2c', marginBottom: 12 }]}
+                onPress={pickAvatarFromCamera}
+              >
+                <Text style={styles.dialogBtnText}>{t('takephoto')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dialogBtn, { backgroundColor: '#eee' }]}
+                onPress={() => setShowAvatarPickerModal(false)}
+              >
+                <Text style={[styles.dialogBtnText, { color: '#888' }]}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-      {/* Form nhập liệu trong ScrollView */}
-        <View style={styles.form}>
-          <Text style={styles.label}>{t('fullname') }</Text>
-          <View style={styles.inputWrap}>
-            <InputNavigation
-              value={name}
-              onChangeText={setName}
-              placeholder={t('enterfullnameplaceholder') }
-              style={styles.input}
-            />
-            <TouchableOpacity style={styles.clearBtn} onPress={() => setName('')}>
-              <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.label}>{t('emailaddress') }</Text>
-          <View style={styles.inputWrap}>
-            <InputNavigation
-              value={email}
-              onChangeText={setEmail}
-              placeholder={t('emailplaceholder') }
-              style={styles.input}
-            />
-            <TouchableOpacity style={styles.clearBtn} onPress={() => setEmail('')}>
-              <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
-            </TouchableOpacity>
+        </Modal>
+        <View style={styles.formContainer}> {/* New container for the white form area */}
+          <View style={styles.form}>
+            <Text style={styles.label}>{t('fullname')}</Text>
+            <View style={styles.inputWrap}>
+              <InputNavigation
+                value={name}
+                onChangeText={setName}
+                placeholder={t('enterfullnameplaceholder')}
+                style={styles.input}
+              />
+              <TouchableOpacity style={styles.clearBtn} onPress={() => setName('')}>
+                <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.label}>{t('emailaddress')}</Text>
+            <View style={styles.inputWrap}>
+              <InputNavigation
+                value={email}
+                onChangeText={setEmail}
+                placeholder={t('emailplaceholder')}
+                style={styles.input}
+              />
+              <TouchableOpacity style={styles.clearBtn} onPress={() => setEmail('')}>
+                <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
-      {/* Nút lưu hồ sơ luôn cố định dưới cùng màn hình, không bị đẩy lên khi bàn phím hiện */}
       {!isKeyboardVisible && <View style={[styles.saveBtnWrapper, { zIndex: 10 }]} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.saveBtn}
@@ -299,6 +279,10 @@ const EditProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F6F6', // Nền tổng thể là màu xám
+  },
   header: {
     backgroundColor: '#FF6600',
     flexDirection: 'row',
@@ -345,12 +329,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -24 }, { translateY: -24 }],
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 8,
-    elevation: 2,
+    transform: [{ translateX: -12 }, { translateY: -12 }], // icon 24x24
     zIndex: 2,
+    padding: 0,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    elevation: 0,
   },
   cameraIcon: {
     width: 32,
@@ -370,39 +354,44 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
-  avatarRow: {
+  avatarSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
-    marginLeft: 24,
-    marginBottom: 16,
+    backgroundColor: '#F6F6F6', // Grey background for this section
+    paddingVertical: 20,
+    paddingHorizontal: 20,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#fff',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#eee',
+    marginRight: 16,
+    borderWidth: 1, // Add border to avatar
+    borderColor: '#ddd', // Avatar border color
   },
   changeAvatarBtn: {
-    marginTop: 10,
-    backgroundColor: '#ff6f2c',
+    backgroundColor: '#AAB9C5',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 24,
   },
   changeAvatarText: {
-    color: '#fff',
+    color: '#FCFCFC',
     fontWeight: 'bold',
     fontSize: 15,
   },
+  formContainer: { // New container to manage the white form area's layout
+    backgroundColor: '#F6F6F6', // The background outside the white form
+    paddingTop: 8, // Small padding on top to separate from the avatar section
+    flex: 1, // Allow it to take up remaining space
+  },
   form: {
-    backgroundColor: '#F6F6F6',
-    borderRadius: 12,
-    marginHorizontal: 16,
+    backgroundColor: '#fff', // Form background is white
+    borderRadius: 0, // No border radius to make it span full width
+    marginHorizontal: 0, // Remove horizontal margin to span full width
     padding: 16,
-    marginTop: 8,
+    // Removed marginBottom, as the save button wrapper handles bottom spacing
   },
   label: {
     fontWeight: 'bold',
@@ -417,6 +406,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     marginBottom: 8,
+    borderWidth: 1, // Add border to input wrap
+    borderColor: '#ccc', // Border color for input wrap
   },
   input: {
     flex: 1,
@@ -443,6 +434,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 8,
     paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderColor: '#eee',
   },
   saveBtn: {
     backgroundColor: '#FF6600',
@@ -488,7 +481,3 @@ const styles = StyleSheet.create({
 });
 
 export default EditProfileScreen;
-
-
-
-
