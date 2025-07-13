@@ -191,5 +191,8 @@
   "loginrequiredtitle":"Bạn chưa đăng nhập",
   "loginrequiredmessage":"Vui lòng đăng nhập để sử dụng chức năng này!",
   "achievements":"Thành tích",
-  "purchasedrecipes":"Công thức đã mua"
+  "purchasedrecipes":"Công thức đã mua",
+  "norecipesfound":"Không tìm thấy công thức",
+  "premiumfeatures":"Tính năng premium",
+  "searchbyingredients":"Tìm kiếm theo nguyên liệu"
 }

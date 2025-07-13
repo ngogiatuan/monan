@@ -34,14 +34,10 @@ type DiscoveryScreenRouteProp = RouteProp<{
 
 const MEAL_OPTIONS = [
   'Tất cả',
-  'Bữa sáng sáng năng lượng',
-  'Bữa trưa đầy đủ',
-  'Bữa chiều thư giãn',
-  'Bữa xế tiếp sức',
-  'Bữa tối nhẹ nhàng',
-  'Tráng miệng ngọt ngào',
-  'Ăn vặt vui vẻ',
-  'Món nhậu tuyệt hảo',
+  'Bữa sáng ',
+  'Bữa trưa ',
+  'Bữa chiều ',
+  'Bữa tối',
 ];
 
 const TYPE_OPTIONS = [
@@ -114,31 +110,16 @@ const DiscoveryScreen = () => {
           return itemRe?.categoryIds?.some((itemCa: any) => itemCa?._id === categorySelected.id);
         });
       }
-
-      // Filter by type (using the 'type' state to determine which recipes to show)
-      // This part depends on how your 'type' options relate to recipe properties.
-      // For now, assuming 'Món ăn thịnh hành' shows all, others might require specific flags/data on recipes.
       if (type === 'Món ăn thịnh hành') {
-        // No specific filter for "trending recipes" based on the recipe data provided.
-        // You might need a 'isTrending' flag on your recipe objects, or a separate API.
-        // For now, it will just show the category-filtered recipes.
       } else if (type === 'Hôm nay bạn nấu gì?') {
-        // Add logic to filter recipes for "What are you cooking today?"
-        // This might involve filtering by recipes with ingredients the user has, or popular daily recipes.
-        // For demonstration, let's assume it doesn't filter further unless specific logic is added.
       } else if (type === 'Cảm hứng hàng ngày') {
-        // Add logic for "Daily Inspiration"
       }
-      // If 'Tất cả' is selected, no type filtering occurs.
+
 
       // Filter by ingredients
       if (ingredients) {
         const searchTerms = ingredients.toLowerCase().split(' ').filter(term => term.length > 0);
         filtered = filtered.filter(itemRe => {
-          // Assuming each recipe has an 'ingredients' array, and each ingredient has a 'name' property
-          // Or, if ingredients are just a string in the recipe, you'd adjust this.
-          // Example: recipe.ingredients = [{ name: 'flour' }, { name: 'sugar' }]
-          // Or: recipe.ingredients = "flour, sugar, eggs"
 
           const recipeIngredients = itemRe?.ingredients?.map((ing: any) => String(ing.name || '').toLowerCase()).join(' ') || '';
           const recipeName = String(itemRe?.name || '').toLowerCase();
@@ -165,7 +146,6 @@ const DiscoveryScreen = () => {
       <View style={styles.card}>
         <View style={styles.cardImgWrap}>
           <Image source={{ uri: item?.imageUrls?.[0] || 'https://via.placeholder.com/150' }} style={styles.cardImg} />
-          {/* Đã chỉnh lại kiểu dáng của phần hiển thị thời gian */}
           <View style={styles.cardTimeRight}>
             <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
             <Text style={styles.timeText}>{String(item.cookingTime || '')}</Text>
@@ -188,7 +168,6 @@ const DiscoveryScreen = () => {
       </View>
     </TouchableOpacity>
   );
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
@@ -226,7 +205,7 @@ const DiscoveryScreen = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
           <View style={styles.emptyListContainer}>
-            <Text style={styles.emptyListText}>{t('no_recipes_found')}</Text>
+            <Text style={styles.emptyListText}>{t('norecipesfound')}</Text>
           </View>
         )}
       />
@@ -271,7 +250,7 @@ const DiscoveryScreen = () => {
                 {/* Premium Feature Section */}
                 <View style={styles.filterRowCol}>
                   <View style={styles.premiumHeader}>
-                    <Text style={styles.filterLabel}>{t('premium_features')}</Text>
+                    <Text style={styles.filterLabel}>{t('premiumfeatures')}</Text>
                     <TouchableOpacity>
                       <Text style={styles.viewNowText}>{t('see_more')}</Text>
                     </TouchableOpacity>
@@ -284,7 +263,7 @@ const DiscoveryScreen = () => {
                   <View style={styles.inputSearchContainer}>
                     <TextInput
                       style={styles.ingredientsInput}
-                      placeholder={t('search_by_ingredients')}
+                      placeholder={t('searchbyingredients')}
                       placeholderTextColor="#888"
                       value={ingredientsTemp}
                       onChangeText={setIngredientsTemp}

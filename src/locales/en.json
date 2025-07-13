@@ -189,5 +189,8 @@
   "card": "Pay with Credit/Debit Card",
   "loginrequiredtitle":"You don't login",
   "achievements":"Achievements",
-  "purchasedrecipes":"Purchased Recipes"
+  "purchasedrecipes":"Purchased Recipes",
+  "norecipesfound":"  No recipe found",
+  "premiumfeatures":"Premium feature",
+  "searchbyingredients":"Search by ingredients"
 }
