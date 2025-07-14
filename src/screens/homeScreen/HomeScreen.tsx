@@ -411,56 +411,38 @@ const HomeScreen = () => {
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
-                        // Nếu là món premium và user chưa đăng nhập (guest) thì bắt đăng nhập rồi cho xem detail
-                        if (recipeItem.isPremiumRecipe && !user?.token) {
-                          Alert.alert(
-                            t('loginrequiredtitle'),
-                            t('loginrequiredmessage'),
-                            [
-                              {
-                                text: t('cancel'),
-                                style: 'cancel',
-                              },
-                              {
-                                text: t('login'),
-                                onPress: () => navigation.navigate(nav.authen),
-                              },
-                            ],
-                            { cancelable: true }
-                          );
-                          return;
+                        // Nếu là món premium
+                        if (recipeItem.isPremiumRecipe) {
+                          // Nếu chưa đăng nhập thì bắt đăng nhập
+                          if (!user?.token) {
+                            Alert.alert(
+                              t('loginrequiredtitle'),
+                              t('loginrequiredmessage'),
+                              [
+                                {
+                                  text: t('cancel'),
+                                  style: 'cancel',
+                                },
+                                {
+                                  text: t('login'),
+                                  onPress: () => navigation.navigate(nav.authen),
+                                },
+                              ],
+                              { cancelable: true }
+                            );
+                            return;
+                          }
+                          // Nếu đã đăng nhập bằng bất kỳ hình thức nào (Google, email gmail, email thường) mà chưa có premium thì chặn
+                          if (!isPre(user)) {
+                            navigation.navigate(nav.buy, {
+                              showPremiumDialog: true,
+                              premiumDialogTitle: t('premiumrequiredtitle'),
+                              premiumDialogMessage: t('premiumrequiredmessage'),
+                            });
+                            return;
+                          }
                         }
-                        // Nếu là món premium và user đã đăng nhập nhưng không phải premium thì chặn
-                        if (recipeItem.isPremiumRecipe && user?.token && !isPre(user)) {
-                          // Sử dụng custom Alert thay vì Alert.alert để kiểm soát màu sắc
-                          navigation.navigate(nav.buy, {
-                            // Nếu bạn có màn hình mua premium riêng, truyền params để show dialog đẹp hơn
-                            showPremiumDialog: true,
-                            premiumDialogTitle: t('premiumrequiredtitle'),
-                            premiumDialogMessage: t('premiumrequiredmessage'),
-                          });
-                          return;
-                          // Nếu vẫn muốn dùng Alert.alert thì có thể thử:
-                          /*
-                          Alert.alert(
-                            t('premiumrequiredtitle'),
-                            t('premiumrequiredmessage'),
-                            [
-                              {
-                                text: t('cancel'),
-                                style: 'cancel',
-                              },
-                              {
-                                text: t('buypremiumbutton'),
-                                onPress: () => navigation.navigate(nav.buy),
-                                style: 'default'
-                              },
-                            ],
-                            { cancelable: true }
-                          );
-                          */
-                        }
-                        // Nếu là món free hoặc user là premium hoặc guest đã đăng nhập thì cho vào detail
+                        // Nếu là món free hoặc user là premium thì cho vào detail
                         const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
                         if (!ok) return;
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
@@ -481,36 +463,26 @@ const HomeScreen = () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
 
+                            // Nếu chưa đăng nhập thì bắt đăng nhập
                             if (!user?.token) {
                               Alert.alert(t('loginrequiredtitle'), t('loginrequiredmessage'));
                               return;
                             }
 
-                            if (recipeItem.isPremiumRecipe) {
-                              if (!isPre(user)) {
-                                Alert.alert(
-                                  t('premiumrequiredtitle'),
-                                  t('premiumrequiredmessage'),
-                                  [
-                                    {
-                                      text: t('cancel'),
-                                      style: 'cancel',
-                                    },
-                                    {
-                                      text: t('buypremiumbutton'),
-                                      onPress: () => navigation.navigate(nav.buy),
-                                    },
-                                  ]
-                                );
-                                return;
-                              }
+                            // Nếu là món premium mà user chưa mua premium (kể cả đăng nhập bằng email gmail/email thường/Google)
+                            if (recipeItem.isPremiumRecipe && !isPre(user)) {
+                              navigation.navigate(nav.buy, {
+                                showPremiumDialog: true,
+                                premiumDialogTitle: t('premiumrequiredtitle'),
+                                premiumDialogMessage: t('premiumrequiredmessage'),
+                              });
+                              return;
                             }
 
                             try {
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
                               } else {
-                                // Đảm bảo truyền đúng favoriteId
                                 if (favoriteId) {
                                   await removeFavorite(user.token, favoriteId);
                                 }
