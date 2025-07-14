@@ -11,28 +11,30 @@ import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-const DEFAULT_LABELS = {
-  overview: 'Tổng quát',
-  settings: 'Cài đặt',
-  support: 'Hỗ trợ',
-  about_us: 'Về chúng tôi',
-  rate_app: 'Đánh giá ứng dụng',
-  security: 'Bảo mật',
-  delete_account: 'Xóa tài khoản',
-  logout: 'Đăng xuất',
-  promo_code: 'Mã ưu đãi',
-  invite_friends: 'Giới thiệu bạn bè',
-  support_how: 'Cách thức hoạt động',
-  support_policy: 'Chính sách bảo mật',
-  support_terms: 'Điều khoản & Điều kiện',
-};
-
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const [showLogout, setShowLogout] = useState(false);
   const { user } = React.useContext(UserContext);
   const [isConnected, setIsConnected] = useState(true);
   const { t, i18n } = useTranslation();
+
+  // Đặt DEFAULT_LABELS vào trong component để dùng được biến t
+  const DEFAULT_LABELS = {
+    overview: t('overview'),
+    settings: t('settings'),
+    support: t('support'),
+    about_us: t('about_us'),
+    rate_app: t('rate_app'),
+    security: t('security'),
+    delete_account: t('delete_account'),
+    logout: t('logout'),
+    promo_code: t('promo_code'),
+    invite_friends: t('invite_friends'),
+    support_how: t('support_how'),
+    support_policy: t('support_policy'),
+    support_terms: t('support_terms'),
+  };
+
   const [labels, setLabels] = useState(DEFAULT_LABELS);
   const [supportList, setSupportList] = useState([
     { label: DEFAULT_LABELS.support_how, icon: require('../../assert/image/activity.png') },

@@ -135,8 +135,11 @@ const EndCookingScreen = () => {
             navigation.goBack();
           }}
         >
-          {/* Đổi icon thành ký tự '<' thay vì back.png */}
-          <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('end_cooking')}</Text>
       </View>

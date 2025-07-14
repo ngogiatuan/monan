@@ -1,87 +1,67 @@
 // components/DetailProfileInfo.tsx
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
-
-const LABELS = {
-  vi: {
-    member_of_app: 'Thành viên appname',
-  },
-  en: {
-    member_of_app: 'Member',
-  },
-};
+import { isPre } from '../api/userApi';
 
 const DetailProfileInfo = () => {
-  const { user } = useContext(UserContext);
-  const { i18n } = useTranslation();
-  const navigation = useNavigation<any>();
-  const [labels, setLabels] = useState(LABELS.vi);
+  const { user } = useContext(UserContext); // <-- user context sẽ tự động cập nhật khi EditProfileScreen thay đổi
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    console.log('Language changed:', i18n.language);
-    if (i18n.language === 'en') setLabels(LABELS.en);
-    else setLabels(LABELS.vi);
-  }, [i18n.language]);
-
-  const renderInfoContentOnly = () => {
-    if (!user) {
-      return null;
-    }
-
-    return (
-      <>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.memberText}>
-          {user.email}
-        </Text>
-        {/* Dải phân cách nằm giữa email và thông tin thành viên app */}
-        <View style={styles.buttonSeparatorAbsolute} />
-        {/* Dòng này cần marginTop để tạo khoảng cách với separator */}
-        <Text style={styles.memberTextAfterSeparator}>
-          {labels.member_of_app}
-        </Text>
-        <Text style={styles.memberText}>
-          {user.joined}
-        </Text>
-      </>
-    );
+  const labels = {
+    member_normal: t('member_normal'),
+    member_premium: t('member_premium'),
   };
+
+  let isPremium = false;
+  let premiumDate = '';
+  if (user) {
+    isPremium = isPre(user);
+    if (isPremium) {
+      try {
+        const d = new Date(user.premium);
+        premiumDate = `HSD: ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+      } catch {
+        premiumDate = '';
+      }
+    }
+  }
 
   return (
     <View style={styles.container}>
-      {/* Vùng ảnh bìa */}
       <View style={styles.coverWrap}>
         <Image
-          source={require('../assert/image/cover.png')}
+          source={
+            typeof user?.cover === 'string'
+              ? { uri: user.cover }
+              : require('../assert/image/cover.png')
+          }
           style={styles.coverImg}
           resizeMode="cover"
         />
-
-        {/* Nút Back - Sử dụng ký tự '<' */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backText}>{'<'}</Text>
-        </TouchableOpacity>
-
-        {/* Avatar đặt ở vị trí chồng lấn */}
         <View style={styles.avatarWrap}>
           <Image
-            source={typeof user?.avatar === 'string' ? { uri: user.avatar } : require('../assert/image/avatar.png')}
+            source={
+              typeof user?.avatar === 'string'
+                ? { uri: user.avatar }
+                : require('../assert/image/avatar.png')
+            }
             style={styles.avatar}
           />
         </View>
       </View>
-
-      {/* Vùng chứa thông tin - background XÁM, nội dung chi tiết TRẮNG */}
       <View style={styles.infoContentWrap}>
         <View style={styles.whiteDetailsBlock}>
           <View style={styles.innerContentWrapper}>
-            {renderInfoContentOnly()}
+            <Text style={styles.name}>{user?.name}</Text>
+            <Text style={styles.memberText}>{user?.email}</Text>
+            <Text style={styles.memberTextAfterSeparator}>
+              {isPremium ? labels.member_premium : labels.member_normal}
+            </Text>
+            <Text style={styles.memberText}>
+              {isPremium ? premiumDate : user?.joined}
+            </Text>
           </View>
         </View>
       </View>
@@ -92,7 +72,7 @@ const DetailProfileInfo = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'transparent',
-    marginBottom: 2,
+    marginBottom: 0,
   },
   coverWrap: {
     width: '100%',
@@ -103,19 +83,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     resizeMode: 'cover',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 19,
-    zIndex: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  backText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   avatarWrap: {
     position: 'absolute',
@@ -131,16 +98,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
   },
   infoContentWrap: {
-    backgroundColor: '#f5f5f5', // Nền XÁM
+    backgroundColor: '#f5f5f5',
     marginTop: -8,
-    paddingTop: 40,
+    paddingTop: 49,
     paddingHorizontal: 0,
     paddingBottom: 0,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
   },
   whiteDetailsBlock: {
-    backgroundColor: '#fff', // Nền TRẮNG
+    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 0,
     paddingBottom: 12,
@@ -162,22 +129,7 @@ const styles = StyleSheet.create({
   memberTextAfterSeparator: {
     color: '#888',
     fontSize: 14,
-    marginTop: 12, // *** ĐÃ THAY ĐỔI: Khoảng cách 12px từ separator xuống ***
-  },
-  createAccountText: {
-    color: '#007aff',
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
-  },
-  // Style cho dải phân cách được định vị tuyệt đối
-  buttonSeparatorAbsolute: {
-    position: 'absolute',
-    left: 1,
-    right: 20,
-    height: 1.5,
-    backgroundColor: '#ededed',
-    top: 56, // *** ĐÃ THAY ĐỔI: Để cách email 12px từ dưới lên ***
-    zIndex: 1,
+    marginTop: 8,
   },
 });
 

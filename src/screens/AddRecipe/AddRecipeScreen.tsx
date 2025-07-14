@@ -106,7 +106,11 @@ const AddRecipeScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
-          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tổng quan công thức</Text>
       </View>
@@ -217,7 +221,7 @@ const AddRecipeScreen = () => {
         <TouchableOpacity
           style={styles.submitBtn}
           onPress={handleContinue}
-          disabled={isLoading} 
+          disabled={isLoading}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
@@ -306,18 +310,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 0,
-    borderWidth:1.5,
-    borderRadius:12,
-    paddingRight:8,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingRight: 8,
     borderColor: '#E0E0E0'
   },
   input: {
-      borderWidth:0,
-        borderColor:'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
     flex: 1,
     marginRight: 4,
   },
-   input2: {
+  input2: {
     flex: 1,
     marginRight: 4,
   },

@@ -58,10 +58,9 @@ export const removeFavorite = async (token: string, favoriteId: string) => {
 // Tìm favoriteId theo userId và recipeId từ danh sách favorites
 export const findFavoriteId = (favorites: any[], recipeId: string) => {
   const fav = favorites.find((f: any) => {
-    // We are now expecting f.recipeId to be an object with an 'id' property,
-    // or directly the recipe ID if it's not populated.
+    // f.recipeId có thể là object hoặc string
     return f.recipeId?.id === recipeId || f.recipeId === recipeId;
   });
-  // Assuming the favorite object itself will have an 'id' property for its own ID
-  return fav?.id ? fav.id : null;
+  // Trả về _id hoặc id của bản ghi favorite (không phải recipeId)
+  return fav?._id || fav?.id || null;
 };

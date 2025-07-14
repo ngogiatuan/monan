@@ -30,7 +30,7 @@ const AddStepScreen = () => {
     const [allSteps, setAllSteps] = useState<StepCooking[]>([]);
     // currentStepIndex: chỉ số của bước hiện tại mà người dùng đang xem/chỉnh sửa/thêm mới
     // 0 là bước đầu tiên, allSteps.length là đang thêm một bước mới sau tất cả các bước đã có
-    const [currentStepIndex, setCurrentStepIndex] = useState(0); 
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     // Effect để tải dữ liệu của bước hiện tại vào form khi currentStepIndex thay đổi
     useEffect(() => {
@@ -130,7 +130,7 @@ const AddStepScreen = () => {
                 // Đây là nơi bạn sẽ điều hướng hoặc gửi dữ liệu đi
                 // Ví dụ: navigation.navigate(nav.RecipeDetailScreen, { steps: finalStepsArray });
                 navigation.goBack(); // Hoặc navigate đến màn hình chi tiết món ăn
-                return finalStepsArray; 
+                return finalStepsArray;
             });
         } else {
             // Nếu không có dữ liệu nào trong form hiện tại (người dùng đã bấm "Tiếp tục" cho tất cả các bước)
@@ -166,7 +166,11 @@ const AddStepScreen = () => {
             {/* Header của màn hình AddStepScreen */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handlePreviousStep} style={styles.headerBackBtn}>
-                    <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
+                    <Image
+                        source={require('../../assert/image/back.png')}
+                        style={{ width: 44, height: 44, tintColor: '#fff' }}
+                        resizeMode="contain"
+                    />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>
                     Bước {displayCurrentStep}{totalStepsCount > 0 ? ` / ${totalStepsCount}` : ''}

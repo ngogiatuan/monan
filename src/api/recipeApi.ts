@@ -62,3 +62,30 @@ export const searchRecipesByIngredientsGet = async (ingredients: string) => {
     throw error;
   }
 };
+
+export const searchRecipesByIngredientsPremium = async (ingredientsString: string) => {
+  try {
+    const payload = {
+      ingredients: ingredientsString,
+    };
+    const res = await axios.post(`${API_URL}/recipes/ingredients`, payload);
+    return res.data?.data || [];
+  } catch (e: any) {
+    console.log('Error searching recipes by ingredients via POST:', e.response?.data || e.message);
+    return [];
+  }
+};
+
+// Thêm API lấy thống kê tổng thời gian và tổng số món đã nấu theo userId
+export const getRecipeStatsByUser = async (userId: string) => {
+  try {
+    if (!userId) return { totalTime: 0, totalRecipes: 0 };
+    // Giả sử backend có endpoint /recipes/stats/:userId trả về { totalTime, totalRecipes }
+    const res = await axios.get(`${API_URL}/recipes/stats/${userId}`);
+    // totalTime: tổng số giây, totalRecipes: số lượng món đã nấu
+    return res.data?.data || { totalTime: 0, totalRecipes: 0 };
+  } catch (e) {
+    console.log('Error fetching recipe stats by user:', e);
+    return { totalTime: 0, totalRecipes: 0 };
+  }
+};

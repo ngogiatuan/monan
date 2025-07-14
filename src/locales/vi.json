@@ -79,7 +79,7 @@
     "my_recipe": "Công thức của tôi",
     "saved_recipe": "Công thức đã lưu",
     "no_recipe": "Bạn chưa có công thức nào",
-    "no_quest": "Bạn chưa sở hữu Quest nào",
+    "no_quest": "Bạn chưa lưu công thức nào",
     "add_my_recipe": "Thêm công thức của tôi",
     "explore_now": "Khám phá ngay >",
     "no_network": "Không có kết nối mạng",
@@ -194,5 +194,7 @@
   "purchasedrecipes":"Công thức đã mua",
   "norecipesfound":"Không tìm thấy công thức",
   "premiumfeatures":"Tính năng premium",
-  "searchbyingredients":"Tìm kiếm theo nguyên liệu"
+  "searchbyingredients":"Tìm kiếm theo nguyên liệu",
+  "member_premium":"Thành viên Premium",
+  "profile":"Trang cá nhân"
 }

@@ -13,12 +13,13 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../../context/UserContext';
+import { useTranslation } from 'react-i18next';
 
 const { height } = Dimensions.get('window');
 
 interface NotificationItem {
   id: string;
-  type: 'app_open' | 'user_login';
+  type: 'app_open' | 'user_login' | 'premium_upgrade';
   timestamp: number;
   message?: string;
 }
@@ -30,19 +31,55 @@ const NotificationScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const { user } = useContext(UserContext);
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  // Hàm lấy ngày bắt đầu premium từ chuỗi ngày hết hạn (giả sử premium là ngày hết hạn, 1 tháng)
+  function getPremiumStartDate(premiumEndDateStr: string): Date {
+    // Nếu chuỗi là ISO hoặc yyyy-mm-dd, new Date sẽ parse được
+    const endDate = new Date(premiumEndDateStr);
+    // Trừ đi 1 tháng (30 ngày)
+    const startDate = new Date(endDate);
+    startDate.setMonth(startDate.getMonth() - 1);
+    // Nếu ngày bắt đầu lớn hơn ngày hiện tại (do setMonth tràn tháng), lùi về cuối tháng trước
+    if (startDate > endDate) {
+      startDate.setDate(0);
+    }
+    return startDate;
+  }
 
   const loadNotifications = useCallback(async () => {
     try {
       const storedNotificationsString = await AsyncStorage.getItem(NOTIFICATION_STORAGE_KEY);
+      let parsedNotifications: NotificationItem[] = [];
       if (storedNotificationsString) {
-        const parsedNotifications: NotificationItem[] = JSON.parse(storedNotificationsString);
-        setNotifications(parsedNotifications.filter(notif => notif.type === 'app_open' || notif.type === 'user_login'));
+        parsedNotifications = JSON.parse(storedNotificationsString);
       }
+      // Nếu user có premium mà chưa có notification premium_upgrade thì thêm vào
+      if (user?.premium) {
+        const hasPremiumNotif = parsedNotifications.some(n => n.type === 'premium_upgrade');
+        if (!hasPremiumNotif) {
+          // Lấy ngày bắt đầu premium từ ngày hết hạn
+          const premiumStartDate = getPremiumStartDate(user.premium);
+          parsedNotifications.push({
+            id: 'premium_upgrade_' + premiumStartDate.getTime(),
+            type: 'premium_upgrade',
+            timestamp: premiumStartDate.getTime(),
+            message: '',
+          });
+          // Lưu lại vào AsyncStorage để lần sau vẫn còn
+          await AsyncStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(parsedNotifications));
+        }
+      }
+      setNotifications(parsedNotifications.filter(notif =>
+        notif.type === 'app_open' ||
+        notif.type === 'user_login' ||
+        notif.type === 'premium_upgrade'
+      ));
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
-  }, []);
+  }, [user?.premium]);
 
   // Effect to mark notifications as read when NotificationScreen is focused
   useEffect(() => {
@@ -120,6 +157,13 @@ const NotificationScreen = () => {
 
     const isLastItemInSection = index === section.data.length - 1;
 
+    // Xử lý message cho thông báo premium_upgrade
+    let message = item.message;
+    if (item.type === 'premium_upgrade') {
+      const month = notificationTime.getMonth() + 1;
+      message = `Nâng cấp thành công tài khoản Premium tháng ${month}`;
+    }
+
     return (
       <View>
         <View style={styles.notificationItem}>
@@ -128,9 +172,16 @@ const NotificationScreen = () => {
               <Image source={require('../../assert/image/act.png')} style={styles.loginIcon} />
             </View>
           )}
+          {item.type === 'premium_upgrade' && (
+            <View style={[styles.loginIconContainer, { backgroundColor: '#15B097' }]}>
+              <Image source={require('../../assert/image/updatepremium.png')} style={styles.loginIcon} />
+            </View>
+          )}
           <View style={styles.notificationContent}>
             <Text style={styles.notificationTitle}>
-              {item.type === 'app_open' ? 'Bạn đã truy cập ứng dụng.' : (item.message || 'Bạn đã đăng nhập.')}
+              {item.type === 'app_open'
+                ? t('notification_app_open', 'Bạn đã truy cập ứng dụng.')
+                : message || t('notification_login', 'Bạn đã đăng nhập.')}
             </Text>
             <Text style={styles.notificationTime}>{timeString}</Text>
           </View>
@@ -144,7 +195,11 @@ const NotificationScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtnText}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thông báo</Text>
       </View>

@@ -6,15 +6,11 @@ import { useTranslation } from 'react-i18next';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 import { nav } from '../../navigation/navigationName';
-import { getFavorites, removeFavorite } from '../../api/favoriteApi';
 import { UserContext } from '../../context/UserContext';
 import { addEventListener } from '@react-native-community/netinfo';
-import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 
-// Đảm bảo mọi chỗ navigate(nav.recipe) và import đều đúng với folder mới
 
-// Xóa dữ liệu mẫu MY_RECIPES, chỉ để mảng rỗng để test trạng thái empty
-const MY_RECIPES: any[] = [];
+const MY_RECIPES: any[] = []; // Giữ nguyên để test empty
 
 const SCREEN_WIDTH = 393;
 const CARD_MAX_WIDTH = 360;
@@ -34,32 +30,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-    width: SCREEN_WIDTH,
-    alignSelf: 'center',
-  },
-  tabBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 2,
-    borderColor: 'transparent',
-  },
-  tabBtnActive: {
-    borderColor: '#00c6b7',
-  },
-  tabText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  tabTextActive: {
-    color: '#00c6b7',
   },
   body: {
     flex: 1,
@@ -231,67 +201,43 @@ const styles = StyleSheet.create({
 });
 
 const RecipeScreen = () => {
-  const [tab, setTab] = useState<'my' | 'saved'>('saved');
   const navigation = useNavigation<any>();
-  const [favorites, setFavorites] = useState<any[]>([]); // Danh sách công thức đã lưu
   const { user } = useContext(UserContext);
   const { t } = useTranslation();
-
   const [isConnected, setIsConnected] = React.useState(true);
 
   React.useEffect(() => {
-    // Kiểm tra kết nối mạng khi ứng dụng khởi động
     const unsubscribe = addEventListener(state => {
-      setIsConnected(!!state.isConnected);   
+      setIsConnected(!!state.isConnected);
     });
-
-    // Dọn dẹp khi component unmount
     return () => {
       unsubscribe();
     };
   }, []);
 
-    const fetchFavorites = async () => {
-      try {
-        if (user?.token) {
-        const favs = await getFavorites(user.token);
-        console.log('favs', favs);
-        setFavorites(favs);
-        }else {
-          setFavorites([]); 
-        }
-        
-      } catch (error) {
-        console.error('Error fetching favorites:', error);  
-        setFavorites([]); 
-      }
-      
-    
-    };
-
-  React.useEffect(() => {
-    // Giả lập lấy danh sách công thức đã lưu từ API
-    fetchFavorites();
-  }, [user]);
-
-  const onFav = async (recipeId: string) => {
-try {
-  if(user?.token)
-    await removeFavorite(user.token, recipeId);
-  await fetchFavorites(); // Cập nhật lại danh sách sau khi xóa
-
-}catch (error) {  
-  }
-  }
-
   // Render từng item công thức của tôi
   const renderMyRecipe = ({ item }: { item: typeof MY_RECIPES[0] }) => (
     <View style={styles.recipeCard}>
       <View style={styles.recipeImgWrap}>
-        <Image source={{uri:  item?.recipeId?.imageUrls?.[0]}} style={styles.recipeImg} />
+        <Image source={{ uri: item?.recipeId?.imageUrls?.[0] }} style={styles.recipeImg} />
         <View style={styles.recipeTimeOverlay}>
           <Image source={require('../../assert/image/time.png')} style={styles.timeIconOverlay} />
           <Text style={styles.timeTextOverlay}>{item?.recipeId?.cookingTime}</Text>
+        </View>
+        {/* Hiển thị icon more.png ở góc phải trên thay vì mark.png */}
+        <View style={{
+          position: 'absolute',
+          top: 6,
+          right: 6,
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          backgroundColor: 'rgba(0,0,0,0.08)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 2,
+        }}>
+          <Image source={require('../../assert/image/more.png')} style={{ width: 20, height: 20, tintColor: '#888' }} />
         </View>
       </View>
       <View style={styles.recipeInfo}>
@@ -314,80 +260,34 @@ try {
           <Text style={styles.reviewText}>{item.reviews} Reviews</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.moreBtn}
-        onPress={async () => {
-          if (!isConnected) {
-            Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để bỏ lưu công thức.');
-            return;
-          }
-          await onFav(item?._id);
-        }}
-      >
-        <View style={styles.moreIconWrap}>
-          <Image source={require('../../assert/image/yellowmark.png')} style={styles.moreIcon} />
-        </View>
-      </TouchableOpacity>
     </View>
   );
-
-  // Kiểm tra danh sách công thức của tôi có rỗng không
   const isMyRecipesEmpty = MY_RECIPES.length === 0;
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('recipe')}</Text>
-      </View>
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tabBtn, tab === 'my' && styles.tabBtnActive]}
-          onPress={() => setTab('my')}
-        >
-          <Text style={[styles.tabText, tab === 'my' && styles.tabTextActive]}>{t('my_recipe')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabBtn, tab === 'saved' && styles.tabBtnActive]}
-          onPress={() => setTab('saved')}
-        >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>{t('saved_recipe')}</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('my_recipe')}</Text>
       </View>
       <View style={styles.body}>
-        {/* Khi mất mạng, vẫn giữ UI, chỉ chặn onPress các nút */}
-        {tab !== 'my' ? (
-          favorites.length === 0 ? (
-            <View style={styles.savedEmptyWrap}>
-              <RecipeEmpty
-                isConnected={isConnected}
-                isGuest={!user}
-                onExplore={async () => {
-                  // Đã xử lý alert trong RecipeEmpty, không cần xử lý ở đây nữa
-                  if (!isConnected || !user) return;
-                  navigation.navigate(nav.discovery);
-                }}
-              />
-            </View>
-          ) : (
-            <FlatList
-              data={favorites}
-              keyExtractor={item => item._id}
-              renderItem={renderMyRecipe}
-              contentContainerStyle={{ padding: 16 }}
-              showsVerticalScrollIndicator={false}
-            />
-          )
-        ) : (
+        {isMyRecipesEmpty ? (
           <View style={styles.savedEmptyWrap}>
             <RecipeEmpty
               isConnected={isConnected}
               isGuest={!user}
-              onAddRecipe={async () => {
-                if (!isConnected) return;
-                navigation.navigate(nav.recipe);
+              // Đổi text và button cho trường hợp chưa có công thức của tôi
+              onAddRecipe={() => {
+                navigation.navigate(nav.addRecipe);
               }}
             />
           </View>
+        ) : (
+          <FlatList
+            data={MY_RECIPES}
+            keyExtractor={item => item._id}
+            renderItem={renderMyRecipe}
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+          />
         )}
       </View>
       <BottomNavigation current="recipe" />

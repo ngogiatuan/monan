@@ -1,31 +1,18 @@
 // screens/DetailProfile.tsx
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Image } from 'react-native'; // Bỏ FlatList
+import { View, Text, StyleSheet, ScrollView, Dimensions, Image, FlatList, TouchableOpacity } from 'react-native'; // Bỏ FlatList
 import { useTranslation } from 'react-i18next';
+import { getFavorites } from '../../api/favoriteApi';
+import { UserContext } from '../../context/UserContext';
+import RecipeEmpty from '../../compoments/RecipeEmpty';
 
 // Imports component ProfileInfo của bạn
 import DetailProfileInfo from '../../compoments/DetailProfileInfo';
 import BottomNavigation from '../../compoments/Bottomnavigation';
+import { useNavigation } from '@react-navigation/native';
+import { getRecipeStatsByUser } from '../../api/recipeApi'; // Thêm hàm API mới để lấy thống kê
 
 const { width } = Dimensions.get('window');
-
-// Dữ liệu cứng cho Thành tích
-const achievementsData = [
-  {
-    id: '1',
-    icon: require('../../assert/image/totaltime.png'), // Đường dẫn bạn đã cung cấp
-    label: 'Tổng thời gian',
-    value: '20h30\'',
-    valueColor: '#1a73e8',
-  },
-  {
-    id: '2',
-    icon: require('../../assert/image/total.png'), // Đường dẫn bạn đã cung cấp
-    label: 'Tổng số món đã nấu',
-    value: '120',
-    valueColor: '#1a73e8',
-  },
-];
 
 // Component để render từng thẻ Thành tích
 const AchievementCard = ({ item }) => {
@@ -40,15 +27,96 @@ const AchievementCard = ({ item }) => {
 
 const DetailProfile = () => {
   const { t } = useTranslation();
+  const navigation = useNavigation<any>();
+  const { user } = React.useContext(UserContext);
+  const [favorites, setFavorites] = React.useState<any[]>([]);
+  const [isConnected, setIsConnected] = React.useState(true);
+
+  // Thêm state cho thống kê
+  const [totalTime, setTotalTime] = React.useState<number>(0); // tổng thời gian nấu (giây)
+  const [totalRecipes, setTotalRecipes] = React.useState<number>(0); // tổng số món đã nấu
+
+  React.useEffect(() => {
+    // Lấy danh sách công thức đã lưu
+    const fetchFavorites = async () => {
+      try {
+        if (user?.token) {
+          const favs = await getFavorites(user.token);
+          setFavorites(favs);
+        } else {
+          setFavorites([]);
+        }
+      } catch (error) {
+        setFavorites([]);
+      }
+    };
+    fetchFavorites();
+  }, [user]);
+
+  // Lấy thống kê tổng thời gian và tổng số món đã nấu theo user._id hoặc user.id
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      if (!user?._id && !user?.id) {
+        setTotalTime(0);
+        setTotalRecipes(0);
+        return;
+      }
+      try {
+        // Hàm này trả về { totalTime: số giây, totalRecipes: số lượng }
+        const stats = await getRecipeStatsByUser(user._id || user.id);
+        setTotalTime(stats?.totalTime || 0);
+        setTotalRecipes(stats?.totalRecipes || 0);
+      } catch (e) {
+        setTotalTime(0);
+        setTotalRecipes(0);
+      }
+    };
+    fetchStats();
+  }, [user]);
+
+  // Format tổng thời gian nấu thành chuỗi "xhym"
+  const formatTotalTime = (seconds: number) => {
+    if (!seconds || seconds <= 0) return '0';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h${m > 0 ? m + "'" : ""}`;
+    return `${m}'`;
+  };
+
+  // achievementsData dùng state thay vì cứng
+  const achievementsData = [
+    {
+      id: '1',
+      icon: require('../../assert/image/totaltime.png'),
+      label: 'Tổng thời gian',
+      value: formatTotalTime(totalTime),
+      valueColor: '#1a73e8',
+    },
+    {
+      id: '2',
+      icon: require('../../assert/image/total.png'),
+      label: 'Tổng số món đã nấu',
+      value: totalRecipes.toString(),
+      valueColor: '#1a73e8',
+    },
+  ];
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
+        {/* Back button nằm trên cover */}
+        <View style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, padding: 4 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Image
+              source={require('../../assert/image/back.png')}
+              style={{ width: 44, height: 44, tintColor: '#fff' }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
         <DetailProfileInfo />
-
         {/* Section Thành tích */}
         <View style={styles.section}>
-          {/* Tiêu đề và icon Thành tích */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitleWithIcon}>{t('achievements')}</Text>
             <Image
@@ -56,7 +124,6 @@ const DetailProfile = () => {
               style={styles.achievementIcon}
             />
           </View>
-          {/* Thay thế FlatList bằng View với flexWrap */}
           <View style={styles.achievementsGrid}>
             {achievementsData.map((item) => (
               <AchievementCard key={item.id} item={item} />
@@ -64,9 +131,55 @@ const DetailProfile = () => {
           </View>
         </View>
 
-        {/* Section Công thức đã mua */}
+        {/* Section Công thức đã lưu */}
         <View style={styles.purchasedRecipesSection}>
-          <Text style={styles.purchasedRecipesTitle}>{t('purchasedrecipes')}</Text>
+          <Text style={styles.purchasedRecipesTitle}>{t('saved_recipe')}</Text>
+          {favorites.length === 0 ? (
+            <RecipeEmpty
+              isConnected={isConnected}
+              isGuest={!user}
+              onExplore={() => {
+                // Đã xử lý alert trong RecipeEmpty
+              }}
+            />
+          ) : (
+            <FlatList
+              data={favorites}
+              keyExtractor={item => item._id}
+              renderItem={({ item }) => (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#fff',
+                  borderRadius: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  marginBottom: 12,
+                  alignSelf: 'center',
+                  width: 360,
+                  minWidth: 360,
+                  maxWidth: 360,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
+                  borderWidth: 1,
+                  borderColor: '#F2F2F2',
+                  minHeight: 100,
+                  position: 'relative',
+                }}>
+                  <View style={{ width: 90, height: 64, marginRight: 14 }}>
+                    <Image source={{ uri: item?.recipeId?.imageUrls?.[0] }} style={{ width: 90, height: 64, borderRadius: 12, backgroundColor: '#eee' }} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#222', marginBottom: 8 }}>{item?.recipeId?.name}</Text>
+                  </View>
+                </View>
+              )}
+              contentContainerStyle={{ padding: 0 }}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
       </ScrollView>
       {/* Bottom Navigation */}

@@ -1,44 +1,42 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { nav } from '../navigation/navigationName'; // Đảm bảo đường dẫn này đúng
-
-const LABELS = {
-  vi: {
-    login: 'Đăng nhập',
-    no_account: 'Chưa có tài khoản?',
-    create_account: 'Tạo tài khoản',
-    profile: 'Trang cá nhân',
-    edit_profile: 'Chỉnh sửa',
-    member_of_app: 'Thành viên appname',
-  },
-  en: {
-    login: 'Login',
-    no_account: 'No account yet?',
-    create_account: 'Create account',
-    profile: 'Profile',
-    edit_profile: 'Edit',
-    member_of_app: 'Member',
-  },
-};
+import { isPre } from '../api/userApi'; // Thêm import
 
 const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
   const { user } = useContext(UserContext);
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<any>();
-  const [labels, setLabels] = useState(LABELS.vi);
 
-  useEffect(() => {
-    console.log('Language changed:', i18n.language);
-    if (i18n.language === 'en') setLabels(LABELS.en);
-    else setLabels(LABELS.vi);
-  }, [i18n.language]);
+  // Không cache label, luôn lấy trực tiếp từ t() để đảm bảo re-render đúng ngôn ngữ và không bị lỗi cache
+  const labels = {
+    login: t('login'),
+    no_account: t('noaccount'),
+    create_account: t('register'),
+    profile: t('profile'),
+    edit_profile: t('edit_profile'),
+    member_normal: t('member_normal'),
+    member_premium: t('member_premium'),
+  };
 
   // Hàm này giờ chỉ render nội dung, không bao gồm separator
   const renderInfoContentOnly = () => {
     if (user) {
+      console.log('DEBUG user object:', user); // Thêm log toàn bộ user object
+      const isPremium = isPre(user);
+      console.log('DEBUG user.premium:', user.premium); // Thêm log để kiểm tra giá trị premium
+      let premiumDate = '';
+      if (isPremium) {
+        try {
+          const d = new Date(user.premium);
+          premiumDate = `HSD: ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        } catch {
+          premiumDate = '';
+        }
+      }
       return (
         <>
           <Text style={styles.name}>{user.name}</Text>
@@ -59,12 +57,11 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
               <Text style={styles.editBtnText}>{labels.edit_profile}</Text>
             </TouchableOpacity>
           </View>
-          {/* Dòng này cần marginTop để tạo khoảng cách với separator (separator là absolute) */}
           <Text style={styles.memberTextAfterSeparator}>
-            {labels.member_of_app}
+            {isPremium ? labels.member_premium : labels.member_normal}
           </Text>
           <Text style={styles.memberText}>
-            {user.joined}
+            {isPremium ? premiumDate : user.joined}
           </Text>
         </>
       );
@@ -75,7 +72,7 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
           <Text style={styles.memberText}>
             {labels.no_account}{' '}
             <Text
-              style={styles.createAccountText}
+              style={styles.createAccountTextNoHighlight}
               onPress={onCreateAccount}
             >
               {labels.create_account}
@@ -188,6 +185,11 @@ const styles = StyleSheet.create({
     color: '#007aff',
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+  },
+  createAccountTextNoHighlight: {
+    color: '#007aff',
+    fontWeight: 'bold',
+    // Không underline, không highlight
   },
   btnRow: {
     flexDirection: 'row',

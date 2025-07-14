@@ -172,7 +172,11 @@ const DiscoveryScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('discovery')}</Text>
         <TouchableOpacity style={styles.filterBtn} onPress={() => {
@@ -230,7 +234,7 @@ const DiscoveryScreen = () => {
                     activeOpacity={0.7}
                     onPress={() => {
                       bottomSheetCategoryRef.current?.present()
-                      
+
                     }}>
                     <Text style={styles.filterSelectText}>{String(categorySelectedTemp?.name || t('all'))}</Text>
                     <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
@@ -241,7 +245,7 @@ const DiscoveryScreen = () => {
                   <TouchableOpacity
                     style={styles.filterSelect}
                     activeOpacity={0.7}
-                    onPress={() => bottomSheetTypeRef.current?.present() }>
+                    onPress={() => bottomSheetTypeRef.current?.present()}>
                     <Text style={styles.filterSelectText}>{typeTemp}</Text>
                     <Image source={require('../../assert/image/down.png')} style={styles.arrowDownIcon} />
                   </TouchableOpacity>
@@ -304,59 +308,63 @@ const DiscoveryScreen = () => {
       <BottomSheetModal ref={bottomSheetCategoryRef} enablePanDownToClose backdropComponent={
         (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
       } >
-         <BottomSheetView style={{ flex: 1 }} >
-        <View style={styles.dialogOverlay}>
-          <View style={styles.dialogContainer}>
-            <View style={styles.dialogHeader}>
-              <TouchableOpacity onPress={() => bottomSheetCategoryRef?.current?.dismiss()}>
-                <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
-              </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('bymeal')}</Text>
-            </View>
-            <View style={styles.dialogInputWrap}>
-              <Image
-                source={require('../../assert/image/blacksearch.png')}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                placeholder={t('searchmeal')}
-                style={styles.dialogInput}
-                value={mealSearch}
-                onChangeText={setMealSearch}
-                placeholderTextColor="#888"
-              />
-            </View>
-            <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
-              <FlatList
-                data={categories.filter(opt =>
-                  String(opt.name || '').toLowerCase().includes(mealSearch.toLowerCase())
-                )}
-                keyExtractor={item => String(item?.id || item?._id)}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.dialogOption,
-                      categorySelectedTemp?.id === item?.id ? styles.dialogOptionSelected : null,
-                    ]}
-                    onPress={() => {
-                      setCategorySelectedTemp(item);
-                      setMealSearch('');
-                     bottomSheetCategoryRef?.current?.dismiss()
-                    }}>
-                    <Text
+        <BottomSheetView style={{ flex: 1 }} >
+          <View style={styles.dialogOverlay}>
+            <View style={styles.dialogContainer}>
+              <View style={styles.dialogHeader}>
+                <TouchableOpacity onPress={() => bottomSheetCategoryRef?.current?.dismiss()}>
+                  <Image
+                    source={require('../../assert/image/back.png')}
+                    style={{ width: 44, height: 44, tintColor: '#888' }}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <Text style={styles.dialogTitle}>{t('bymeal')}</Text>
+              </View>
+              <View style={styles.dialogInputWrap}>
+                <Image
+                  source={require('../../assert/image/blacksearch.png')}
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  placeholder={t('searchmeal')}
+                  style={styles.dialogInput}
+                  value={mealSearch}
+                  onChangeText={setMealSearch}
+                  placeholderTextColor="#888"
+                />
+              </View>
+              <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
+                <FlatList
+                  data={categories.filter(opt =>
+                    String(opt.name || '').toLowerCase().includes(mealSearch.toLowerCase())
+                  )}
+                  keyExtractor={item => String(item?.id || item?._id)}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
                       style={[
-                        styles.dialogOptionText,
-                        categorySelectedTemp?.id === item?.id ? styles.dialogOptionTextActive : null,
-                      ]}>
-                      {String(item?.name || '')}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                keyboardShouldPersistTaps="handled"
-              />
+                        styles.dialogOption,
+                        categorySelectedTemp?.id === item?.id ? styles.dialogOptionSelected : null,
+                      ]}
+                      onPress={() => {
+                        setCategorySelectedTemp(item);
+                        setMealSearch('');
+                        bottomSheetCategoryRef?.current?.dismiss()
+                      }}>
+                      <Text
+                        style={[
+                          styles.dialogOptionText,
+                          categorySelectedTemp?.id === item?.id ? styles.dialogOptionTextActive : null,
+                        ]}>
+                        {String(item?.name || '')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  keyboardShouldPersistTaps="handled"
+                />
+              </View>
             </View>
           </View>
-        </View>
         </BottomSheetView>
       </BottomSheetModal>
 
@@ -364,58 +372,62 @@ const DiscoveryScreen = () => {
       <BottomSheetModal ref={bottomSheetTypeRef} enablePanDownToClose backdropComponent={
         (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
       } >
-         <BottomSheetView style={{ flex: 1 }} >
-        <View style={styles.dialogOverlay}>
-          <View style={styles.dialogContainer}>
-            {/* END - Modal Drag Handle */}
-            <View style={styles.dialogHeader}>
-              <TouchableOpacity onPress={() => bottomSheetTypeRef?.current?.dismiss()}>
-                <Text style={{ color: '#888', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
-              </TouchableOpacity>
-              <Text style={styles.dialogTitle}>{t('bytype')}</Text>
-            </View>
-            <View style={styles.dialogInputWrap}>
-              <Image
-                source={require('../../assert/image/blacksearch.png')}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                placeholder={t('searchtype')}
-                style={styles.dialogInput}
-                value={typeSearch}
-                onChangeText={setTypeSearch}
-                placeholderTextColor="#888"
-              />
-            </View>
-            <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
-              <FlatList
-                data={TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(typeSearch.toLowerCase()))}
-                keyExtractor={item => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.dialogOption,
-                      typeTemp === item ? styles.dialogOptionSelected : null,
-                    ]}
-                    onPress={() => {
-                      setTypeTemp(item);
-                      setTypeSearch('');
-                     bottomSheetTypeRef.current?.dismiss()
-                    }}>
-                    <Text
+        <BottomSheetView style={{ flex: 1 }} >
+          <View style={styles.dialogOverlay}>
+            <View style={styles.dialogContainer}>
+              {/* END - Modal Drag Handle */}
+              <View style={styles.dialogHeader}>
+                <TouchableOpacity onPress={() => bottomSheetTypeRef?.current?.dismiss()}>
+                  <Image
+                    source={require('../../assert/image/back.png')}
+                    style={{ width: 44, height: 44, tintColor: '#888' }}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <Text style={styles.dialogTitle}>{t('bytype')}</Text>
+              </View>
+              <View style={styles.dialogInputWrap}>
+                <Image
+                  source={require('../../assert/image/blacksearch.png')}
+                  style={styles.searchIcon}
+                />
+                <TextInput
+                  placeholder={t('searchtype')}
+                  style={styles.dialogInput}
+                  value={typeSearch}
+                  onChangeText={setTypeSearch}
+                  placeholderTextColor="#888"
+                />
+              </View>
+              <View style={{ maxHeight: Dimensions.get('window').height * 0.5, flexGrow: 0 }}>
+                <FlatList
+                  data={TYPE_OPTIONS.filter(opt => opt.toLowerCase().includes(typeSearch.toLowerCase()))}
+                  keyExtractor={item => item}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
                       style={[
-                        styles.dialogOptionText,
-                        typeTemp === item ? styles.dialogOptionTextActive : null,
-                      ]}>
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                keyboardShouldPersistTaps="handled"
-              />
+                        styles.dialogOption,
+                        typeTemp === item ? styles.dialogOptionSelected : null,
+                      ]}
+                      onPress={() => {
+                        setTypeTemp(item);
+                        setTypeSearch('');
+                        bottomSheetTypeRef.current?.dismiss()
+                      }}>
+                      <Text
+                        style={[
+                          styles.dialogOptionText,
+                          typeTemp === item ? styles.dialogOptionTextActive : null,
+                        ]}>
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  keyboardShouldPersistTaps="handled"
+                />
+              </View>
             </View>
           </View>
-        </View>
         </BottomSheetView>
       </BottomSheetModal>
     </SafeAreaView>

@@ -195,7 +195,11 @@ const DetailScreen = () => {
                         }}
                         style={styles.overlayBtn}
                     >
-                        <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
+                        <Image
+                            source={require('../../assert/image/back.png')}
+                            style={{ width: 44, height: 44, tintColor: '#fff' }}
+                            resizeMode="contain"
+                        />
                     </TouchableOpacity>
                     <View style={styles.overlayRight}>
                         <TouchableOpacity
@@ -263,7 +267,7 @@ const DetailScreen = () => {
                         <View style={styles.infoBox}>
                             <Image source={require('../../assert/image/people.png')} style={styles.infoBoxIcon} />
                             <View>
-                                <Text style={styles.infoBoxLabel}>{t('servings') }</Text>
+                                <Text style={styles.infoBoxLabel}>{t('servings')}</Text>
                                 <Text style={styles.infoBoxValue}>{recipe.servings || 'N/A'}</Text>
                             </View>
                         </View>
@@ -317,7 +321,7 @@ const DetailScreen = () => {
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={styles.relatedTitle}>{t('related_recipes')}</Text>
                         <TouchableOpacity onPress={() => {/* can navigate to recipe list page if desired */ }}>
-                            <Text style={styles.seeMoreReview}>{t('see_more') }</Text>
+                            <Text style={styles.seeMoreReview}>{t('see_more')}</Text>
                         </TouchableOpacity>
                     </View>
                     <FlatList
@@ -349,7 +353,7 @@ const DetailScreen = () => {
                                                 style={styles.relatedMarkCircle}
                                                 onPress={async (e) => {
                                                     e.stopPropagation && e.stopPropagation();
-                                                   
+
                                                     if (!isConnected) {
                                                         Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
                                                         return;
@@ -402,9 +406,9 @@ const DetailScreen = () => {
             {/* "Let's cook!" button fixed at the bottom, using ButtonNavigation */}
             <View style={styles.fixedCookBtnWrapper}>
                 <ButtonNavigation
-                    title={t('start_cooking') }
+                    title={t('start_cooking')}
                     onPress={async () => {
-                        const ok = await checkNetworkAndAlert(t('networkviewtutorial') );
+                        const ok = await checkNetworkAndAlert(t('networkviewtutorial'));
                         if (!ok) return;
                         navigation.navigate(nav.tutorialCooking, {
                             recipeId,
@@ -814,20 +818,20 @@ const styles = StyleSheet.create({
     },
     relatedMarkCircle: {
         position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
+        top: 6,
+        right: 6,
+        width: 24,
+        height: 24,
+        borderRadius: 10,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 2,
     },
     relatedMark: {
         width: 16,
         height: 16,
-        resizeMode:'contain'
+        resizeMode: 'contain'
     },
     relatedTimeOverlay: {
         position: 'absolute',

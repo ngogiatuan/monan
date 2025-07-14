@@ -21,6 +21,8 @@ import axios from 'axios';
 import Tts from 'react-native-tts';
 import { useTranslation } from 'react-i18next';
 import { countRecipe } from '../../api/recipeApi';
+import { UserContext } from '../../context/UserContext';
+import { isPre } from '../../api/userApi';
 const NetInfo = require('@react-native-community/netinfo');
 
 const { width } = Dimensions.get('window');
@@ -40,6 +42,7 @@ const StepCookingViewer = ({
   setShowImageModal,
   currentImageIdx,
   setCurrentImageIdx,
+  user,
 }: {
   steps: {
     imageUrls: string[];
@@ -58,32 +61,33 @@ const StepCookingViewer = ({
   setShowImageModal: (v: boolean) => void;
   currentImageIdx: number;
   setCurrentImageIdx: (v: number | ((prev: number) => number)) => void;
+  user: any;
 }) => {
   const [stepIdx, setStepIdx] = useState(0);
   // Đảm bảo step luôn có giá trị mặc định để tránh lỗi Text string must be rendered
   const step = steps[stepIdx] || { imageUrls: [], title: '', desc: '' };
-  
+
   const [isVisibleTts, setIsVisibleTts] = useState(false);
   const { t } = useTranslation();
 
   const stepImages = step.imageUrls || [];
   const scrollViewRef = useRef<ScrollView>(null); // Ref cho ScrollView của ảnh
+  const isPremium = isPre(user);
 
   useEffect(() => {
     Tts.getInitStatus().then(
       () => setIsVisibleTts(true),
       () => setIsVisibleTts(false)
     );
-
     return () => {
       Tts.stop();
     };
   }, []);
 
   useEffect(() => {
-    if (isVisibleTts && autoTts) {
+    // Chỉ tự động đọc khi là premium
+    if (isVisibleTts && autoTts && isPremium) {
       Tts.stop();
-      // Đảm bảo truyền chuỗi an toàn vào Tts.speak
       Tts.speak(String(step.title || ''));
       Tts.speak(String(step.desc || ''));
     }
@@ -91,7 +95,7 @@ const StepCookingViewer = ({
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ x: 0, animated: false });
     }
-  }, [stepIdx, isVisibleTts, autoTts, setCurrentImageIdx, step.title, step.desc]);
+  }, [stepIdx, isVisibleTts, autoTts, setCurrentImageIdx, step.title, step.desc, isPremium]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -182,15 +186,15 @@ const StepCookingViewer = ({
           <Text style={styles.stepTitle}>{String(step.title || '')}</Text>
           <TouchableOpacity
             style={styles.ttsButton}
+            disabled={!isPremium}
             onPress={() => {
-              if (!isVisibleTts) return;
+              if (!isVisibleTts || !isPremium) return;
               if (autoTts) {
                 setAutoTts(false);
                 Tts.stop();
               } else {
                 setAutoTts(true);
                 Tts.stop();
-                // Đảm bảo truyền chuỗi an toàn vào Tts.speak
                 Tts.speak(String(step.title || ''));
                 Tts.speak(String(step.desc || ''));
               }
@@ -198,11 +202,14 @@ const StepCookingViewer = ({
           >
             <Image
               source={
-                autoTts
+                autoTts && isPremium
                   ? require('../../assert/image/loa.png')
                   : require('../../assert/image/muteloa.png')
               }
-              style={styles.ttsIcon}
+              style={[
+                styles.ttsIcon,
+                !isPremium && { opacity: 0.4 }
+              ]}
               resizeMode='contain'
             />
           </TouchableOpacity>
@@ -273,6 +280,7 @@ const TutorialCookingScreen = () => {
   >([]);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
+  const { user } = React.useContext(UserContext); // Thêm dòng này để lấy user từ context
 
   const recipeId = route.params?.recipeId;
   const [startTime, setStartTime] = useState(Date.now());
@@ -390,6 +398,7 @@ const TutorialCookingScreen = () => {
         setShowImageModal={setShowImageModal}
         currentImageIdx={currentImageIdx}
         setCurrentImageIdx={setCurrentImageIdx}
+        user={user}
       />
     </SafeAreaView>
   );
@@ -433,7 +442,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContentContainer: {
     // Không cần đặt width ở đây vì các Image bên trong đã có width: width
-   // paddingBottom:100
+    // paddingBottom:100
   },
   stepImg: {
     width: width,

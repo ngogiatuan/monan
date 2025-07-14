@@ -24,6 +24,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isPre } from '../../api/userApi';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +39,14 @@ const NOTIFICATION_STORAGE_KEY = '@app_notifications';
 const LAST_APP_ACCESS_TIMESTAMP_PREFIX = '@last_app_access_timestamp_';
 const LAST_USER_ID_KEY = '@last_logged_user_id';
 const HAS_UNREAD_NOTIFICATIONS_KEY = '@has_unread_notifications';
+
+// Helper: xác định id hoặc tên category cho từng bữa ăn
+const getMealCategoryKey = (hour: number) => {
+  if (hour >= 5 && hour < 11) return 'Bữa sáng';
+  if (hour >= 11 && hour < 13) return 'Bữa trưa';
+  if (hour >= 13 && hour < 18) return 'Bữa chiều';
+  return 'Bữa tối';
+};
 
 const HomeScreen = () => {
   const { user } = useContext(UserContext);
@@ -235,15 +244,120 @@ const HomeScreen = () => {
     isPremiumRecipe: item?.isPrevailing,
   }));
 
-  const todayData = recipes.slice(5, 10).map((item) => ({
-    id: item?._id || item?.id,
-    image: getProductImage(item),
-    title: item.name,
-    time: item.cookingTime || '',
-    rating: 4.8,
-    free: !item?.isPrevailing,
-    isPremiumRecipe: item?.isPrevailing,
-  }));
+  // Lấy key category cho bữa ăn hiện tại
+  const hour = new Date().getHours();
+  const mealCateName = getMealCategoryKey(hour);
+
+  // Tìm id hoặc name của category bữa ăn hiện tại
+  const mealCateObj = categories.find(
+    (cat) =>
+      cat.name?.toLowerCase() === mealCateName.toLowerCase() ||
+      cat.title?.toLowerCase() === mealCateName.toLowerCase()
+  );
+  const mealCateId = mealCateObj?.id || mealCateObj?._id;
+
+  // Nếu không có món đúng bữa hiện tại, thử lấy bữa tối hoặc bữa sáng
+  let todayData = recipes
+    .filter((item) => {
+      if (!mealCateId) return false;
+      if (Array.isArray(item.categories)) {
+        return item.categories.some(
+          (cat) =>
+            cat === mealCateId ||
+            cat?.id === mealCateId ||
+            cat?.name?.toLowerCase() === mealCateName.toLowerCase()
+        );
+      }
+      return false;
+    })
+    .map((item) => ({
+      id: item?._id || item?.id,
+      image: getProductImage(item),
+      title: item.name,
+      time: item.cookingTime || '',
+      rating: 4.8,
+      free: !item?.isPrevailing,
+      isPremiumRecipe: item?.isPrevailing,
+    }));
+
+  // Nếu không có món đúng bữa hiện tại, thử lấy bữa tối
+  if (todayData.length === 0) {
+    const fallbackCateName = 'Bữa tối';
+    const fallbackCateObj = categories.find(
+      (cat) =>
+        cat.name?.toLowerCase() === fallbackCateName.toLowerCase() ||
+        cat.title?.toLowerCase() === fallbackCateName.toLowerCase()
+    );
+    const fallbackCateId = fallbackCateObj?.id || fallbackCateObj?._id;
+    todayData = recipes
+      .filter((item) => {
+        if (!fallbackCateId) return false;
+        if (Array.isArray(item.categories)) {
+          return item.categories.some(
+            (cat) =>
+              cat === fallbackCateId ||
+              cat?.id === fallbackCateId ||
+              cat?.name?.toLowerCase() === fallbackCateName.toLowerCase()
+          );
+        }
+        return false;
+      })
+      .map((item) => ({
+        id: item?._id || item?.id,
+        image: getProductImage(item),
+        title: item.name,
+        time: item.cookingTime || '',
+        rating: 4.8,
+        free: !item?.isPrevailing,
+        isPremiumRecipe: item?.isPrevailing,
+      }));
+  }
+
+  // Nếu vẫn không có, thử lấy bữa sáng (gợi ý cho ngày hôm sau)
+  if (todayData.length === 0) {
+    const fallbackCateName = 'Bữa sáng';
+    const fallbackCateObj = categories.find(
+      (cat) =>
+        cat.name?.toLowerCase() === fallbackCateName.toLowerCase() ||
+        cat.title?.toLowerCase() === fallbackCateName.toLowerCase()
+    );
+    const fallbackCateId = fallbackCateObj?.id || fallbackCateObj?._id;
+    todayData = recipes
+      .filter((item) => {
+        if (!fallbackCateId) return false;
+        if (Array.isArray(item.categories)) {
+          return item.categories.some(
+            (cat) =>
+              cat === fallbackCateId ||
+              cat?.id === fallbackCateId ||
+              cat?.name?.toLowerCase() === fallbackCateName.toLowerCase()
+          );
+        }
+        return false;
+      })
+      .map((item) => ({
+        id: item?._id || item?.id,
+        image: getProductImage(item),
+        title: item.name,
+        time: item.cookingTime || '',
+        rating: 4.8,
+        free: !item?.isPrevailing,
+        isPremiumRecipe: item?.isPrevailing,
+      }));
+  }
+
+  // Nếu vẫn không có, render tất cả (test cate)
+  if (todayData.length === 0) {
+    todayData = recipes.map((item) => ({
+      id: item?._id || item?.id,
+      image: getProductImage(item),
+      title: item.name,
+      time: item.cookingTime || '',
+      rating: 4.8,
+      free: !item?.isPrevailing,
+      isPremiumRecipe: item?.isPrevailing,
+    }));
+  }
 
   const offerData = [
     {
@@ -268,6 +382,7 @@ const HomeScreen = () => {
 
   const scrollableSections = [
     { type: 'trending_recipes', title: t('trending_recipes'), data: trendingData },
+    // "today_recipes" chỉ render các món đúng bữa ăn hiện tại
     { type: 'today_recipes', title: t('today_recipes'), data: todayData },
     { type: 'offers', title: t('offers'), data: offerData },
     { type: 'daily_inspiration', title: t('daily_inspiration'), data: todayData },
@@ -296,6 +411,56 @@ const HomeScreen = () => {
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
+                        // Nếu là món premium và user chưa đăng nhập (guest) thì bắt đăng nhập rồi cho xem detail
+                        if (recipeItem.isPremiumRecipe && !user?.token) {
+                          Alert.alert(
+                            t('loginrequiredtitle'),
+                            t('loginrequiredmessage'),
+                            [
+                              {
+                                text: t('cancel'),
+                                style: 'cancel',
+                              },
+                              {
+                                text: t('login'),
+                                onPress: () => navigation.navigate(nav.authen),
+                              },
+                            ],
+                            { cancelable: true }
+                          );
+                          return;
+                        }
+                        // Nếu là món premium và user đã đăng nhập nhưng không phải premium thì chặn
+                        if (recipeItem.isPremiumRecipe && user?.token && !isPre(user)) {
+                          // Sử dụng custom Alert thay vì Alert.alert để kiểm soát màu sắc
+                          navigation.navigate(nav.buy, {
+                            // Nếu bạn có màn hình mua premium riêng, truyền params để show dialog đẹp hơn
+                            showPremiumDialog: true,
+                            premiumDialogTitle: t('premiumrequiredtitle'),
+                            premiumDialogMessage: t('premiumrequiredmessage'),
+                          });
+                          return;
+                          // Nếu vẫn muốn dùng Alert.alert thì có thể thử:
+                          /*
+                          Alert.alert(
+                            t('premiumrequiredtitle'),
+                            t('premiumrequiredmessage'),
+                            [
+                              {
+                                text: t('cancel'),
+                                style: 'cancel',
+                              },
+                              {
+                                text: t('buypremiumbutton'),
+                                onPress: () => navigation.navigate(nav.buy),
+                                style: 'default'
+                              },
+                            ],
+                            { cancelable: true }
+                          );
+                          */
+                        }
+                        // Nếu là món free hoặc user là premium hoặc guest đã đăng nhập thì cho vào detail
                         const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
                         if (!ok) return;
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
@@ -309,24 +474,20 @@ const HomeScreen = () => {
                             <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
                           </View>
                         )}
+                        {/* Chỉ giữ 1 nút mark lưu ở đây */}
                         <TouchableOpacity
                           style={styles.productMarkCircle}
                           onPress={async () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
 
-                            // Bắt đầu logic mới tại đây:
-
-                            // 1. Kiểm tra người dùng đã đăng nhập chưa
                             if (!user?.token) {
                               Alert.alert(t('loginrequiredtitle'), t('loginrequiredmessage'));
                               return;
                             }
 
-                            // 2. Nếu món ăn là Premium
                             if (recipeItem.isPremiumRecipe) {
-                              // Kiểm tra xem người dùng có tài khoản Premium không
-                              if (!user?.isPremium) {
+                              if (!isPre(user)) {
                                 Alert.alert(
                                   t('premiumrequiredtitle'),
                                   t('premiumrequiredmessage'),
@@ -341,16 +502,18 @@ const HomeScreen = () => {
                                     },
                                   ]
                                 );
-                                return; // Ngừng thực hiện nếu không có premium
+                                return;
                               }
                             }
-                            // Nếu món ăn không phải premium, hoặc là premium nhưng user có premium, thì tiếp tục lưu/hủy lưu
 
                             try {
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
                               } else {
-                                await removeFavorite(user.token, favoriteId);
+                                // Đảm bảo truyền đúng favoriteId
+                                if (favoriteId) {
+                                  await removeFavorite(user.token, favoriteId);
+                                }
                               }
                               await reloadFavorites();
                             } catch (e) {
@@ -383,9 +546,11 @@ const HomeScreen = () => {
                         <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
                       </View>
                       <Text style={recipeItem.free ? styles.freeTag : styles.premiumTag}>
-                        {recipeItem.free ? t('free') : "Premium"}
+                        {recipeItem.free ? t('free') : t('buyrecipe')}
                       </Text>
                     </View>
+                    {/* XÓA nút mark lưu ở đây, chỉ giữ 1 nút bên trên */}
+                    {/* <TouchableOpacity ...> ... </TouchableOpacity> */}
                   </View>
                 );
               })}
@@ -423,6 +588,7 @@ const HomeScreen = () => {
                   </View>
                 </View>
               ))}
+
             </ScrollView>
           </View>
         );
@@ -531,7 +697,7 @@ const HomeScreen = () => {
           keyExtractor={(item, index) => item.type + index}
           showsVerticalScrollIndicator={false}
           renderItem={renderScrollableSection}
-          style={{ backgroundColor: '#F6F6F6'}}
+          style={{ backgroundColor: '#F6F6F6' }}
         />
       ) : (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F6F6' }}>
@@ -554,7 +720,7 @@ const styles = StyleSheet.create({
   contentBlock: {
     backgroundColor: '#fff',
     borderTopWidth: 10,
-    borderTopColor:"#f6f6f6",
+    borderTopColor: "#f6f6f6",
     marginBottom: 8,
   },
 
@@ -616,8 +782,8 @@ const styles = StyleSheet.create({
   searchBox: {
     flex: 1,
     flexDirection: 'row',
-    borderWidth:1,
-    borderColor:"#E8E8E8",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
     borderRadius: 12,
     alignItems: 'center',
     paddingHorizontal: 12,

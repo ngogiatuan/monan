@@ -34,15 +34,21 @@ const AuthenScreen = () => {
       console.log('signInRes', signInRes);
       if (signInRes?.data?.idToken) {
         const resLoginWithSv = await loginGG(signInRes?.data?.idToken);
-        setUser(resLoginWithSv);
-        navigation.navigate(nav.home as never);
-
+        console.log('loginGG result:', resLoginWithSv); // Thêm log để debug
+        if (resLoginWithSv && resLoginWithSv.token) {
+          setUser(resLoginWithSv);
+          navigation.navigate(nav.home as never);
+        } else {
+          Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!');
+          // Không setUser(null) ở đây, tránh chuyển về guest khi login thất bại
+        }
       } else {
         Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
       }
     } catch (err) {
       console.log('SIGN_IN_GG_ERR', err)
       Alert.alert('Đăng nhập thất bại vui lòng thử lại sau!')
+      // Không setUser(null) ở đây
     }
 
   }

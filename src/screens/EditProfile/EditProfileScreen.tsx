@@ -26,8 +26,9 @@ const EditProfileScreen = () => {
 
 
   useEffect(() => {
-    setName(user?.name || '');
-    setEmail(user?.email || '');
+    // Khi vào màn hình, input phải rỗng, chỉ hiện hint (placeholder) là tên/email hiện tại
+    setName('');
+    setEmail('');
     setAvatarUrl(typeof user?.avatar === 'string' ? user.avatar : null);
     setCover(typeof user?.cover === 'string' ? user.cover : null);
   }, [user]);
@@ -120,7 +121,11 @@ const EditProfileScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('editprofile')}</Text>
         <View style={{ width: 40 }} />
@@ -236,31 +241,39 @@ const EditProfileScreen = () => {
             </View>
           </View>
         </Modal>
-        <View style={styles.formContainer}> {/* New container for the white form area */}
+        <View style={styles.formContainer}>
           <View style={styles.form}>
             <Text style={styles.label}>{t('fullname')}</Text>
             <View style={styles.inputWrap}>
               <InputNavigation
                 value={name}
                 onChangeText={setName}
-                placeholder={t('enterfullnameplaceholder')}
+                placeholder={user?.name || t('enterfullnameplaceholder')}
+                placeholderTextColor="#bbb"
                 style={styles.input}
               />
-              <TouchableOpacity style={styles.clearBtn} onPress={() => setName('')}>
-                <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
-              </TouchableOpacity>
+              {/* Chỉ hiện icon clear khi có text */}
+              {name.length > 0 && (
+                <TouchableOpacity style={styles.clearBtn} onPress={() => setName('')}>
+                  <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
+                </TouchableOpacity>
+              )}
             </View>
             <Text style={styles.label}>{t('emailaddress')}</Text>
             <View style={styles.inputWrap}>
               <InputNavigation
                 value={email}
                 onChangeText={setEmail}
-                placeholder={t('emailplaceholder')}
+                placeholder={user?.email || t('emailplaceholder')}
+                placeholderTextColor="#bbb"
                 style={styles.input}
               />
-              <TouchableOpacity style={styles.clearBtn} onPress={() => setEmail('')}>
-                <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
-              </TouchableOpacity>
+              {/* Chỉ hiện icon clear khi có text */}
+              {email.length > 0 && (
+                <TouchableOpacity style={styles.clearBtn} onPress={() => setEmail('')}>
+                  <Image source={require('../../assert/image/cancel.png')} style={styles.clearIcon} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
