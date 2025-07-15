@@ -50,8 +50,12 @@ const LanguageScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>{'<'}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('language')}</Text>
       </View>
@@ -87,9 +91,9 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: 8,
   },
-  backBtn: {
-    padding: 8,
-    marginRight: 8,
+  headerBackBtn: {
+    marginRight: 12,
+    padding: 4,
   },
   backText: {
     color: '#fff',

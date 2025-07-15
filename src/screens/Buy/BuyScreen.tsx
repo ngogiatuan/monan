@@ -40,8 +40,12 @@ const BuyScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold' }}>{'<'}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('Premium')}</Text>
       </View>
@@ -157,9 +161,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 0,
   },
-  backBtn: {
-    padding: 8,
-    marginRight: 4,
+  headerBackBtn: {
+    marginRight: 12,
+    padding: 4,
   },
   headerTitle: {
     flex: 1,
@@ -169,8 +173,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginRight: 24,
   },
-  // Removed stepsRow, stepCircleWrap, stepCircle, stepInner, stepLabel, stepLine styles
-  contentContainer: { // Added a wrapper for the main content
+  contentContainer: { 
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 16,
