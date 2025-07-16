@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal, Image } from 'react-native'; // Import Image
 import InputNavigation from '../../compoments/InputNavigation';
 import { UserContext } from '../../context/UserContext';
 import { deleteUserByEmail } from '../../api/userApi';
@@ -49,17 +49,20 @@ const DeleteAccountScreen = ({ navigation }: any) => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')} // Path to your back arrow image
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('deleteaccount') }</Text>
+        <Text style={styles.headerTitle}>{t('deleteaccount')}</Text>
       </View>
       <View style={styles.body}>
         <Text style={styles.warning}>
-          {t('deletewarning') }
+          {t('deletewarning')}
         </Text>
-        <Text style={styles.label}>{t('enterdeletephrase') }</Text>
+        <Text style={styles.label}>{t('enterdeletephrase')}</Text>
         <InputNavigation
-          placeholder={t('deleteaccount') }
+          placeholder={t('deleteaccount')}
           value={input}
           onChangeText={setInput}
           autoCapitalize="none"
@@ -71,7 +74,7 @@ const DeleteAccountScreen = ({ navigation }: any) => {
           onPress={handleDelete}
         >
           <Text style={[styles.deleteBtnText, { color: isValid ? '#fff' : '#bbb' }]}>
-            {t('confirmdelete') }
+            {t('confirmdelete')}
           </Text>
         </TouchableOpacity>
         {/* Dialog cho guest */}
@@ -95,10 +98,10 @@ const DeleteAccountScreen = ({ navigation }: any) => {
               alignItems: 'center',
             }}>
               <Text style={{ fontWeight: 'bold', fontSize: 17, marginBottom: 8, color: '#222', textAlign: 'center' }}>
-                {t('noaccounttodelete') }
+                {t('noaccounttodelete')}
               </Text>
               <Text style={{ color: '#888', fontSize: 14, marginBottom: 18, textAlign: 'center' }}>
-                {t('registerbeforedelete') }
+                {t('registerbeforedelete')}
               </Text>
               <TouchableOpacity
                 style={{
@@ -135,18 +138,19 @@ const styles = StyleSheet.create({
     padding: 8,
     marginRight: 8,
   },
-  backText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
+  backIcon: { // New style for the back image
+    width: 24, // Adjust size as needed
+    height: 24, // Adjust size as needed
+    tintColor: '#fff', // Keep the icon white to match the header
   },
+  // Removed backText style as it's no longer used
   headerTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
-    marginRight: 32, // Để căn giữa tiêu đề khi có nút back
+    marginRight: 32, // To center the title when there's a back button
   },
   body: {
     padding: 20,
@@ -176,4 +180,3 @@ const styles = StyleSheet.create({
 });
 
 export default DeleteAccountScreen;
-

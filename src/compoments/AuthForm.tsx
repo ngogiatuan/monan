@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native'; // Import Image
 import { useTranslation } from 'react-i18next';
 
 interface AuthFormProps {
@@ -34,8 +34,12 @@ const AuthForm = ({
       >
         <View style={[styles.bottomSheet, bottomSheetStyle]}>
           {showBack && (
-            <TouchableOpacity onPress={onBack}>
-              <Text style={styles.backText}>{'< ' + t('back')}</Text>
+            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+              <Image
+                source={require('../assert/image/back.png')} 
+                style={styles.backIcon}
+              />
+              <Text style={styles.backText}>{t('back')}</Text>
             </TouchableOpacity>
           )}
           {title ? <Text style={styles.title}>{t(title) || title}</Text> : null}
@@ -67,10 +71,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  backIcon: {
+    width: 24, // Adjust size as needed
+    height: 24, // Adjust size as needed
+    tintColor: '#888', // Adjust color as needed
+    marginRight: 4,
+  },
   backText: {
     color: '#888',
     fontSize: 14,
-    marginBottom: 8,
   },
   title: {
     fontWeight: 'bold',
