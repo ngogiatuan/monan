@@ -480,6 +480,7 @@ const HomeScreen = () => {
                             }
 
                             try {
+                              console.log('Toggling favorite for recipe:', recipeItem.id, favoriteId, user?.token);
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
                               } else {

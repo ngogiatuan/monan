@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://103.72.99.132:3000'; // Thay thế bằng URL API B
 export const getAllCategories = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/categories`); // Ví dụ: endpoint /categories
-    console.log('Response from getAllCategories API:', response.data);
+    // console.log('Response from getAllCategories API:', response.data);
     if (response.data?.length) { // Tùy thuộc vào cấu trúc response của BE
       // Assuming categories in the response also use 'id' instead of '_id'
       // No direct change needed here as we are just returning the data,
