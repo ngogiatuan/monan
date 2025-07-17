@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, SafeAreaView, Alert, ActivityIndicator } from 'react-native'; // Import ActivityIndicator
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal, TextInput, Platform, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
 import { nav } from '../../navigation/navigationName';
@@ -16,33 +16,43 @@ const AddRecipeScreen = () => {
   const [ingredients, setIngredients] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Function to validate inputs
+  // New state for custom error modal
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorTitle, setErrorTitle] = useState(''); // Added state for title
+
+  // Function to show custom error modal
+  const showCustomError = (title: string, message: string) => {
+    setErrorTitle(title); // Set the title
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
+
   const validateInputs = () => {
     if (!name.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên công thức.');
+      showCustomError('Lỗi', 'Vui lòng nhập tên công thức.');
       return false;
     }
     if (!imageUrl) {
-      Alert.alert('Lỗi', 'Vui lòng thêm hình ảnh cho công thức.');
+      showCustomError('Lỗi', 'Vui lòng thêm hình ảnh cho công thức.');
       return false;
     }
     if (servings === 0) {
-      Alert.alert('Lỗi', 'Vui lòng chọn khẩu phần ăn (phải lớn hơn 0).');
+      showCustomError('Lỗi', 'Vui lòng chọn khẩu phần ăn (phải lớn hơn 0).');
       return false;
     }
     if (!time.trim() || isNaN(Number(time)) || Number(time) <= 0) {
-      Alert.alert('Lỗi', 'Vui lòng nhập thời gian dự kiến hợp lệ (phải là số và lớn hơn 0 phút).');
+      showCustomError('Lỗi', 'Vui lòng nhập thời gian dự kiến hợp lệ (phải là số và lớn hơn 0 phút).');
       return false;
     }
     return true;
   };
 
-  // Function to check for duplicate recipe name
   const checkDuplicateRecipeName = async (recipeName: string) => {
     try {
-      const allRecipes = await getRecipes(1, 1000); // Fetch a sufficient number of recipes to check for duplicates
+      const allRecipes = await getRecipes(1, 1000);
       const lowerCaseNewName = recipeName.trim().toLowerCase();
       const isDuplicate = allRecipes.some(
         (recipe: any) => recipe.name.toLowerCase() === lowerCaseNewName
@@ -50,8 +60,8 @@ const AddRecipeScreen = () => {
       return isDuplicate;
     } catch (error) {
       console.error('Error checking duplicate recipe name:', error);
-      Alert.alert('Lỗi', 'Không thể kiểm tra trùng lặp tên món ăn. Vui lòng thử lại.');
-      return true; // Assume duplicate or error to prevent proceeding
+      showCustomError('Lỗi', 'Không thể kiểm tra trùng lặp tên món ăn. Vui lòng thử lại.');
+      return true;
     }
   };
 
@@ -60,19 +70,18 @@ const AddRecipeScreen = () => {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     const isDuplicate = await checkDuplicateRecipeName(name);
 
-    setIsLoading(false); // Stop loading
+    setIsLoading(false);
 
     if (isDuplicate) {
-      Alert.alert(
+      showCustomError(
         'Lỗi',
         'Tên công thức này đã tồn tại. Vui lòng chọn một tên khác.'
       );
     } else {
-      // If all required inputs are valid and name is not a duplicate, navigate to the next screen
       navigation.navigate(nav.rank);
     }
   };
@@ -108,7 +117,7 @@ const AddRecipeScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
           <Image
             source={require('../../assert/image/back.png')}
-            style={{ width: 44, height: 44, tintColor: '#fff' }}
+            style={styles.backIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -262,6 +271,29 @@ const AddRecipeScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Custom Error Modal (Updated) */}
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.errorDialogBox}>
+            <Text style={styles.errorDialogTitle}>{errorTitle}</Text> {/* Use errorTitle here */}
+            <Text style={styles.errorDialogMessage}>{errorMessage}</Text>
+            <View style={styles.errorButtonContainer}> {/* New container for button */}
+              <TouchableOpacity
+                style={styles.errorOkButton}
+                onPress={() => setShowErrorModal(false)}
+              >
+                <Text style={styles.errorOkButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -273,17 +305,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
+    position: 'relative',
   },
   headerBackBtn: {
-    marginRight: 12,
     padding: 4,
+    marginRight: 0,
+    zIndex: 1,
+  },
+  backIcon: {
+    width: 30,
+    height: 30,
+    tintColor: '#fff',
+    marginLeft: -4,
   },
   headerTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    flex: 1,
     textAlign: 'center',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    textAlignVertical: 'center',
   },
   scrollContentContainer: {
     padding: 16,
@@ -324,6 +369,12 @@ const styles = StyleSheet.create({
   input2: {
     flex: 1,
     marginRight: 4,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingRight: 8,
+    borderColor: '#E0E0E0',
+    paddingVertical: 10,
+    paddingLeft: 12,
   },
   cancelIcon: {
     width: 20,
@@ -435,7 +486,7 @@ const styles = StyleSheet.create({
   },
   dialogOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -466,6 +517,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dialogBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  // Updated styles for custom error modal
+  errorDialogBox: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    // Adjusted padding for a more horizontal rectangle look
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    width: '85%', // Wider
+    // Removed alignItems: 'center' from here
+    elevation: 4,
+  },
+  errorDialogTitle: { // New style for the title in error dialog
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 10,
+  },
+  errorDialogMessage: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 20,
+  },
+  errorButtonContainer: { // Container to align button to the right
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  errorOkButton: {
+    backgroundColor: '#ff6f2c',
+    borderRadius: 8, // Slightly more rounded corners
+    paddingVertical: 8, // Smaller vertical padding
+    paddingHorizontal: 18, // More horizontal padding
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorOkButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,

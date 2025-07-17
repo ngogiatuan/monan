@@ -1,20 +1,17 @@
-// screens/DetailProfile.tsx
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Image, FlatList, TouchableOpacity } from 'react-native'; // Bỏ FlatList
+import { View, Text, StyleSheet, ScrollView, Dimensions, Image, FlatList, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { getFavorites } from '../../api/favoriteApi';
 import { UserContext } from '../../context/UserContext';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 
-// Imports component ProfileInfo của bạn
 import DetailProfileInfo from '../../compoments/DetailProfileInfo';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
-import { getRecipeStatsByUser } from '../../api/recipeApi'; // Thêm hàm API mới để lấy thống kê
+import { getRecipeStatsByUser } from '../../api/recipeApi';
 
 const { width } = Dimensions.get('window');
 
-// Component để render từng thẻ Thành tích
 const AchievementCard = ({ item }) => {
   return (
     <View style={styles.achievementCard}>
@@ -30,14 +27,12 @@ const DetailProfile = () => {
   const navigation = useNavigation<any>();
   const { user } = React.useContext(UserContext);
   const [favorites, setFavorites] = React.useState<any[]>([]);
-  const [isConnected, setIsConnected] = React.useState(true);
+  const [isConnected, setIsConnected] = React.useState(true); // You might want to get this from a network utility/hook
 
-  // Thêm state cho thống kê
-  const [totalTime, setTotalTime] = React.useState<number>(0); // tổng thời gian nấu (giây)
-  const [totalRecipes, setTotalRecipes] = React.useState<number>(0); // tổng số món đã nấu
+  const [totalTime, setTotalTime] = React.useState<number>(0);
+  const [totalRecipes, setTotalRecipes] = React.useState<number>(0);
 
   React.useEffect(() => {
-    // Lấy danh sách công thức đã lưu
     const fetchFavorites = async () => {
       try {
         if (user?.token) {
@@ -53,7 +48,6 @@ const DetailProfile = () => {
     fetchFavorites();
   }, [user]);
 
-  // Lấy thống kê tổng thời gian và tổng số món đã nấu theo user._id hoặc user.id
   React.useEffect(() => {
     const fetchStats = async () => {
       if (!user?._id && !user?.id) {
@@ -62,7 +56,6 @@ const DetailProfile = () => {
         return;
       }
       try {
-        // Hàm này trả về { totalTime: số giây, totalRecipes: số lượng }
         const stats = await getRecipeStatsByUser(user._id || user.id);
         setTotalTime(stats?.totalTime || 0);
         setTotalRecipes(stats?.totalRecipes || 0);
@@ -74,7 +67,6 @@ const DetailProfile = () => {
     fetchStats();
   }, [user]);
 
-  // Format tổng thời gian nấu thành chuỗi "xhym"
   const formatTotalTime = (seconds: number) => {
     if (!seconds || seconds <= 0) return '0';
     const h = Math.floor(seconds / 3600);
@@ -83,7 +75,6 @@ const DetailProfile = () => {
     return `${m}'`;
   };
 
-  // achievementsData dùng state thay vì cứng
   const achievementsData = [
     {
       id: '1',
@@ -104,7 +95,6 @@ const DetailProfile = () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
-        {/* Back button nằm trên cover */}
         <View style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, padding: 4 }}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image
@@ -115,7 +105,7 @@ const DetailProfile = () => {
           </TouchableOpacity>
         </View>
         <DetailProfileInfo />
-        {/* Section Thành tích */}
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitleWithIcon}>{t('achievements')}</Text>
@@ -131,16 +121,13 @@ const DetailProfile = () => {
           </View>
         </View>
 
-        {/* Section Công thức đã lưu */}
         <View style={styles.purchasedRecipesSection}>
           <Text style={styles.purchasedRecipesTitle}>{t('saved_recipe')}</Text>
           {favorites.length === 0 ? (
             <RecipeEmpty
               isConnected={isConnected}
               isGuest={!user}
-              onExplore={() => {
-                // Đã xử lý alert trong RecipeEmpty
-              }}
+              // Removed onExplore prop here, as it's no longer needed or expected
             />
           ) : (
             <FlatList
@@ -182,7 +169,6 @@ const DetailProfile = () => {
           )}
         </View>
       </ScrollView>
-      {/* Bottom Navigation */}
       <BottomNavigation current="profile" />
     </View>
   );
@@ -223,13 +209,13 @@ const styles = StyleSheet.create({
   },
   achievementsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap', // Cho phép các item xuống dòng
-    justifyContent: 'space-between', // Căn đều các item và tạo khoảng cách giữa chúng
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   achievementCard: {
-    width: (width - (16 * 2) - 8) / 2, // 16*2 là padding của section, 8 là khoảng cách giữa 2 thẻ (4+4)
-    height: 100, // Cố định chiều cao để đồng nhất
-    marginVertical: 4, // Khoảng cách trên/dưới cho mỗi thẻ
+    width: (width - (16 * 2) - 8) / 2,
+    height: 100,
+    marginVertical: 4,
     backgroundColor: '#D9F2FE',
     borderRadius: 8,
     borderWidth: 1,
@@ -253,7 +239,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  // --- Hết Styles cho phần Thành tích ---
   purchasedRecipesTitle: {
     color: '#474747',
     fontSize: 16,
@@ -265,7 +250,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 100, // Giảm paddingBottom nếu thấy quá nhiều
+    paddingBottom: 100,
   },
 });
 

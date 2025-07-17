@@ -63,16 +63,12 @@ const HomeScreen = () => {
   const [hasNewNotifications, setHasNewNotifications] = useState(false); // State for notification icon
 
   const isFocused = useIsFocused(); // To detect when HomeScreen comes into focus
-
-  // Network connectivity check
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsConnected(!!state.isConnected);
     });
     return () => unsubscribe();
   }, []);
-
-  // Fetch recipes and categories (and use cache if offline)
   useEffect(() => {
     let ignore = false;
     const fetchData = async () => {
@@ -128,8 +124,6 @@ const HomeScreen = () => {
   useEffect(() => {
     if (isConnected) reloadFavorites();
   }, [user, isConnected]);
-
-  // --- Logic for logging app access and setting unread notification flag ---
   useEffect(() => {
     const logAppAccessAndSetNotification = async () => {
       const now = new Date();
@@ -142,9 +136,6 @@ const HomeScreen = () => {
         if (user?.token && user?.id) { // User is logged in
           const lastAccessTimestampStr = await AsyncStorage.getItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + user.id);
           const lastAccessTimestamp = lastAccessTimestampStr ? parseInt(lastAccessTimestampStr, 10) : 0;
-
-          // Condition 1: It's a new day OR
-          // Condition 2: This is a new login session for this user (e.g., they logged out and logged back in)
           if (lastAccessTimestamp < todayStart || lastLoggedUserId !== currentUserId) {
             const newAppOpenNotification: AppOpenNotificationItem = {
               id: `app_open_${now.getTime()}`,
@@ -160,15 +151,12 @@ const HomeScreen = () => {
             await AsyncStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(updatedNotifications));
             console.log('Logged app access notification:', newAppOpenNotification.timestamp);
 
-            // Set the flag for new notifications
             await AsyncStorage.setItem(HAS_UNREAD_NOTIFICATIONS_KEY, 'true');
-            // No need to setHasNewNotifications(true) here, as the checkNewNotifications effect will handle it.
 
             await AsyncStorage.setItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + user.id, now.getTime().toString());
             await AsyncStorage.setItem(LAST_USER_ID_KEY, user.id);
           }
-        } else { // User is not logged in (guest) or user context is null
-          // If a user was previously logged in, clear their last access timestamp upon "logout"
+        } else {
           if (lastLoggedUserId && lastLoggedUserId !== 'guest') {
             await AsyncStorage.removeItem(LAST_APP_ACCESS_TIMESTAMP_PREFIX + lastLoggedUserId);
             console.log('Cleared last app access for previous user:', lastLoggedUserId);
@@ -179,13 +167,9 @@ const HomeScreen = () => {
         console.error('Failed to log app access notification:', error);
       }
     };
-
-    // This effect runs once when component mounts or user/token changes, to log access.
-    // It is not dependent on `isFocused` of HomeScreen.
     logAppAccessAndSetNotification();
   }, [user?.id, user?.token]); // Dependencies: user ID and token
 
-  // --- Effect to check and update notification icon when HomeScreen is focused ---
   useEffect(() => {
     const checkNotificationIconStatus = async () => {
       if (isFocused) {
@@ -244,11 +228,10 @@ const HomeScreen = () => {
     isPremiumRecipe: item?.isPrevailing,
   }));
 
-  // Lấy key category cho bữa ăn hiện tại
+
   const hour = new Date().getHours();
   const mealCateName = getMealCategoryKey(hour);
 
-  // Tìm id hoặc name của category bữa ăn hiện tại
   const mealCateObj = categories.find(
     (cat) =>
       cat.name?.toLowerCase() === mealCateName.toLowerCase() ||
@@ -256,7 +239,6 @@ const HomeScreen = () => {
   );
   const mealCateId = mealCateObj?.id || mealCateObj?._id;
 
-  // Nếu không có món đúng bữa hiện tại, thử lấy bữa tối hoặc bữa sáng
   let todayData = recipes
     .filter((item) => {
       if (!mealCateId) return false;
@@ -280,7 +262,6 @@ const HomeScreen = () => {
       isPremiumRecipe: item?.isPrevailing,
     }));
 
-  // Nếu không có món đúng bữa hiện tại, thử lấy bữa tối
   if (todayData.length === 0) {
     const fallbackCateName = 'Bữa tối';
     const fallbackCateObj = categories.find(
@@ -313,7 +294,6 @@ const HomeScreen = () => {
       }));
   }
 
-  // Nếu vẫn không có, thử lấy bữa sáng (gợi ý cho ngày hôm sau)
   if (todayData.length === 0) {
     const fallbackCateName = 'Bữa sáng';
     const fallbackCateObj = categories.find(
@@ -346,7 +326,6 @@ const HomeScreen = () => {
       }));
   }
 
-  // Nếu vẫn không có, render tất cả (test cate)
   if (todayData.length === 0) {
     todayData = recipes.map((item) => ({
       id: item?._id || item?.id,
@@ -382,7 +361,6 @@ const HomeScreen = () => {
 
   const scrollableSections = [
     { type: 'trending_recipes', title: t('trending_recipes'), data: trendingData },
-    // "today_recipes" chỉ render các món đúng bữa ăn hiện tại
     { type: 'today_recipes', title: t('today_recipes'), data: todayData },
     { type: 'offers', title: t('offers'), data: offerData },
     { type: 'daily_inspiration', title: t('daily_inspiration'), data: todayData },
@@ -411,9 +389,7 @@ const HomeScreen = () => {
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
-                        // Nếu là món premium
                         if (recipeItem.isPremiumRecipe) {
-                          // Nếu chưa đăng nhập thì bắt đăng nhập
                           if (!user?.token) {
                             Alert.alert(
                               t('loginrequiredtitle'),
@@ -432,7 +408,6 @@ const HomeScreen = () => {
                             );
                             return;
                           }
-                          // Nếu đã đăng nhập bằng bất kỳ hình thức nào (Google, email gmail, email thường) mà chưa có premium thì chặn
                           if (!isPre(user)) {
                             navigation.navigate(nav.buy, {
                               showPremiumDialog: true,
@@ -442,7 +417,6 @@ const HomeScreen = () => {
                             return;
                           }
                         }
-                        // Nếu là món free hoặc user là premium thì cho vào detail
                         const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
                         if (!ok) return;
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
@@ -456,26 +430,38 @@ const HomeScreen = () => {
                             <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
                           </View>
                         )}
-                        {/* Chỉ giữ 1 nút mark lưu ở đây */}
                         <TouchableOpacity
                           style={styles.productMarkCircle}
                           onPress={async () => {
                             const ok = await checkNetworkAndAlert(t('networksaverecipe'));
                             if (!ok) return;
 
-                            // Nếu chưa đăng nhập thì bắt đăng nhập
                             if (!user?.token) {
                               Alert.alert(t('loginrequiredtitle'), t('loginrequiredmessage'));
                               return;
                             }
-
-                            // Nếu là món premium mà user chưa mua premium (kể cả đăng nhập bằng email gmail/email thường/Google)
                             if (recipeItem.isPremiumRecipe && !isPre(user)) {
-                              navigation.navigate(nav.buy, {
-                                showPremiumDialog: true,
-                                premiumDialogTitle: t('premiumrequiredtitle'),
-                                premiumDialogMessage: t('premiumrequiredmessage'),
-                              });
+                              Alert.alert(
+                                t('premiumrequiredtitle'),
+                                t('premiumrequiredmessage'),
+                                [
+                                  {
+                                    text: t('cancel'),
+                                    style: 'cancel',
+                                  },
+                                  {
+                                    text: t('buynow'),
+                                    onPress: () => {
+                                      navigation.navigate(nav.buy, {
+                                        showPremiumDialog: true,
+                                        premiumDialogTitle: t('premiumrequiredtitle'),
+                                        premiumDialogMessage: t('premiumrequiredsavemessage'),
+                                      });
+                                    },
+                                  },
+                                ],
+                                { cancelable: true }
+                              );
                               return;
                             }
 
@@ -522,8 +508,6 @@ const HomeScreen = () => {
                         {recipeItem.free ? t('free') : t('buyrecipe')}
                       </Text>
                     </View>
-                    {/* XÓA nút mark lưu ở đây, chỉ giữ 1 nút bên trên */}
-                    {/* <TouchableOpacity ...> ... </TouchableOpacity> */}
                   </View>
                 );
               })}

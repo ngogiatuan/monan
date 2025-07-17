@@ -169,7 +169,7 @@ const PaymentScreen = () => {
               />
             </View>
             <ButtonNavigation
-              title={t('viewrecipe')}
+              title={t('back')}
               backgroundColor="#FF6600"
               onPress={() => {
                 setShowSuccess(false);

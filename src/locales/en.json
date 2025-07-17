@@ -160,7 +160,6 @@
     "pay":"Pay",
     "success":"Success",
     "home":"Home",
-    "viewrecipe":"View recipe",
     "successbuydes":"Check out the recipe and cook something delicious!",
     "hoosepaymentmethod":"Chọn phương thức thanh toán",
     "networkviewtutorial":"No internet connection. Please turn on wifi or mobile data to view cooking instructions.",
@@ -193,5 +192,6 @@
   "norecipesfound":"  No recipe found",
   "premiumfeatures":"Premium feature",
   "searchbyingredients":"Search by ingredients",
-  "member_premium":"Member Premium"
+  "member_premium":"Member Premium",
+  "buynow": "Buy Now"
 }

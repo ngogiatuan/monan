@@ -1,17 +1,20 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, Alert } from 'react-native';
 import ButtonNavigation from './ButtonNavigation';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import {nav} from '../navigation/navigationName'
 
 interface RecipeEmptyProps {
   onAddRecipe?: () => void;
-  onExplore?: () => void;
   isConnected?: boolean;
   isGuest?: boolean;
 }
 
-const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmptyProps) => {
+const RecipeEmpty = ({ onAddRecipe, isConnected, isGuest }: RecipeEmptyProps) => {
   const { t } = useTranslation();
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <Image source={require('../assert/image/fire.png')} style={styles.icon} resizeMode='contain' />
@@ -27,7 +30,7 @@ const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmp
           textStyle={styles.btnText}
           onPress={onAddRecipe}
         />
-      ) : onExplore ? (
+      ) : (
         <ButtonNavigation
           title={t('explore_now')}
           backgroundColor="#ff6f2c"
@@ -43,10 +46,10 @@ const RecipeEmpty = ({ onAddRecipe, onExplore, isConnected, isGuest }: RecipeEmp
               Alert.alert(t('login_to_explore'));
               return;
             }
-            onExplore && onExplore();
+            navigation.navigate(nav.discovery as never);
           }}
         />
-      ) : null}
+      )}
     </View>
   );
 };
