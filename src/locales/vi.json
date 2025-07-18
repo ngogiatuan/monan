@@ -45,7 +45,7 @@
     "estimated_time": "Thời gian",
     "servings": "Khẩu phần ăn",
     "ingredients": "Nguyên liệu",
-    "review": "Đánh giá",
+    "review": "Review",
     "excellent": "Xuất sắc",
     "related_recipes": "Công thức liên quan",
     "start_cooking": "Vào bếp thôi!",
@@ -185,5 +185,7 @@
   "searchbyingredients":"Tìm kiếm theo nguyên liệu",
   "member_premium":"Thành viên Premium",
   "profile":"Trang cá nhân",
-  "buynow": "Mua ngay"
+  "buynow": "Mua ngay",
+  "member_normal":"Thành viên thường",
+  "premiumrequiredsavemessage":"Bạn cần mua gói Premium để lưu công thức này."
 }

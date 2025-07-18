@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
@@ -21,6 +22,10 @@ import { getAllCategories } from '../../api/categoryApi';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { searchRecipesByIngredientsPremium } from '../../api/recipeApi';
+import { UserContext } from '../../context/UserContext';
+import { isPre } from '../../api/userApi'; // Hàm kiểm tra premium
+import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 
 const { width, height } = Dimensions.get('window');
 
@@ -52,6 +57,7 @@ const DiscoveryScreen = () => {
   const route = useRoute<DiscoveryScreenRouteProp>();
   const { mealType, category } = route.params || {};
   const { t } = useTranslation();
+  const { user } = useContext(UserContext);
 
   const [type, setType] = useState('Món ăn thịnh hành');
   const [ingredients, setIngredients] = useState('');
@@ -60,6 +66,7 @@ const DiscoveryScreen = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [categorySelected, setCategorySelected] = useState<any | null>(null);
   const [recipesFiltered, setRecipeFiltered] = useState<any[]>([]);
+  const [recipeRatings, setRecipeRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
 
   const [showFilter, setShowFilter] = useState(false);
   const [showMealDialog, setShowMealDialog] = useState(false);
@@ -137,6 +144,25 @@ const DiscoveryScreen = () => {
     }
   }, [recipes, categorySelected, type, ingredients]); // Add 'ingredients' to dependency array
 
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratingsObj: { [recipeId: string]: { avg: number, count: number } } = {};
+      await Promise.all(recipesFiltered.map(async (r) => {
+        const id = r._id || r.id;
+        const [reviews, avg] = await Promise.all([
+          getReviewsByRecipeId(id),
+          getAverageRatingByRecipeId(id)
+        ]);
+        ratingsObj[id] = {
+          avg: avg ?? 0,
+          count: reviews.length
+        };
+      }));
+      setRecipeRatings(ratingsObj);
+    };
+    if (recipesFiltered.length > 0) fetchRatings();
+  }, [recipesFiltered]);
+
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -159,10 +185,22 @@ const DiscoveryScreen = () => {
             {String(item?.name || '')}
           </Text>
           <View style={styles.cardRow}>
-            <View style={styles.ratingBox}>
-              <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconRatingBox} />
-              <Text style={styles.ratingTextRatingBox}>{item.rating ? String(item.rating) : '4.8'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <View style={styles.ratingBox}>
+                <Image source={require('../../assert/image/whitestar.png')} style={styles.starIconRatingBox} />
+                <Text style={styles.ratingTextRatingBox}>
+                  {recipeRatings[item._id || item.id]?.avg?.toFixed(1) ?? '0.0'}
+                </Text>
+              </View>
+              <Text style={styles.reviewText}>
+                {recipeRatings[item._id || item.id]?.count ?? 0} Reviews
+              </Text>
             </View>
+          </View>
+          <View style={{ flexDirection: 'row', marginTop: 4 }}>
+            <Text style={item.isPrevailing ? styles.premiumTag : styles.freeTag}>
+              {item.isPrevailing ? t('buyrecipe') : t('free')}
+            </Text>
           </View>
         </View>
       </View>
@@ -282,10 +320,62 @@ const DiscoveryScreen = () => {
               <ButtonNavigation
                 title={t('confirm')}
                 style={styles.filterBtnConfirm}
-                onPress={() => {
+                onPress={async () => {
+                  // Nếu có nhập nguyên liệu
+                  if (ingredientsTemp && ingredientsTemp.trim().length > 0) {
+                    if (!isPre(user)) {
+                      // Show dialog mua premium
+                      Alert.alert(
+                        t('premiumrequiredtitle'),
+                        t('premiumrequiredmessage'),
+                        [
+                          { text: t('cancel'), style: 'cancel' },
+                          { text: t('buynow'), onPress: () => navigation.navigate(nav.buy) }
+                        ]
+                      );
+                      return;
+                    }
+                    // Nếu là premium, gọi API tìm kiếm theo nguyên liệu và category
+                    try {
+                      const filteredIngredients = filterIngredientsInput(ingredientsTemp);
+                      if (!filteredIngredients) {
+                        Alert.alert('Vui lòng nhập tên nguyên liệu hợp lệ!');
+                        return;
+                      }
+                      const result = await searchRecipesByIngredientsPremium(filteredIngredients);
+                      // Lọc theo category nếu có chọn
+                      let filtered = result;
+                      if (categorySelectedTemp && categorySelectedTemp.id) {
+                        filtered = result.filter(item =>
+                          item?.categoryIds?.some((cat: any) => cat?._id === categorySelectedTemp.id)
+                        );
+                      }
+                      setRecipeFiltered(filtered);
+                      setIngredients(ingredientsTemp);
+                      setCategorySelected(categorySelectedTemp);
+                      setType(typeTemp);
+                      // Đặt lại pageTitle nếu cần
+                      if (typeTemp === 'Món ăn thịnh hành') {
+                        setPageTitle(t('trending_recipes'));
+                      } else if (typeTemp === 'Hôm nay bạn nấu gì?') {
+                        setPageTitle(t('what_to_cook_today')); // Assuming you have this translation key
+                      } else if (typeTemp === 'Cảm hứng hàng ngày') {
+                        setPageTitle(t('daily_inspiration')); // Assuming you have this translation key
+                      } else {
+                        setPageTitle(typeTemp); // Fallback to raw type if no specific translation
+                      }
+                      bottomSheetRef.current?.dismiss();
+                      return;
+                    } catch (e) {
+                      Alert.alert(t('error'), t('norecipesfound'));
+                      return;
+                    }
+                  }
+                  // Nếu không nhập nguyên liệu, filter như cũ
                   setCategorySelected(categorySelectedTemp);
                   setType(typeTemp);
-                  // Update pageTitle based on the selected type, or a combination if needed
+                  setIngredients(ingredientsTemp);
+                  // Đặt lại pageTitle nếu cần
                   if (typeTemp === 'Món ăn thịnh hành') {
                     setPageTitle(t('trending_recipes'));
                   } else if (typeTemp === 'Hôm nay bạn nấu gì?') {
@@ -295,8 +385,7 @@ const DiscoveryScreen = () => {
                   } else {
                     setPageTitle(typeTemp); // Fallback to raw type if no specific translation
                   }
-                  setIngredients(ingredientsTemp);
-                  bottomSheetRef.current?.dismiss()
+                  bottomSheetRef.current?.dismiss();
                 }}
               />
             </View>
@@ -630,8 +719,9 @@ const styles = StyleSheet.create({
   },
   reviewText: {
     color: '#888',
-    fontSize: 12,
-    marginLeft: 2,
+    fontSize: 13,
+    marginLeft: 8,
+    fontWeight: '400',
   },
   modalOverlay: {
     //  flex: 1,
@@ -828,6 +918,43 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 10,
   },
+  premiumTag: {
+    color: '#FF4500',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#FFECDF',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+  freeTag: {
+    color: '#00C48C',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#E6FFF6',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
 });
+
+const UNITS = [
+  'gr', 'kg', 'ml', 'l', 'muỗng', 'thìa', 'muoi', 'muỗng canh', 'muỗng cà phê', 'g', 'gam', 'lít', 'cc'
+];
+
+function filterIngredientsInput(input: string) {
+  return input
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(word =>
+      // Không chứa số và không phải đơn vị đo lường
+      !/\d/.test(word) && !UNITS.some(unit => word.includes(unit))
+    )
+    .join(', ');
+}
 
 export default DiscoveryScreen;

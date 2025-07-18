@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, Image, FlatList, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { getFavorites } from '../../api/favoriteApi';
+import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../../api/favoriteApi';
 import { UserContext } from '../../context/UserContext';
 import RecipeEmpty from '../../compoments/RecipeEmpty';
 
@@ -9,6 +9,9 @@ import DetailProfileInfo from '../../compoments/DetailProfileInfo';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation } from '@react-navigation/native';
 import { getRecipeStatsByUser } from '../../api/recipeApi';
+import { nav } from '../../navigation/navigationName';
+import { uniqBy } from 'lodash'; // thêm thư viện lodash nếu chưa có
+import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +34,7 @@ const DetailProfile = () => {
 
   const [totalTime, setTotalTime] = React.useState<number>(0);
   const [totalRecipes, setTotalRecipes] = React.useState<number>(0);
+  const [recipeRatings, setRecipeRatings] = React.useState<{ [recipeId: string]: { avg: number, count: number } }>({});
 
   React.useEffect(() => {
     const fetchFavorites = async () => {
@@ -66,6 +70,27 @@ const DetailProfile = () => {
     };
     fetchStats();
   }, [user]);
+
+  React.useEffect(() => {
+    const fetchRatings = async () => {
+      const ratingsObj: { [recipeId: string]: { avg: number, count: number } } = {};
+      await Promise.all(favorites.map(async (f) => {
+        const recipeId = f.recipeId?._id || f.recipeId?.id;
+        if (recipeId) {
+          const [reviews, avg] = await Promise.all([
+            getReviewsByRecipeId(recipeId),
+            getAverageRatingByRecipeId(recipeId)
+          ]);
+          ratingsObj[recipeId] = {
+            avg: avg ?? 0,
+            count: reviews.length
+          };
+        }
+      }));
+      setRecipeRatings(ratingsObj);
+    };
+    if (favorites.length > 0) fetchRatings();
+  }, [favorites]);
 
   const formatTotalTime = (seconds: number) => {
     if (!seconds || seconds <= 0) return '0';
@@ -123,56 +148,98 @@ const DetailProfile = () => {
 
         <View style={styles.purchasedRecipesSection}>
           <Text style={styles.purchasedRecipesTitle}>{t('saved_recipe')}</Text>
-          {favorites.length === 0 ? (
-            <RecipeEmpty
-              isConnected={isConnected}
-              isGuest={!user}
-              // Removed onExplore prop here, as it's no longer needed or expected
-            />
-          ) : (
-            <FlatList
-              data={favorites}
-              keyExtractor={item => item._id}
-              renderItem={({ item }) => (
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#fff',
-                  borderRadius: 16,
-                  paddingVertical: 12,
-                  paddingHorizontal: 12,
-                  marginBottom: 12,
-                  alignSelf: 'center',
-                  width: 360,
-                  minWidth: 360,
-                  maxWidth: 360,
-                  shadowColor: '#000',
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                  borderWidth: 1,
-                  borderColor: '#F2F2F2',
-                  minHeight: 100,
-                  position: 'relative',
-                }}>
-                  <View style={{ width: 90, height: 64, marginRight: 14 }}>
-                    <Image source={{ uri: item?.recipeId?.imageUrls?.[0] }} style={{ width: 90, height: 64, borderRadius: 12, backgroundColor: '#eee' }} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#222', marginBottom: 8 }}>{item?.recipeId?.name}</Text>
-                  </View>
-                </View>
-              )}
-              contentContainerStyle={{ padding: 0 }}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
+          {uniqBy(favorites, f => f.recipeId?._id || f.recipeId?.id).length === 0
+            ? <RecipeEmpty isConnected={isConnected} isGuest={!user} />
+            : <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 0, paddingRight: 8 }}
+            >
+              {uniqBy(favorites, f => f.recipeId?._id || f.recipeId?.id).map((item, idx, arr) => {
+                const recipe = item.recipeId;
+                if (!recipe) return null;
+                // Map lại cho đồng bộ với HomeScreen
+                const isPremiumRecipe = !!recipe.isPrevailing;
+                const favoriteId = item._id;
+                console.log('Recipe in favorite:', recipe);
+                return (
+                  <TouchableOpacity
+                    key={recipe._id || recipe.id}
+                    style={[styles.productCard, { marginLeft: idx === 0 ? 0 : 8 }]}
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate(nav.detail, { recipeId: recipe._id || recipe.id })}
+                  >
+                    <View style={styles.productImgWrap}>
+                      {recipe.imageUrls && recipe.imageUrls.length > 0 ? (
+                        <Image source={{ uri: recipe.imageUrls[0] }} style={styles.productImg} />
+                      ) : (
+                        <View style={[styles.productImg, { backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }]}>
+                          <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
+                        </View>
+                      )}
+                      {/* Mark icon ở góc phải trên */}
+                      <TouchableOpacity
+                        style={styles.productMarkCircle}
+                        onPress={async (e) => {
+                          e.stopPropagation && e.stopPropagation();
+                          if (!favoriteId || !user?.token) return;
+                          // Optimistic update: loại bỏ ngay trên UI
+                          setFavorites(prev => prev.filter(f => {
+                            const rid = f.recipeId?._id || f.recipeId?.id || f.recipeId;
+                            const currentId = recipe._id || recipe.id;
+                            return rid !== currentId;
+                          }));
+                          try {
+                            await removeFavorite(user.token, favoriteId);
+                            // Sau khi API xong, sync lại với server (nếu muốn)
+                            const favs = await getFavorites(user.token);
+                            setFavorites(favs);
+                          } catch (err) {
+                            // Nếu lỗi, có thể revert lại hoặc báo lỗi
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Image
+                          source={require('../../assert/image/yellowmark.png')}
+                          style={styles.productMark}
+                        />
+                      </TouchableOpacity>
+                      <View style={styles.productTimeOverlay}>
+                        <Image source={require('../../assert/image/time.png')} style={styles.timeIcon} />
+                        <Text style={styles.timeText}>{recipe.cookingTime || ''}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.productTitle} numberOfLines={2}>
+                      {recipe.name}
+                    </Text>
+                    <View style={styles.productInfoRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View style={styles.ratingBox}>
+                          <Text style={styles.ratingText}>★ {recipeRatings[recipe._id || recipe.id]?.avg?.toFixed(1) ?? '0.0'}</Text>
+                        </View>
+                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
+                          {recipeRatings[recipe._id || recipe.id]?.count ?? 0} Reviews
+                        </Text>
+                      </View>
+                      <Text style={isPremiumRecipe ? styles.premiumTag : styles.freeTag}>
+                        {isPremiumRecipe ? t('buyrecipe') : t('free')}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          }
         </View>
+        <View style={styles.bottomSpacer} />
       </ScrollView>
       <BottomNavigation current="profile" />
     </View>
   );
 };
+
+const PRODUCT_CARD_MAIN_WIDTH = 260;
 
 const styles = StyleSheet.create({
   container: {
@@ -250,7 +317,126 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 100,
+    paddingBottom: 0, // bỏ paddingBottom ở đây
+  },
+  bottomSpacer: {
+    height: 25,
+    backgroundColor: '#F6F6F6',
+    width: '100%',
+  },
+  productCard: {
+    width: PRODUCT_CARD_MAIN_WIDTH,
+    marginRight: 12,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    alignItems: 'center',
+    padding: 10,
+    marginBottom: 16,
+  },
+  productImgWrap: {
+    width: PRODUCT_CARD_MAIN_WIDTH - 20,
+    height: PRODUCT_CARD_MAIN_WIDTH - 20,
+    borderRadius: 8,
+    marginBottom: 6,
+    backgroundColor: '#eee',
+    overflow: 'hidden',
+  },
+  productImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  productTitle: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: '#222',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  productTimeOverlay: {
+    position: 'absolute',
+    left: 0,
+    bottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A5E6D',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  timeIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
+    tintColor: '#fff',
+  },
+  timeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  productInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 5,
+    marginTop: 4,
+  },
+  ratingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1CB0F6',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 8,
+  },
+  ratingText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  freeTag: {
+    color: '#00C48C',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#E6FFF6',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  premiumTag: {
+    color: '#FF4500',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#FFECDF',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  productMarkCircle: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  productMark: {
+    width: 10,
+    height: 13,
+    resizeMode: 'contain',
   },
 });
 

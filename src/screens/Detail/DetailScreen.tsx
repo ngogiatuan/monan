@@ -9,6 +9,10 @@ import { addFavorite, removeFavorite, getFavorites, findFavoriteId } from '../..
 import NetInfo from '@react-native-community/netinfo';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
+import {
+    getReviewsByRecipeId,
+    getAverageRatingByRecipeId
+} from '../../api/reviewApi';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -28,6 +32,8 @@ const DetailScreen = () => {
     const [isConnected, setIsConnected] = useState(true);
     const [firstRecipeId, setFirstRecipeId] = useState<string | null>(null);
     const [historyStack, setHistoryStack] = useState<string[]>([]);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [avgRating, setAvgRating] = useState<number | null>(null);
     const { t } = useTranslation();
 
     // Ensure that each time you return to this screen, the correct recipe is fetched by ID
@@ -119,6 +125,26 @@ const DetailScreen = () => {
         // eslint-disable-next-line
     }, [recipeId]);
 
+    // Fetch reviews and average rating when recipeId changes
+    useEffect(() => {
+        const fetchReviews = async () => {
+            if (recipeId) {
+                try {
+                    const [reviewList, avg] = await Promise.all([
+                        getReviewsByRecipeId(recipeId),
+                        getAverageRatingByRecipeId(recipeId)
+                    ]);
+                    setReviews(reviewList);
+                    setAvgRating(avg);
+                } catch (e) {
+                    setReviews([]);
+                    setAvgRating(null);
+                }
+            }
+        };
+        fetchReviews();
+    }, [recipeId]);
+
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -134,28 +160,6 @@ const DetailScreen = () => {
             </View>
         );
     }
-
-    // Demo comment
-    const comments = [
-        {
-            id: 1,
-            user: {
-                name: 'Van Dung Tran',
-                avatar: require('../../assert/image/user1.png'),
-            },
-            content: 'Công thức nấu chuẩn chỉnh quá',
-            time: '2 ngày trước',
-        },
-        {
-            id: 2,
-            user: {
-                name: 'Quang Lam',
-                avatar: require('../../assert/image/user2.png'),
-            },
-            content: 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
-            time: '5 ngày trước',
-        },
-    ];
 
     const isFav = favoriteIds.includes(recipe._id);
     const favoriteId = findFavoriteId(favorites, recipe._id);
@@ -205,10 +209,8 @@ const DetailScreen = () => {
                         <TouchableOpacity
                             style={styles.overlayBtn}
                             onPress={async () => {
-                                if (!isConnected) {
-                                    Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
-                                    return;
-                                }
+                                const ok = await checkNetworkAndAlert(t('networkviewtutorial'));
+                                if (!ok) return;
                                 if (!user?.token) return;
                                 try {
                                     if (!isFav) {
@@ -286,30 +288,48 @@ const DetailScreen = () => {
                     <View style={styles.reviewHeaderRow}>
                         <View style={styles.reviewScoreBox}>
                             <Image source={require('../../assert/image/whitestar.png')} style={styles.reviewStarIcon} />
-                            <Text style={styles.reviewScoreText}>5.0</Text>
+                            <Text style={styles.reviewScoreText}>
+                                {avgRating !== null ? avgRating.toFixed(1) : '0.0'}
+                            </Text>
                         </View>
                         <Text style={styles.reviewHighlight}>{t('excellent')}</Text>
                         <Text style={styles.reviewDot}>•</Text>
+                        <Text style={styles.reviewCount}>
+                            {reviews.length} {t('review')}
+                        </Text>
                     </View>
 
                     <ScrollView showsHorizontalScrollIndicator={false}>
-                        {comments.map((item, index) => (
-                            <View key={item?.id} style={styles.commentRow}>
-                                <Image source={item.user.avatar} style={styles.commentAvatar} />
-                                <View style={{ flex: 1 }}>
-                                    <View style={styles.commentNameRow}>
-                                        <Text style={styles.commentName}>{item.user.name}</Text>
-                                        <View style={{ flex: 1 }} />
-                                        <View style={styles.commentStarBox}>
-                                            <Image source={require('../../assert/image/bluestar.png')} style={styles.commentStarIcon} />
-                                            <Text style={styles.commentStarText}>5.0</Text>
+                        {reviews.length === 0 ? (
+                            <Text style={{ color: '#888', fontStyle: 'italic' }}>{t('no_review')}</Text>
+                        ) : (
+                            reviews.slice(0, 2).map((item, index) => (
+                                <View key={item?._id || index} style={styles.commentRow}>
+                                    <Image
+                                        source={require('../../assert/image/user1.png')}
+                                        style={styles.commentAvatar}
+                                    />
+                                    <View style={{ flex: 1 }}>
+                                        <View style={styles.commentNameRow}>
+                                            <Text style={styles.commentName}>
+                                                {typeof item.userId === 'string' ? item.userId : item.userId?.full_name || 'Ẩn danh'}
+                                            </Text>
+                                            <View style={{ flex: 1 }} />
+                                            <View style={styles.commentStarBox}>
+                                                <Image source={require('../../assert/image/bluestar.png')} style={styles.commentStarIcon} />
+                                                <Text style={styles.commentStarText}>
+                                                    {item.rating?.toFixed(1) || '5.0'}
+                                                </Text>
+                                            </View>
                                         </View>
+                                        <Text style={styles.commentDate}>
+                                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                                        </Text>
+                                        <Text style={styles.commentContent}>{item.comment}</Text>
                                     </View>
-                                    <Text style={styles.commentDate}>{item.time}</Text>
-                                    <Text style={styles.commentContent}>{item.content}</Text>
                                 </View>
-                            </View>
-                        ))}
+                            ))
+                        )}
                     </ScrollView>
 
                     <TouchableOpacity onPress={() => navigation.navigate(nav.review, { recipeId })}>
@@ -354,10 +374,8 @@ const DetailScreen = () => {
                                                 onPress={async (e) => {
                                                     e.stopPropagation && e.stopPropagation();
 
-                                                    if (!isConnected) {
-                                                        Alert.alert('Không có kết nối mạng', 'Vui lòng bật wifi hoặc dữ liệu di động để sử dụng chức năng này.');
-                                                        return;
-                                                    }
+                                                    const ok = await checkNetworkAndAlert(t('networkviewtutorial'));
+                                                    if (!ok) return;
                                                     if (!user?.token) return;
                                                     try {
                                                         if (!relatedIsFav) {
@@ -460,7 +478,7 @@ const DetailScreen = () => {
     );
 };
 
-const scrênWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
     headerOverlay: {

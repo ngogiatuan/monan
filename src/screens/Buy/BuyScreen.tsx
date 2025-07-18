@@ -28,6 +28,7 @@ const BuyScreen = () => {
   const { t } = useTranslation();
 
   const [selectedPackage, setSelectedPackage] = useState('monthly');
+  const [paymentInfo, setPaymentInfo] = useState<any>(null);
 
   const monthlyPrice = 50000;
   const yearlyPrice = 300000;
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginRight: 24,
   },
-  contentContainer: { 
+  contentContainer: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 16,

@@ -12,6 +12,7 @@ import {
   FlatList,
   Dimensions,
   Alert,
+  Modal,
 } from 'react-native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isPre } from '../../api/userApi';
+import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 
 const { width } = Dimensions.get('window');
 
@@ -61,6 +63,11 @@ const HomeScreen = () => {
   const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
   const [hasNewNotifications, setHasNewNotifications] = useState(false); // State for notification icon
+  const [recipeRatings, setRecipeRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumMessage, setPremiumMessage] = useState('');
+  const [premiumTitle, setPremiumTitle] = useState('');
+  const [premiumBuyMessage, setPremiumBuyMessage] = useState('');
 
   const isFocused = useIsFocused(); // To detect when HomeScreen comes into focus
   useEffect(() => {
@@ -107,6 +114,25 @@ const HomeScreen = () => {
     fetchData();
     return () => { ignore = true; };
   }, [isConnected, recipesCache, categoriesCache]); // Depend on isConnected and caches
+
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratingsObj: { [recipeId: string]: { avg: number, count: number } } = {};
+      await Promise.all(recipes.map(async (r) => {
+        const id = r._id || r.id;
+        const [reviews, avg] = await Promise.all([
+          getReviewsByRecipeId(id),
+          getAverageRatingByRecipeId(id)
+        ]);
+        ratingsObj[id] = {
+          avg: avg ?? 0,
+          count: reviews.length
+        };
+      }));
+      setRecipeRatings(ratingsObj);
+    };
+    if (recipes.length > 0) fetchRatings();
+  }, [recipes]);
 
   const reloadFavorites = async () => {
     if (!isConnected) return;
@@ -409,11 +435,10 @@ const HomeScreen = () => {
                             return;
                           }
                           if (!isPre(user)) {
-                            navigation.navigate(nav.buy, {
-                              showPremiumDialog: true,
-                              premiumDialogTitle: t('premiumrequiredtitle'),
-                              premiumDialogMessage: t('premiumrequiredmessage'),
-                            });
+                            setPremiumTitle(t('premiumrequiredtitle'));
+                            setPremiumMessage(t('premiumrequiredmessage'));
+                            setPremiumBuyMessage(t('buynow'));
+                            setShowPremiumModal(true);
                             return;
                           }
                         }
@@ -441,42 +466,21 @@ const HomeScreen = () => {
                               return;
                             }
                             if (recipeItem.isPremiumRecipe && !isPre(user)) {
-                              Alert.alert(
-                                t('premiumrequiredtitle'),
-                                t('premiumrequiredmessage'),
-                                [
-                                  {
-                                    text: t('cancel'),
-                                    style: 'cancel',
-                                  },
-                                  {
-                                    text: t('buynow'),
-                                    onPress: () => {
-                                      navigation.navigate(nav.buy, {
-                                        showPremiumDialog: true,
-                                        premiumDialogTitle: t('premiumrequiredtitle'),
-                                        premiumDialogMessage: t('premiumrequiredsavemessage'),
-                                      });
-                                    },
-                                  },
-                                ],
-                                { cancelable: true }
-                              );
+                              setPremiumTitle(t('premiumrequiredtitle'));
+                              setPremiumMessage(t('premiumrequiredsavemessage')); // hoặc message phù hợp
+                              setPremiumBuyMessage(t('buynow'));
+                              setShowPremiumModal(true);
                               return;
                             }
 
                             try {
-                              console.log('Toggling favorite for recipe:', recipeItem.id, favoriteId, user?.token);
                               if (!isFav) {
                                 await addFavorite(user.token, recipeItem.id);
-                              } else {
-                                if (favoriteId) {
-                                  await removeFavorite(user.token, favoriteId);
-                                }
+                              } else if (favoriteId) {
+                                await removeFavorite(user.token, favoriteId);
                               }
                               await reloadFavorites();
                             } catch (e) {
-                              console.error('Error adding/removing favorite:', e);
                               Alert.alert('Lỗi', t('cannotsaverecipe'));
                             }
                           }}
@@ -501,11 +505,16 @@ const HomeScreen = () => {
                       </Text>
                     </TouchableOpacity>
                     <View style={styles.productInfoRow}>
-                      <View style={styles.ratingBox}>
-                        <Text style={styles.ratingText}>★ {recipeItem.rating}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View style={styles.ratingBox}>
+                          <Text style={styles.ratingText}>★ {recipeRatings[recipeItem.id]?.avg?.toFixed(1) ?? '0.0'}</Text>
+                        </View>
+                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
+                          {recipeRatings[recipeItem.id]?.count ?? 0} Reviews
+                        </Text>
                       </View>
-                      <Text style={recipeItem.free ? styles.freeTag : styles.premiumTag}>
-                        {recipeItem.free ? t('free') : t('buyrecipe')}
+                      <Text style={recipeItem.isPremiumRecipe ? styles.premiumTag : styles.freeTag}>
+                        {recipeItem.isPremiumRecipe ? t('buyrecipe') : t('free')}
                       </Text>
                     </View>
                   </View>
@@ -664,6 +673,40 @@ const HomeScreen = () => {
         </View>
       )}
       <BottomNavigation current="home" />
+      <Modal
+        visible={showPremiumModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.errorDialogBox}>
+            <Text style={styles.errorDialogTitle}>{premiumTitle}</Text>
+            <Text style={styles.errorDialogMessage}>{premiumMessage}</Text>
+            <View style={styles.errorButtonContainer}>
+              <TouchableOpacity
+                style={[styles.errorOkButton, { backgroundColor: '#E0E0E0', marginRight: 8, flex: 1 }]}
+                onPress={() => setShowPremiumModal(false)}
+              >
+                <Text style={[styles.errorOkButtonText, { color: '#222' }]}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.errorOkButton, { flex: 1 }]}
+                onPress={() => {
+                  setShowPremiumModal(false);
+                  navigation.navigate(nav.buy, {
+                    showPremiumDialog: true,
+                    premiumDialogTitle: premiumTitle,
+                    premiumDialogMessage: premiumMessage,
+                  });
+                }}
+              >
+                <Text style={styles.errorOkButtonText}>{premiumBuyMessage}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -886,7 +929,7 @@ const styles = StyleSheet.create({
   productInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between', // Đảm bảo tag nằm sát phải
     width: '100%',
     paddingHorizontal: 5,
     marginTop: 4,
@@ -987,6 +1030,52 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 0,
     marginTop: 2,
+  },
+  dialogOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorDialogBox: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    width: '85%',
+    elevation: 4,
+  },
+  errorDialogTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  errorDialogMessage: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  errorButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12, // nếu dùng React Native >= 0.71, hoặc dùng marginRight như trên
+  },
+  errorOkButton: {
+    backgroundColor: '#ff6f2c',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorOkButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 

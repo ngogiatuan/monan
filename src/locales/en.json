@@ -193,5 +193,7 @@
   "premiumfeatures":"Premium feature",
   "searchbyingredients":"Search by ingredients",
   "member_premium":"Member Premium",
-  "buynow": "Buy Now"
+  "buynow": "Buy Now",
+  "member_normal":"Normal Member",
+  "premiumrequiredsavemessage":"You need to buy Premium to save this recipe."
 }

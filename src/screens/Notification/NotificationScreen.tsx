@@ -59,23 +59,17 @@ const NotificationScreen = () => {
       if (user?.premium) {
         const hasPremiumNotif = parsedNotifications.some(n => n.type === 'premium_upgrade');
         if (!hasPremiumNotif) {
-          // Lấy ngày bắt đầu premium từ ngày hết hạn
-          const premiumStartDate = getPremiumStartDate(user.premium);
+          // SỬA: Dùng ngày hiện tại làm timestamp
           parsedNotifications.push({
-            id: 'premium_upgrade_' + premiumStartDate.getTime(),
+            id: 'premium_upgrade_' + Date.now(),
             type: 'premium_upgrade',
-            timestamp: premiumStartDate.getTime(),
+            timestamp: Date.now(),
             message: '',
           });
-          // Lưu lại vào AsyncStorage để lần sau vẫn còn
           await AsyncStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(parsedNotifications));
         }
       }
-      setNotifications(parsedNotifications.filter(notif =>
-        notif.type === 'app_open' ||
-        notif.type === 'user_login' ||
-        notif.type === 'premium_upgrade'
-      ));
+      setNotifications(parsedNotifications);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
@@ -168,13 +162,26 @@ const NotificationScreen = () => {
       <View>
         <View style={styles.notificationItem}>
           {item.type === 'user_login' && (
-            <View style={styles.loginIconContainer}>
-              <Image source={require('../../assert/image/act.png')} style={styles.loginIcon} />
+            <View style={[styles.loginIconContainer, { backgroundColor: '#E0F7FA' }]}>
+              <Image source={require('../../assert/image/act.png')} style={[styles.loginIcon, { tintColor: '#00B8D4' }]} />
             </View>
           )}
           {item.type === 'premium_upgrade' && (
-            <View style={[styles.loginIconContainer, { backgroundColor: '#15B097' }]}>
-              <Image source={require('../../assert/image/updatepremium.png')} style={styles.loginIcon} />
+            <View style={[styles.loginIconContainer, { backgroundColor: 'rgba(21, 176, 151, 0.1)' }]}>
+              <Image
+                source={require('../../assert/image/updatepremium.png')}
+                style={styles.loginIcon}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+          {item.type === 'app_open' && (
+            <View style={[styles.loginIconContainer, { backgroundColor: 'rgba(21, 176, 151, 0.1)' }]}>
+              <Image
+                source={require('../../assert/image/act.png')}
+                style={styles.loginIcon}
+                resizeMode="contain"
+              />
             </View>
           )}
           <View style={styles.notificationContent}>
@@ -308,7 +315,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#E0F7FA', // màu xanh nhạt hoặc #F0F0F0
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -316,7 +323,7 @@ const styles = StyleSheet.create({
   loginIcon: {
     width: 20,
     height: 20,
-    resizeMode: 'contain',
+    resizeMode: 'contain',// hoặc màu phù hợp
   },
   notificationContent: {
     flex: 1,

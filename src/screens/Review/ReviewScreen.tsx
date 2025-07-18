@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,32 +8,40 @@ import {
   FlatList,
   SafeAreaView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { useTranslation } from 'react-i18next';
-
-const REVIEWS = [
-  {
-    id: '1',
-    name: 'Van Dung Tran',
-    avatar: require('../../assert/image/user1.png'),
-    date: '15 May 2024',
-    rating: 5,
-    comment: 'Công thức nấu chuẩn chỉnh luôn.',
-  },
-  {
-    id: '2',
-    name: 'Quang Lam',
-    avatar: require('../../assert/image/user2.png'),
-    date: '25 July 2024',
-    rating: 5,
-    comment: 'Mới nghe thôi đã thèm lắm rồi. Công thức này đúng chuẩn người miền Tây nấu luôn ấy. Rất tuyệt vời!',
-  },
-];
+import {
+  getReviewsByRecipeId,
+  getAverageRatingByRecipeId
+} from '../../api/reviewApi';
 
 const ReviewScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { t } = useTranslation();
+  const recipeId = route.params?.recipeId;
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (recipeId) {
+        try {
+          const [reviewList, avg] = await Promise.all([
+            getReviewsByRecipeId(recipeId),
+            getAverageRatingByRecipeId(recipeId)
+          ]);
+          setReviews(reviewList);
+          setAvgRating(avg);
+        } catch (e) {
+          setReviews([]);
+          setAvgRating(null);
+        }
+      }
+    };
+    fetchReviews();
+  }, [recipeId]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -51,25 +59,36 @@ const ReviewScreen = () => {
       {/* Tổng điểm */}
       <View style={styles.summaryRow}>
         <View style={styles.summaryScoreBox}>
-          <Text style={styles.summaryScore}>4.8</Text>
+          <Text style={styles.summaryScore}>
+            {avgRating !== null ? avgRating.toFixed(1) : '0.0'}
+          </Text>
           <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
         </View>
         <Text style={styles.summaryLabel}>{t('excellent')}</Text>
       </View>
       {/* Danh sách review */}
       <FlatList
-        data={REVIEWS}
-        keyExtractor={item => item.id}
+        data={reviews}
+        keyExtractor={item => item._id || item.id || Math.random().toString()}
         contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={styles.reviewItem}>
-            <Image source={item.avatar} style={styles.reviewAvatar} />
+            <Image
+              source={require('../../assert/image/user1.png')}
+              style={styles.reviewAvatar}
+            />
             <View style={styles.reviewContent}>
               <View style={styles.reviewHeader}>
-                <Text style={styles.reviewName}>{item.name}</Text>
-                <Text style={styles.reviewDate}>{item.date}</Text>
+                <Text style={styles.reviewName}>
+                  {item.userId?.full_name || 'Ẩn danh'}
+                </Text>
+                <Text style={styles.reviewDate}>
+                  {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                </Text>
                 <View style={styles.reviewScoreBox}>
-                  <Text style={styles.reviewScore}>{item.rating.toFixed(1)}</Text>
+                  <Text style={styles.reviewScore}>
+                    {item.rating?.toFixed(1) || '5.0'}
+                  </Text>
                   <Image source={require('../../assert/image/bluestar.png')} style={styles.reviewStarIcon} />
                 </View>
               </View>
@@ -77,6 +96,11 @@ const ReviewScreen = () => {
             </View>
           </View>
         )}
+        ListEmptyComponent={
+          <Text style={{ color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: 24 }}>
+            {t('no_review')}
+          </Text>
+        }
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

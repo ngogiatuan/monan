@@ -58,7 +58,7 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
             </TouchableOpacity>
           </View>
           <Text style={styles.memberTextAfterSeparator}>
-            {isPremium ? labels.member_premium : labels.member_normal}
+            {isPremium ? t('member_premium') : t('member_normal')}
           </Text>
           <Text style={styles.memberText}>
             {isPremium ? premiumDate : user.joined}
