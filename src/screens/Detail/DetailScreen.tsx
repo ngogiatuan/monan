@@ -34,6 +34,7 @@ const DetailScreen = () => {
     const [historyStack, setHistoryStack] = useState<string[]>([]);
     const [reviews, setReviews] = useState<any[]>([]);
     const [avgRating, setAvgRating] = useState<number | null>(null);
+    const [relatedRatings, setRelatedRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
     const { t } = useTranslation();
 
     // Ensure that each time you return to this screen, the correct recipe is fetched by ID
@@ -144,6 +145,25 @@ const DetailScreen = () => {
         };
         fetchReviews();
     }, [recipeId]);
+
+    useEffect(() => {
+        const fetchRelatedRatings = async () => {
+            const ratingsObj: { [recipeId: string]: { avg: number, count: number } } = {};
+            await Promise.all(related.map(async (r) => {
+                const id = r._id || r.id;
+                const [reviews, avg] = await Promise.all([
+                    getReviewsByRecipeId(id),
+                    getAverageRatingByRecipeId(id)
+                ]);
+                ratingsObj[id] = {
+                    avg: avg ?? 0,
+                    count: reviews.length
+                };
+            }));
+            setRelatedRatings(ratingsObj);
+        };
+        if (related.length > 0) fetchRelatedRatings();
+    }, [related]);
 
     if (loading) {
         return (
@@ -292,7 +312,9 @@ const DetailScreen = () => {
                                 {avgRating !== null ? avgRating.toFixed(1) : '0.0'}
                             </Text>
                         </View>
-                        <Text style={styles.reviewHighlight}>{t('excellent')}</Text>
+                        <Text style={{ color: '#1CB0F6', fontWeight: 'bold' }}>
+                            {t('excellent')}
+                        </Text>
                         <Text style={styles.reviewDot}>•</Text>
                         <Text style={styles.reviewCount}>
                             {reviews.length} {t('review')}
@@ -312,7 +334,10 @@ const DetailScreen = () => {
                                     <View style={{ flex: 1 }}>
                                         <View style={styles.commentNameRow}>
                                             <Text style={styles.commentName}>
-                                                {typeof item.userId === 'string' ? item.userId : item.userId?.full_name || 'Ẩn danh'}
+                                                {item.userId?.fullName?.trim()
+                                                    ? item.userId.fullName
+                                                    : t('anonymous') // hoặc 'Ẩn danh'
+                                                }
                                             </Text>
                                             <View style={{ flex: 1 }} />
                                             <View style={styles.commentStarBox}>
@@ -406,13 +431,19 @@ const DetailScreen = () => {
                                         </View>
                                         <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
                                         <View style={styles.relatedInfoRow}>
-                                            <View style={styles.relatedRatingBox}>
-                                                <Image source={require('../../assert/image/bluestar.png')} style={styles.relatedStarIcon} />
-                                                <Text style={styles.relatedRatingText}>4.8</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                                <View style={styles.ratingBox}>
+                                                    <Text style={styles.ratingText}>
+                                                        ★ {relatedRatings[item._id || item.id]?.avg?.toFixed(1) ?? '0.0'}
+                                                    </Text>
+                                                </View>
+                                                <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
+                                                    {relatedRatings[item._id || item.id]?.count ?? 0} Reviews
+                                                </Text>
                                             </View>
-                                            <View style={styles.relatedFreeTag}>
-                                                <Text style={styles.relatedFreeTagText}>Miễn phí</Text>
-                                            </View>
+                                            <Text style={item.isPrevailing ? styles.premiumTag : styles.freeTag}>
+                                                {item.isPrevailing ? t('buyrecipe') : t('free')}
+                                            </Text>
                                         </View>
                                     </TouchableOpacity>
                                 </View>
@@ -909,6 +940,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
+    relatedPremiumTagText: {
+        color: '#FF8000',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
     infoRowWrap: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -951,6 +987,46 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 4,
         marginBottom: 4,
+    },
+    commentExcellent: {
+        color: '#1CB0F6',
+        fontWeight: 'bold',
+    },
+    ratingBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1DA1F2',
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginRight: 8,
+    },
+    ratingText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    premiumTag: {
+        color: '#FF4500',
+        fontWeight: 'bold',
+        fontSize: 12,
+        backgroundColor: '#FFECDF',
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        overflow: 'hidden',
+        marginRight: 8,
+    },
+    freeTag: {
+        color: '#00C48C',
+        fontWeight: 'bold',
+        fontSize: 12,
+        backgroundColor: '#E6FFF6',
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        overflow: 'hidden',
+        marginRight: 8,
     },
 });
 
