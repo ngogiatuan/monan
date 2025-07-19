@@ -20,6 +20,7 @@ import { getRecipes } from '../../api/recipeApi';
 import { useTranslation } from 'react-i18next';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import NetInfo from '@react-native-community/netinfo';
+import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +31,7 @@ type SearchScreenParams = {
 type SearchScreenRouteProp = RouteProp<{ SearchScreen: SearchScreenParams }, 'SearchScreen'>;
 
 const SearchScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>(); // ✅ Change from useNavigation() to useNavigation<any>()
   const route = useRoute<SearchScreenRouteProp>();
   const { user } = useContext(UserContext);
   const { t } = useTranslation();
@@ -41,6 +42,9 @@ const SearchScreen = () => {
   const [filteredRecipes, setFilteredRecipes] = useState<any[]>([]); // Recipes after filtering
   const [hasLoadedRecipes, setHasLoadedRecipes] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
+
+  // ✅ Thêm state để track khi nào đã load xong recipes
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Network listener
   useEffect(() => {
@@ -55,29 +59,31 @@ const SearchScreen = () => {
     let ignore = false;
     const fetchAllRecipes = async () => {
       if (!isConnected) {
-        setHasLoadedRecipes(true); // Treat as loaded even if no network, to show "No network" message
+        setHasLoadedRecipes(true);
+        setHasInitialized(true); // ✅ Đánh dấu đã khởi tạo xong
         return;
       }
       try {
-        // Fetch more recipes for search, e.g., 50 items
-        const data = await getRecipes(1, 50); // Increased limit for better search coverage
+        const data = await getRecipes(1, 50);
         if (!ignore && data) {
           setRecipes(data);
-          // Apply initial filter if query exists, otherwise, filteredRecipes will be empty initially for search results
+          // ✅ Chỉ apply filter nếu có initialQuery, không thì để trống
           if (initialQuery) {
             const lowercasedQuery = initialQuery.toLowerCase();
             setFilteredRecipes(data.filter((recipe: any) =>
               recipe.name.toLowerCase().includes(lowercasedQuery)
             ));
           } else {
-            setFilteredRecipes([]); // IMPORTANT: Clear filtered recipes if initial query is empty
+            setFilteredRecipes([]);
           }
           setHasLoadedRecipes(true);
+          setHasInitialized(true); // ✅ Đánh dấu đã khởi tạo xong
         }
       } catch (error) {
         if (!ignore) {
           console.error('Failed to fetch recipes:', error);
-          setHasLoadedRecipes(true); // Still set to true to show appropriate UI
+          setHasLoadedRecipes(true);
+          setHasInitialized(true); // ✅ Đánh dấu đã khởi tạo xong
           Alert.alert(t('error'), t('failed_to_load_recipes'));
         }
       }
@@ -87,10 +93,12 @@ const SearchScreen = () => {
     return () => { ignore = true; };
   }, [isConnected, initialQuery]);
 
-  // Filter recipes whenever searchQuery or recipes list changes
+  // ✅ Cải thiện logic filter để không bị biến mất kết quả
   useEffect(() => {
+    if (!hasInitialized) return; // ✅ Chỉ filter khi đã khởi tạo xong
+
     if (searchQuery.trim() === '') {
-      setFilteredRecipes([]); // If query is empty, clear filtered recipes
+      setFilteredRecipes([]);
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
       const filtered = recipes.filter((recipe: any) =>
@@ -98,7 +106,36 @@ const SearchScreen = () => {
       );
       setFilteredRecipes(filtered);
     }
-  }, [searchQuery, recipes]);
+  }, [searchQuery, recipes, hasInitialized]); // ✅ Thêm hasInitialized vào dependencies
+
+  // ✅ Thêm function để lấy thông tin rating từ API
+  const [recipeRatings, setRecipeRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
+
+  // ✅ Thêm useEffect để fetch ratings cho recipes
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratingsObj: { [recipeId: string]: { avg: number, count: number } } = {};
+      await Promise.all(filteredRecipes.map(async (recipe) => {
+        try {
+          const [reviews, avg] = await Promise.all([
+            getReviewsByRecipeId(recipe._id),
+            getAverageRatingByRecipeId(recipe._id)
+          ]);
+          ratingsObj[recipe._id] = {
+            avg: avg ?? 0,
+            count: reviews.length
+          };
+        } catch (error) {
+          ratingsObj[recipe._id] = { avg: 0, count: 0 };
+        }
+      }));
+      setRecipeRatings(ratingsObj);
+    };
+
+    if (filteredRecipes.length > 0) {
+      fetchRatings();
+    }
+  }, [filteredRecipes]);
 
   // Hàm trả về ảnh món ăn từ API (ưu tiên imageUrls[0])
   const getProductImage = (item: any) => {
@@ -108,11 +145,12 @@ const SearchScreen = () => {
     return undefined; // Or a default placeholder image
   };
 
-  // const handleRecipePress = async (recipeId: string) => {
-  //   const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
-  //   if (!ok) return;
-  //   navigation.navigate(nav.detail, { recipeId: recipeId });
-  // };
+  // ✅ Thêm function để handle khi bấm vào recipe
+  const handleRecipePress = async (recipeId: string) => {
+    const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
+    if (!ok) return;
+    navigation.navigate(nav.detail, { recipeId: recipeId });
+  };
 
   // Xác định nếu người dùng là khách (guest) - Cần thiết cho logic hiển thị "Gần đây"
   const isGuest = !user || !user.uid; // Giả định user là null hoặc undefined khi chưa đăng nhập, hoặc không có uid
@@ -148,21 +186,21 @@ const SearchScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {!isConnected && !hasLoadedRecipes ? (
-        <View style={styles.centeredMessage}>
-          <Text style={styles.errorMessage}>{t('nonetworkhome')}</Text>
-        </View>
-      ) : !hasLoadedRecipes ? (
+      {/* ✅ Chỉ hiện loading khi chưa khởi tạo xong */}
+      {!hasInitialized ? (
         <View style={styles.centeredMessage}>
           <Text>{t('loadingData')}</Text>
         </View>
+      ) : !isConnected ? (
+        <View style={styles.centeredMessage}>
+          <Text style={styles.errorMessage}>{t('nonetworkhome')}</Text>
+        </View>
       ) : (
         <ScrollView style={styles.contentContainer}>
-          {searchQuery.trim() !== '' && ( // ONLY render search results if search query is NOT empty
+          {searchQuery.trim() !== '' && (
             <View style={styles.searchResultsContainer}>
               {filteredRecipes.length > 0 ? (
                 <>
-                  {/* Tiêu đề "Gần đây" vẫn hiển thị như Figma khi có kết quả tìm kiếm */}
                   <Text style={styles.sectionTitle}>{t('Gần đây')}</Text>
                   <FlatList
                     data={filteredRecipes}
@@ -171,7 +209,7 @@ const SearchScreen = () => {
                     renderItem={({ item }) => (
                       <TouchableOpacity
                         style={styles.productListItem}
-                        // onPress={() => handleRecipePress(item._id)} // Vẫn comment
+                        onPress={() => handleRecipePress(item._id)}
                         activeOpacity={0.8}
                       >
                         <View style={styles.productImgWrapList}>
@@ -182,17 +220,23 @@ const SearchScreen = () => {
                               <Text style={{ color: '#bbb', fontSize: 12 }}>{t('no_image')}</Text>
                             </View>
                           )}
+                          {/* ❌ Bỏ tag ở góc ảnh */}
                         </View>
                         <View style={styles.productDetailsList}>
                           <Text style={styles.productTitleList} numberOfLines={2}>{item.name}</Text>
                           <View style={styles.productInfoRowList}>
                             <View style={styles.ratingBoxList}>
-                              <Text style={styles.ratingTextList}>★ {item.rating || 0}</Text>
+                              <Text style={styles.ratingTextList}>
+                                ★ {recipeRatings[item._id]?.avg?.toFixed(1) ?? '0.0'}
+                              </Text>
                             </View>
-                            {/* Hiển thị số lượng Reviews CHỈ KHI reviewsCount > 0 */}
-                            {item.reviewsCount > 0 && (
-                              <Text style={styles.reviewsTextList}>{item.reviewsCount} Reviews</Text>
-                            )}
+                            <Text style={styles.reviewsTextList}>
+                              {recipeRatings[item._id]?.count ?? 0} Reviews
+                            </Text>
+                            {/* ✅ Thêm tag free/premium cùng hàng với rating và review */}
+                            <Text style={item.isPrevailing ? styles.premiumTag : styles.freeTag}>
+                              {item.isPrevailing ? t('buyrecipe') : t('free')}
+                            </Text>
                           </View>
                         </View>
                       </TouchableOpacity>
@@ -208,7 +252,7 @@ const SearchScreen = () => {
               )}
             </View>
           )}
-          {/* Nếu searchQuery.trim() === '', thì contentContainer sẽ rỗng, tạo khoảng trắng */}
+          {/* ✅ Khi searchQuery rỗng thì hiện màn hình trống như ảnh */}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -326,18 +370,19 @@ const styles = StyleSheet.create({
   productInfoRowList: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // ✅ Thêm để tag nằm sát phải
   },
   ratingBoxList: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F8F3', // Nền màu xanh nhạt cho rating box
-    borderRadius: 5,
-    paddingHorizontal: 6,
+    backgroundColor: '#1CB0F6', // ✅ Thay đổi từ #E6F8F3 thành #1CB0F6 giống HomeScreen
+    borderRadius: 6, // ✅ Thay đổi từ 5 thành 6
+    paddingHorizontal: 8, // ✅ Thay đổi từ 6 thành 8
     paddingVertical: 2,
     marginRight: 8,
   },
   ratingTextList: {
-    color: '#00C48C', // Chữ màu xanh cho rating
+    color: '#fff', // ✅ Thay đổi từ #00C48C thành #fff giống HomeScreen
     fontWeight: 'bold',
     fontSize: 13,
   },
@@ -361,6 +406,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     textAlign: 'center',
+  },
+  // ❌ Bỏ tagContainer vì không cần nữa
+  freeTag: {
+    color: '#00C48C',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#E6FFF6',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+    marginLeft: 'auto', // ✅ Đẩy tag về phía phải
+  },
+  premiumTag: {
+    color: '#FF4500',
+    fontWeight: 'bold',
+    fontSize: 12,
+    backgroundColor: '#FFECDF',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+    marginLeft: 'auto', // ✅ Đẩy tag về phía phải
   },
 });
 

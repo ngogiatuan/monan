@@ -28,6 +28,9 @@ const ReviewScreen = () => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [avgRating, setAvgRating] = useState<number | null>(null);
 
+  // ✅ Thêm state để lưu thông tin user của từng review
+  const [reviewUsers, setReviewUsers] = useState<{ [userId: string]: any }>({});
+
   useEffect(() => {
     const fetchReviews = async () => {
       if (recipeId) {
@@ -38,6 +41,24 @@ const ReviewScreen = () => {
           ]);
           setReviews(reviewList);
           setAvgRating(avg);
+
+          // ✅ Lấy thông tin user cho từng review
+          const usersInfo: { [userId: string]: any } = {};
+          for (const review of reviewList) {
+            if (review.userId && typeof review.userId === 'string') {
+              try {
+                // Gọi API để lấy thông tin user
+                const response = await fetch(`http://103.72.99.132:3000/api/users/${review.userId}`);
+                if (response.ok) {
+                  const userData = await response.json();
+                  usersInfo[review.userId] = userData;
+                }
+              } catch (error) {
+                console.error('Error fetching user info:', error);
+              }
+            }
+          }
+          setReviewUsers(usersInfo);
         } catch (e) {
           setReviews([]);
           setAvgRating(null);
@@ -58,6 +79,23 @@ const ReviewScreen = () => {
             ]);
             setReviews(reviewList);
             setAvgRating(avg);
+
+            // ✅ Lấy thông tin user cho từng review
+            const usersInfo: { [userId: string]: any } = {};
+            for (const review of reviewList) {
+              if (review.userId && typeof review.userId === 'string') {
+                try {
+                  const response = await fetch(`http://103.72.99.132:3000/api/users/${review.userId}`);
+                  if (response.ok) {
+                    const userData = await response.json();
+                    usersInfo[review.userId] = userData;
+                  }
+                } catch (error) {
+                  console.error('Error fetching user info:', error);
+                }
+              }
+            }
+            setReviewUsers(usersInfo);
           } catch (e) {
             setReviews([]);
             setAvgRating(null);
@@ -67,6 +105,33 @@ const ReviewScreen = () => {
       fetchReviews();
     }, [recipeId])
   );
+
+  // ✅ Thêm function để lấy avatar user
+  const getUserAvatar = (review: any) => {
+    if (review.userId?.avatar) {
+      return { uri: review.userId.avatar };
+    }
+    return require('../../assert/image/user1.png');
+  };
+
+  // ✅ Cập nhật function để lấy tên user
+  const getUserName = (review: any) => {
+    if (review.userId?.fullName?.trim()) {
+      return review.userId.fullName;
+    }
+    return 'Ẩn danh';
+  };
+
+  // ✅ Thêm function để lấy màu và label dựa trên rating
+  const getRatingColorAndLabel = (rating: number) => {
+    if (rating >= 4.5) {
+      return { color: '#1CB0F6', label: t('excellent') };
+    } else if (rating >= 3.0) {
+      return { color: '#EDA145', label: t('good') };
+    } else {
+      return { color: '#E4626F', label: t('bad') };
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -83,44 +148,49 @@ const ReviewScreen = () => {
       </View>
       {/* Tổng điểm */}
       <View style={styles.summaryRow}>
-        <View style={styles.summaryScoreBox}>
+        <View style={[styles.summaryScoreBox, { backgroundColor: getRatingColorAndLabel(avgRating || 0).color }]}>
+          <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
           <Text style={styles.summaryScore}>
             {avgRating !== null ? avgRating.toFixed(1) : '0.0'}
           </Text>
-          <Image source={require('../../assert/image/bluestar.png')} style={styles.summaryStar} />
         </View>
-        <Text style={styles.summaryLabel}>{t('excellent')}</Text>
+        <Text style={[styles.summaryLabel, { color: getRatingColorAndLabel(avgRating || 0).color }]}>
+          {getRatingColorAndLabel(avgRating || 0).label}
+        </Text>
       </View>
       {/* Danh sách review */}
       <FlatList
         data={reviews}
         keyExtractor={item => item._id || item.id || Math.random().toString()}
         contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 16 }}
-        renderItem={({ item }) => (
-          <View style={styles.reviewItem}>
-            <Image
-              source={require('../../assert/image/user1.png')}
-              style={styles.reviewAvatar}
-            />
-            <View style={styles.reviewContent}>
-              <View style={styles.reviewHeader}>
-                <Text style={styles.reviewName}>
-                  {item.userId?.full_name || 'Ẩn danh'}
-                </Text>
-                <Text style={styles.reviewDate}>
-                  {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
-                </Text>
-                <View style={styles.reviewScoreBox}>
-                  <Text style={styles.reviewScore}>
-                    {item.rating?.toFixed(1) || '5.0'}
+        renderItem={({ item }) => {
+          const ratingColor = getRatingColorAndLabel(item.rating || 0).color;
+          return (
+            <View style={styles.reviewItem}>
+              <Image
+                source={getUserAvatar(item)}
+                style={styles.reviewAvatar}
+              />
+              <View style={styles.reviewContent}>
+                <View style={styles.reviewHeader}>
+                  <Text style={styles.reviewName}>
+                    {getUserName(item)}
                   </Text>
-                  <Image source={require('../../assert/image/bluestar.png')} style={styles.reviewStarIcon} />
+                  <Text style={styles.reviewDate}>
+                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
+                  </Text>
+                  <View style={[styles.reviewScoreBox, { borderColor: ratingColor }]}>
+                    <Image source={require('../../assert/image/bluestar.png')} style={[styles.reviewStarIcon, { tintColor: ratingColor }]} />
+                    <Text style={[styles.reviewScore, { color: ratingColor }]}>
+                      {item.rating?.toFixed(1) || '5.0'}
+                    </Text>
+                  </View>
                 </View>
+                <Text style={styles.reviewComment}>{item.comment}</Text>
               </View>
-              <Text style={styles.reviewComment}>{item.comment}</Text>
             </View>
-          </View>
-        )}
+          );
+        }}
         ListEmptyComponent={
           <Text style={{ color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: 24 }}>
             {t('no_review')}
@@ -169,7 +239,6 @@ const styles = StyleSheet.create({
   summaryScoreBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4A90E2',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -179,7 +248,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
-    marginRight: 4,
+    marginLeft: 4, // ✅ Thay đổi từ marginRight thành marginLeft
   },
   summaryStar: {
     width: 16,
@@ -187,7 +256,6 @@ const styles = StyleSheet.create({
     tintColor: '#fff',
   },
   summaryLabel: {
-    color: '#4A90E2',
     fontWeight: 'bold',
     fontSize: 14,
     marginRight: 8,
@@ -230,7 +298,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#4A90E2',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -238,15 +305,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   reviewScore: {
-    color: '#4A90E2',
     fontWeight: 'bold',
     fontSize: 13,
-    marginRight: 4,
+    marginLeft: 4, // ✅ Thay đổi từ marginRight thành marginLeft
   },
   reviewStarIcon: {
     width: 13,
     height: 13,
-    tintColor: '#4A90E2',
   },
   reviewComment: {
     color: '#222',

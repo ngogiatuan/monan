@@ -195,7 +195,7 @@ const DetailScreen = () => {
     const favoriteId = findFavoriteId(favorites, recipe._id);
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={{ flex: 1, backgroundColor: '#F6F6F6' }}> {/* ✅ Thay đổi background thành #F6F6F6 */}
             {/* Food image with back button, bookmark, share overlay */}
             <View style={{ position: 'relative' }}>
                 <TouchableOpacity activeOpacity={0.9} onPress={() => setShowImageModal(true)}>
@@ -269,7 +269,7 @@ const DetailScreen = () => {
                     </View>
                 </View>
             </View>
-            <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScrollView style={{ flex: 1, backgroundColor: '#F6F6F6' }}> {/* ✅ Thay đổi background */}
                 {/* Recipe info */}
                 <View style={styles.infoSection}>
                     <Text style={styles.title}>{recipe.name}</Text>
@@ -304,12 +304,14 @@ const DetailScreen = () => {
                             </View>
                         </View>
                     </View>
-                    {/* Ingredients */}
-                    <View style={styles.ingredientSection}>
-                        <Text style={styles.ingredientTitle}>{t('ingredients')}</Text>
-                        <View style={styles.ingredientList}>
-                            <Text style={styles.ingredientItem}>{recipe?.instructions}</Text>
-                        </View>
+                </View>
+                {/* Khoảng cách xám lớn trước nguyên liệu */}
+                <View style={{ height: 10, backgroundColor: '#F6F6F6' }} />
+                {/* Ingredients */}
+                <View style={styles.ingredientSection}>
+                    <Text style={styles.ingredientTitle}>{t('ingredients')}</Text>
+                    <View style={styles.ingredientList}>
+                        <Text style={styles.ingredientItem}>{recipe?.instructions}</Text>
                     </View>
                 </View>
                 {/* Reviews */}
@@ -593,6 +595,7 @@ const styles = StyleSheet.create({
     infoSection: {
         padding: 18,
         backgroundColor: '#fff',
+        marginBottom: 10, // ✅ Khoảng cách xám lớn giữa info và review
     },
     title: {
         fontWeight: 'bold',
@@ -645,6 +648,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginTop: 6,
         marginBottom: 8,
+        paddingTop: 8, // ✅ Giữ nguyên - khoảng cách nhỏ
+        borderTopWidth: 1, // ✅ Giữ nguyên - border mỏng
+        borderTopColor: '#F0F0F0', // ✅ Giữ nguyên - màu xám nhạt
     },
     row: {
         flexDirection: 'row',
@@ -670,9 +676,12 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     reviewSection: {
-        marginTop: 12,
+        marginTop: 0,
         paddingHorizontal: 18,
         paddingBottom: 8,
+        backgroundColor: '#fff',
+        paddingTop: 18,
+        marginBottom: 10, // ✅ Khoảng cách xám lớn giữa review và related
     },
     reviewHeaderRow: {
         flexDirection: 'row',
@@ -820,30 +829,35 @@ const styles = StyleSheet.create({
         fontSize: 17,
     },
     ingredientSection: {
-        marginTop: 10,
+        marginTop: 0, // ✅ Đổi về 0 vì đã có View khoảng cách riêng
         marginBottom: 12,
-        // remove gray background, just padding at the bottom
         paddingBottom: 8,
+        paddingTop: 18, // ✅ Giữ padding top
+        backgroundColor: '#fff', // ✅ Thêm background trắng
+        paddingHorizontal: 18, // ✅ Thêm padding horizontal
     },
     ingredientTitle: {
         fontWeight: 'bold',
-        color: '#222', // black color
+        color: '#222',
         fontSize: 15,
         marginBottom: 8,
     },
     ingredientList: {
-        // paddingLeft: 8,
+        paddingLeft: 0, // ✅ Đổi từ paddingLeft: 8 thành 0
     },
     ingredientItem: {
         color: '#222',
         fontSize: 14,
         marginBottom: 2,
         lineHeight: 20,
+        paddingLeft: 0, // ✅ Thêm paddingLeft: 0
     },
     relatedSection: {
-        marginTop: 16,
+        marginTop: 0,
         paddingHorizontal: 12,
-        paddingBottom: 24, // increase paddingBottom so it's not covered when fully scrolled
+        paddingBottom: 24,
+        backgroundColor: '#fff',
+        paddingTop: 18,
     },
     relatedTitle: {
         fontWeight: 'bold',

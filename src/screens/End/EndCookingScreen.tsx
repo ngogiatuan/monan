@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
@@ -28,20 +27,19 @@ const EndCookingScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useTranslation();
-  const { user } = useContext(UserContext); // Thêm user context
+  const { user } = useContext(UserContext);
 
   // State cho dialog đánh giá
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isConnected, setIsConnected] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Thêm state loading
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // ✅ Lấy recipeId từ params
   const recipeId = route.params?.recipeId;
-
-  console.log('EndCookingScreen - recipeId:', recipeId);
-  console.log('EndCookingScreen - user:', user);
 
   React.useEffect(() => {
     const unsubscribe = require('@react-native-community/netinfo').addEventListener(
@@ -55,7 +53,6 @@ const EndCookingScreen = () => {
   const cookedDuration = route.params?.cookedDuration;
   const wasOffline = route.params?.wasOffline;
   const offlineAtEnd = route.params?.offlineAtEnd;
-  // Không cần estimatedTime nữa
   const [duration, setDuration] = useState<string>('0\'');
   const [showOfflineDialog, setShowOfflineDialog] = useState(!!(wasOffline && offlineAtEnd));
   const [realDuration, setRealDuration] = useState<number | null>(typeof cookedDuration === 'number' ? cookedDuration : null);
@@ -97,17 +94,6 @@ const EndCookingScreen = () => {
     }
   }, [wasOffline, offlineAtEnd, cookedDuration]);
 
-  // Thêm useEffect để debug
-  React.useEffect(() => {
-    console.log('EndCookingScreen mounted with:');
-    console.log('- recipeId:', recipeId);
-    console.log('- user:', user);
-    console.log('- user.id:', user?.id);
-    console.log('- user.token:', user?.token);
-    console.log('- token length:', user?.token?.length);
-    console.log('- token starts with eyJ:', user?.token?.startsWith('eyJ'));
-  }, [recipeId, user]);
-
   // Render các ngôi sao (blank star và full star)
   const renderStars = () => {
     const stars = [] as any[];
@@ -147,35 +133,20 @@ const EndCookingScreen = () => {
   };
 
   const handleSubmitReview = async () => {
-    console.log('=== DEBUG REVIEW SUBMIT ===');
-    console.log('user:', user);
-    console.log('user.id:', user?.id);
-    console.log('user.token:', user?.token);
-    console.log('recipeId:', recipeId);
-    console.log('rating:', rating);
-    console.log('comment:', comment);
-    console.log('==========================');
-
-    // Kiểm tra từng điều kiện riêng biệt
     if (!user?.token) {
-      console.log('❌ Token missing');
       Alert.alert('Lỗi', 'Vui lòng đăng nhập để đánh giá');
       return;
     }
 
     if (!recipeId) {
-      console.log('❌ RecipeId missing');
       Alert.alert('Lỗi', 'Không tìm thấy thông tin công thức');
       return;
     }
 
     if (rating === 0) {
-      console.log('❌ Rating is 0');
       Alert.alert('Lỗi', 'Vui lòng chọn số sao');
       return;
     }
-
-    console.log('✅ All validations passed');
 
     const ok = await checkNetworkAndAlert(t('network_comment'));
     if (!ok) return;
@@ -183,9 +154,11 @@ const EndCookingScreen = () => {
     setIsSubmitting(true);
 
     try {
-      const userId = user.id;
-      console.log('Using userId:', userId);
-      console.log('Using token:', user.token);
+      const userId = user._id || user.id || user.userId;
+      
+      if (!userId) {
+        throw new Error('Không tìm thấy userId');
+      }
 
       const reviewData = {
         userId: userId,
@@ -194,36 +167,15 @@ const EndCookingScreen = () => {
         comment: comment.trim()
       };
 
-      console.log('Sending review data:', reviewData);
-      // ✅ Truyền token vào API call
       await createNewReview(reviewData, user.token);
 
-      // ✅ Emit event để HomeScreen update
-      DeviceEventEmitter.emit('reviewCountUpdated', {
-        recipeId: recipeId,
-        increment: 1
-      });
+      setShowRating(false);
+      setSuccessMessage('Đánh giá của bạn đã được gửi!');
+      setShowSuccessModal(true);
 
-      Alert.alert(
-        'Thành công',
-        'Đánh giá của bạn đã được gửi!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setShowRating(false);
-              // Không cần navigate nữa vì đã navigate ở trên
-            }
-          }
-        ]
-      );
     } catch (error: any) {
       console.error('❌ API Error:', error);
-      console.error('❌ Error response:', error.response?.data);
-      Alert.alert(
-        'Lỗi',
-        error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại!'
-      );
+      Alert.alert('Lỗi', 'Không thể gửi đánh giá. Vui lòng thử lại!');
     } finally {
       setIsSubmitting(false);
     }
@@ -283,7 +235,6 @@ const EndCookingScreen = () => {
             </Text>
           </View>
         ) : null}
-        {/* Removed the "You Got" section related to points */}
       </View>
       {/* Button cố định dưới cùng */}
       <View style={styles.fixedBottomBtnRow}>
@@ -323,17 +274,11 @@ const EndCookingScreen = () => {
               multiline
               numberOfLines={3}
               placeholderTextColor="#BDBDBD"
-              onSubmitEditing={async () => {
-                const ok = await checkNetworkAndAlert(t('network_comment'));
-                if (!ok) return;
-                // ...submit logic nếu có...
-              }}
             />
-            {/* Removed the point information in the rating modal */}
             <TouchableOpacity
               style={[styles.modalButton, isSubmitting && styles.modalButtonDisabled]}
               onPress={handleSubmitReview}
-              disabled={isSubmitting || rating === 0} // ❌ Có thể rating === 0
+              disabled={isSubmitting || rating === 0}
               activeOpacity={0.8}
             >
               <Text style={styles.modalButtonText}>
@@ -342,6 +287,32 @@ const EndCookingScreen = () => {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Modal thành công */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.errorDialogBox}>
+            <Text style={styles.errorDialogTitle}>Thành công</Text>
+            <Text style={styles.errorDialogMessage}>{successMessage}</Text>
+            <View style={styles.errorButtonContainer}>
+              <TouchableOpacity
+                style={[styles.errorOkButton, { flex: 1 }]}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  navigation.navigate(nav.home);
+                }}
+              >
+                <Text style={styles.errorOkButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -359,11 +330,6 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: 8,
     marginRight: 4,
-  },
-  backIcon: {
-    width: 20,
-    height: 20,
-    tintColor: '#fff',
   },
   headerTitle: {
     flex: 1,
@@ -477,32 +443,6 @@ const styles = StyleSheet.create({
     height: 10,
     tintColor: '#fff',
   },
-  // Removed rewardRowCenter and its related styles
-  // Removed rewardIconCircle and its related styles
-  // Removed rewardIconCenter and its related styles
-  // Removed rewardValueCenter and its related styles
-  rewardNoteContainer: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 0,
-    paddingHorizontal: 0,
-  },
-  rewardNote: {
-    color: '#888',
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 18,
-    maxWidth: 320,
-    width: '100%',
-    includeFontPadding: false,
-    letterSpacing: 0.1,
-  },
-  bottomBtnRow: {
-    // Xóa style này nếu có, hoặc để trống nếu dùng fixedBottomBtnRow
-    display: 'none',
-  },
   fixedBottomBtnRow: {
     position: 'absolute',
     left: 0,
@@ -515,7 +455,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#f2f2f2',
   },
-  // Thêm style cho modal nếu chưa có
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.18)',
@@ -564,9 +503,6 @@ const styles = StyleSheet.create({
     color: '#222',
     backgroundColor: '#FAFAFA',
   },
-  // Removed modalPointRow and its related styles
-  // Removed modalPointText and its related styles
-  // Removed modalPointIcon and its related styles
   modalButton: {
     backgroundColor: '#FF6600',
     borderRadius: 8,
@@ -581,6 +517,52 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  dialogOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorDialogBox: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    width: '85%',
+    elevation: 4,
+  },
+  errorDialogTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  errorDialogMessage: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  errorButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  errorOkButton: {
+    backgroundColor: '#ff6f2c',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorOkButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 

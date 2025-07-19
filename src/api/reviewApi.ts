@@ -10,6 +10,7 @@ interface Review {
   createdAt?: string; // Có thể có hoặc không tùy vào response khi tạo
   updatedAt?: string; // Có thể có hoặc không tùy vào response khi tạo
   id?: string;        // Có thể có hoặc không tùy vào response khi tạo
+  _id?: string; // ✅ Thêm trường _id
 }
 
 /**
@@ -98,4 +99,43 @@ export const createNewReview = async (
     console.error('API: Error creating review:', error.response?.data || error.message);
     throw error;
   }
+};
+
+/**
+ * Cập nhật review đã tồn tại
+ */
+export const updateReview = async (
+    reviewId: string,
+    reviewData: { rating: number; comment: string },
+    token: string
+): Promise<Review | null> => {
+    try {
+        const res = await axios.put(`${API_URL}/reviews/${reviewId}`, reviewData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return res.data || null;
+    } catch (error: any) {
+        console.error('API: Error updating review:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
+/**
+ * Lấy review của user cho một công thức
+ */
+export const getUserReview = async (recipeId: string, token: string): Promise<Review | null> => {
+    try {
+        const res = await axios.get(`${API_URL}/reviews/user/${recipeId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return res.data || null;
+    } catch (error: any) {
+        console.error('API: Error getting user review:', error.response?.data || error.message);
+        return null;
+    }
 };
