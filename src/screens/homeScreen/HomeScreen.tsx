@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isPre } from '../../api/userApi';
 import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
+import { DeviceEventEmitter } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -64,10 +65,14 @@ const HomeScreen = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [hasNewNotifications, setHasNewNotifications] = useState(false); // State for notification icon
   const [recipeRatings, setRecipeRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
+  const [reviewCountUpdates, setReviewCountUpdates] = useState<{ [recipeId: string]: number }>({}); // ✅ Thêm state track updates
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumMessage, setPremiumMessage] = useState('');
   const [premiumTitle, setPremiumTitle] = useState('');
   const [premiumBuyMessage, setPremiumBuyMessage] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginMessage, setLoginMessage] = useState('');
+  const [loginTitle, setLoginTitle] = useState('');
 
   const isFocused = useIsFocused(); // To detect when HomeScreen comes into focus
   useEffect(() => {
@@ -133,6 +138,26 @@ const HomeScreen = () => {
     };
     if (recipes.length > 0) fetchRatings();
   }, [recipes]);
+
+  // ✅ Thêm useEffect để cập nhật review count khi có thay đổi
+  useEffect(() => {
+    if (Object.keys(reviewCountUpdates).length > 0) {
+      setRecipeRatings(prev => {
+        const updated = { ...prev };
+        Object.keys(reviewCountUpdates).forEach(recipeId => {
+          if (updated[recipeId]) {
+            updated[recipeId] = {
+              ...updated[recipeId],
+              count: updated[recipeId].count + reviewCountUpdates[recipeId]
+            };
+          }
+        });
+        return updated;
+      });
+      // Reset updates sau khi apply
+      setReviewCountUpdates({});
+    }
+  }, [reviewCountUpdates]);
 
   const reloadFavorites = async () => {
     if (!isConnected) return;
@@ -211,6 +236,19 @@ const HomeScreen = () => {
 
     checkNotificationIconStatus();
   }, [isFocused]); // Depend only on isFocused to re-check when returning to screen
+
+  // ✅ Thêm function để update review count
+  const updateReviewCount = (recipeId: string, increment: number = 1) => {
+    setReviewCountUpdates(prev => ({
+      ...prev,
+      [recipeId]: (prev[recipeId] || 0) + increment
+    }));
+  };
+
+  // ✅ Export function để các screen khác có thể gọi
+  // The useImperativeHandle approach is not needed here as DeviceEventEmitter is more appropriate.
+  // The original code had this line, but it was causing a type error.
+  // I will remove it as per the edit hint.
 
 
   const getGreeting = () => {
@@ -415,23 +453,12 @@ const HomeScreen = () => {
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={async () => {
+                        // ✅ Thêm validation cho guest user với premium recipes
                         if (recipeItem.isPremiumRecipe) {
                           if (!user?.token) {
-                            Alert.alert(
-                              t('loginrequiredtitle'),
-                              t('loginrequiredmessage'),
-                              [
-                                {
-                                  text: t('cancel'),
-                                  style: 'cancel',
-                                },
-                                {
-                                  text: t('login'),
-                                  onPress: () => navigation.navigate(nav.authen),
-                                },
-                              ],
-                              { cancelable: true }
-                            );
+                            setLoginTitle(t('loginrequiredtitle'));
+                            setLoginMessage(t('loginrequiredmessage'));
+                            setShowLoginModal(true);
                             return;
                           }
                           if (!isPre(user)) {
@@ -442,8 +469,11 @@ const HomeScreen = () => {
                             return;
                           }
                         }
+
                         const ok = await checkNetworkAndAlert(t('networkviewrecipe'));
                         if (!ok) return;
+
+                        // ✅ Chỉ truyền recipeId, không truyền recipeData
                         navigation.navigate(nav.detail, { recipeId: recipeItem.id });
                       }}
                     >
@@ -575,6 +605,27 @@ const HomeScreen = () => {
     navigation.navigate(nav.notification);
   };
 
+  // ✅ Thêm useFocusEffect để check params khi quay lại
+  useEffect(() => {
+    const params = navigation.getState()?.routes?.find(r => r.name === nav.home)?.params;
+    if (params?.updateReviewCount && params?.recipeId) {
+      updateReviewCount(params.recipeId, params.increment || 1);
+      // Clear params
+      navigation.setParams({ updateReviewCount: undefined, recipeId: undefined, increment: undefined });
+    }
+  }, [navigation]);
+
+  // ✅ Thêm listener cho review count updates
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('reviewCountUpdated', (data) => {
+      if (data.recipeId && data.increment) {
+        updateReviewCount(data.recipeId, data.increment);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.topSectionBlock}>
@@ -673,6 +724,36 @@ const HomeScreen = () => {
         </View>
       )}
       <BottomNavigation current="home" />
+      <Modal
+        visible={showLoginModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLoginModal(false)}
+      >
+        <View style={styles.dialogOverlay}>
+          <View style={styles.errorDialogBox}>
+            <Text style={styles.errorDialogTitle}>{loginTitle}</Text>
+            <Text style={styles.errorDialogMessage}>{loginMessage}</Text>
+            <View style={styles.errorButtonContainer}>
+              <TouchableOpacity
+                style={[styles.errorOkButton, { backgroundColor: '#E0E0E0', marginRight: 8, flex: 1 }]}
+                onPress={() => setShowLoginModal(false)}
+              >
+                <Text style={[styles.errorOkButtonText, { color: '#222' }]}>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.errorOkButton, { flex: 1 }]}
+                onPress={() => {
+                  setShowLoginModal(false);
+                  navigation.navigate(nav.authen);
+                }}
+              >
+                <Text style={styles.errorOkButtonText}>{t('login')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={showPremiumModal}
         transparent

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,16 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
+import { createNewReview } from '../../api/reviewApi';
+import { UserContext } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -24,12 +28,20 @@ const EndCookingScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useTranslation();
+  const { user } = useContext(UserContext); // Thêm user context
 
   // State cho dialog đánh giá
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isConnected, setIsConnected] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Thêm state loading
+
+  // ✅ Lấy recipeId từ params
+  const recipeId = route.params?.recipeId;
+
+  console.log('EndCookingScreen - recipeId:', recipeId);
+  console.log('EndCookingScreen - user:', user);
 
   React.useEffect(() => {
     const unsubscribe = require('@react-native-community/netinfo').addEventListener(
@@ -85,6 +97,17 @@ const EndCookingScreen = () => {
     }
   }, [wasOffline, offlineAtEnd, cookedDuration]);
 
+  // Thêm useEffect để debug
+  React.useEffect(() => {
+    console.log('EndCookingScreen mounted with:');
+    console.log('- recipeId:', recipeId);
+    console.log('- user:', user);
+    console.log('- user.id:', user?.id);
+    console.log('- user.token:', user?.token);
+    console.log('- token length:', user?.token?.length);
+    console.log('- token starts with eyJ:', user?.token?.startsWith('eyJ'));
+  }, [recipeId, user]);
+
   // Render các ngôi sao (blank star và full star)
   const renderStars = () => {
     const stars = [] as any[];
@@ -121,6 +144,89 @@ const EndCookingScreen = () => {
         {stars}
       </View>
     );
+  };
+
+  const handleSubmitReview = async () => {
+    console.log('=== DEBUG REVIEW SUBMIT ===');
+    console.log('user:', user);
+    console.log('user.id:', user?.id);
+    console.log('user.token:', user?.token);
+    console.log('recipeId:', recipeId);
+    console.log('rating:', rating);
+    console.log('comment:', comment);
+    console.log('==========================');
+
+    // Kiểm tra từng điều kiện riêng biệt
+    if (!user?.token) {
+      console.log('❌ Token missing');
+      Alert.alert('Lỗi', 'Vui lòng đăng nhập để đánh giá');
+      return;
+    }
+
+    if (!recipeId) {
+      console.log('❌ RecipeId missing');
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin công thức');
+      return;
+    }
+
+    if (rating === 0) {
+      console.log('❌ Rating is 0');
+      Alert.alert('Lỗi', 'Vui lòng chọn số sao');
+      return;
+    }
+
+    console.log('✅ All validations passed');
+
+    const ok = await checkNetworkAndAlert(t('network_comment'));
+    if (!ok) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const userId = user.id;
+      console.log('Using userId:', userId);
+      console.log('Using token:', user.token);
+
+      const reviewData = {
+        userId: userId,
+        recipeId: recipeId,
+        rating: rating,
+        comment: comment.trim()
+      };
+
+      console.log('Sending review data:', reviewData);
+      // ✅ Truyền token vào API call
+      await createNewReview(reviewData, user.token);
+
+      // ✅ Emit event để HomeScreen update
+      DeviceEventEmitter.emit('reviewCountUpdated', {
+        recipeId: recipeId,
+        increment: 1
+      });
+
+      Alert.alert(
+        'Thành công',
+        'Đánh giá của bạn đã được gửi!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setShowRating(false);
+              // Không cần navigate nữa vì đã navigate ở trên
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('❌ API Error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      Alert.alert(
+        'Lỗi',
+        error.response?.data?.message || 'Không thể gửi đánh giá. Vui lòng thử lại!'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -225,16 +331,14 @@ const EndCookingScreen = () => {
             />
             {/* Removed the point information in the rating modal */}
             <TouchableOpacity
-              style={styles.modalButton}
-              onPress={async () => {
-                const ok = await checkNetworkAndAlert(t('network_confirm'));
-                if (!ok) return;
-                setShowRating(false);
-                navigation.navigate(nav.home);
-              }}
+              style={[styles.modalButton, isSubmitting && styles.modalButtonDisabled]}
+              onPress={handleSubmitReview}
+              disabled={isSubmitting || rating === 0} // ❌ Có thể rating === 0
               activeOpacity={0.8}
             >
-              <Text style={styles.modalButtonText}>{t('confirm')}</Text>
+              <Text style={styles.modalButtonText}>
+                {isSubmitting ? 'Đang gửi...' : t('confirm')}
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -469,6 +573,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 4,
+  },
+  modalButtonDisabled: {
+    backgroundColor: '#ccc',
   },
   modalButtonText: {
     color: '#fff',

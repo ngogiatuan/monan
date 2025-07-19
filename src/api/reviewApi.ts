@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://103.72.99.132:3000/api'; 
+const API_URL = 'http://103.72.99.132:3000/api';
 
 interface Review {
   userId: string;
@@ -19,9 +19,9 @@ interface Review {
  */
 export const getAllReviews = async (): Promise<Review[]> => {
   try {
-    const res = await axios.get(`${API_URL}/reviews/`); 
+    const res = await axios.get(`${API_URL}/reviews/`);
     // Dựa trên response bạn cho, dữ liệu trả về trực tiếp là mảng review.
-    return res.data || []; 
+    return res.data || [];
   } catch (error) {
     console.error('Lỗi khi lấy tất cả review:', error);
     return [];
@@ -63,7 +63,7 @@ export const getAverageRatingByRecipeId = async (recipeId: string): Promise<numb
     }
     const res = await axios.get(`${API_URL}/reviews/caculate-rate/${recipeId}`);
 
-    return res.data?.avgRate ?? null; 
+    return res.data?.avgRate ?? null;
   } catch (error) {
     console.error(`Lỗi khi lấy điểm trung bình cho công thức ${recipeId}:`, error);
     return null;
@@ -74,15 +74,28 @@ export const getAverageRatingByRecipeId = async (recipeId: string): Promise<numb
  * Tạo một review mới.
  * Endpoint: POST /api/reviews/
  * @param reviewData Dữ liệu của review cần tạo (userId, recipeId, rating, comment).
+ * @param token Token xác thực của user
  * @returns Đối tượng review đã được tạo từ server, hoặc null nếu có lỗi.
  */
-export const createNewReview = async (reviewData: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>): Promise<Review | null> => {
+export const createNewReview = async (
+  reviewData: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>,
+  token: string // ✅ Thêm token parameter
+): Promise<Review | null> => {
   try {
-    const res = await axios.post(`${API_URL}/reviews/`, reviewData); // Endpoint giống với getAllReviews nhưng là POST
-    // Dựa trên response bạn cho, dữ liệu trả về trực tiếp là đối tượng review.
+    console.log('API: Sending review data:', reviewData);
+    console.log('API: Token:', token);
+
+    const res = await axios.post(`${API_URL}/reviews/`, reviewData, {
+      headers: {
+        'Authorization': `Bearer ${token}`, // ✅ Thêm Authorization header
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('API: Response:', res.data);
     return res.data || null;
   } catch (error: any) {
-    console.error('Lỗi khi tạo review mới:', error.response?.data || error.message);
-    throw error; // Ném lỗi để phía gọi hàm có thể bắt và xử lý.
+    console.error('API: Error creating review:', error.response?.data || error.message);
+    throw error;
   }
 };

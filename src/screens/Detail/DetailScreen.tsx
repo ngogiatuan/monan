@@ -11,7 +11,8 @@ import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
 import {
     getReviewsByRecipeId,
-    getAverageRatingByRecipeId
+    getAverageRatingByRecipeId,
+    createNewReview
 } from '../../api/reviewApi';
 
 const { width } = Dimensions.get('window');
@@ -21,6 +22,8 @@ const DetailScreen = () => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const recipeId = route.params?.recipeId;
+
+    // ✅ Xóa recipeData và cache logic
     const [recipe, setRecipe] = useState<any>(null);
     const [related, setRelated] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,13 +49,18 @@ const DetailScreen = () => {
                     const res = await axios.get(`${API_URL}/api/recipes?page=1&limit=50`);
                     const allRecipes = res.data?.data || [];
                     const found = allRecipes.find((r: any) => r._id === recipeId);
-                    if (isMounted) setRecipe(found || null);
-                    setRelated(allRecipes.filter((r: any) => r._id !== recipeId).slice(0, 6));
+
+                    if (isMounted) {
+                        setRecipe(found || null);
+                        setRelated(allRecipes.filter((r: any) => r._id !== recipeId).slice(0, 6));
+                        setLoading(false);
+                    }
                 } catch (e) {
-                    setRecipe(null);
-                    setRelated([]);
-                } finally {
-                    setLoading(false);
+                    if (isMounted) {
+                        setRecipe(null);
+                        setRelated([]);
+                        setLoading(false);
+                    }
                 }
             };
             fetchRecipe();
@@ -127,24 +135,26 @@ const DetailScreen = () => {
     }, [recipeId]);
 
     // Fetch reviews and average rating when recipeId changes
-    useEffect(() => {
-        const fetchReviews = async () => {
-            if (recipeId) {
-                try {
-                    const [reviewList, avg] = await Promise.all([
-                        getReviewsByRecipeId(recipeId),
-                        getAverageRatingByRecipeId(recipeId)
-                    ]);
-                    setReviews(reviewList);
-                    setAvgRating(avg);
-                } catch (e) {
-                    setReviews([]);
-                    setAvgRating(null);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchReviews = async () => {
+                if (recipeId) {
+                    try {
+                        const [reviewList, avg] = await Promise.all([
+                            getReviewsByRecipeId(recipeId),
+                            getAverageRatingByRecipeId(recipeId)
+                        ]);
+                        setReviews(reviewList);
+                        setAvgRating(avg);
+                    } catch (e) {
+                        setReviews([]);
+                        setAvgRating(null);
+                    }
                 }
-            }
-        };
-        fetchReviews();
-    }, [recipeId]);
+            };
+            fetchReviews();
+        }, [recipeId])
+    );
 
     useEffect(() => {
         const fetchRelatedRatings = async () => {
@@ -459,8 +469,9 @@ const DetailScreen = () => {
                     onPress={async () => {
                         const ok = await checkNetworkAndAlert(t('networkviewtutorial'));
                         if (!ok) return;
+                        console.log('DetailScreen - Navigating to tutorial with recipeId:', recipeId);
                         navigation.navigate(nav.tutorialCooking, {
-                            recipeId,
+                            recipeId, // ✅ Đảm bảo có recipeId
                             imageUrl:
                                 recipe?.imageUrls && recipe.imageUrls.length > 0
                                     ? recipe.imageUrls[0]
@@ -1027,6 +1038,21 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         overflow: 'hidden',
         marginRight: 8,
+    },
+    modalButton: {
+        backgroundColor: '#FF6600',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    modalButtonDisabled: {
+        backgroundColor: '#ccc',
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });
 

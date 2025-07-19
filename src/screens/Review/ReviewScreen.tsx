@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,19 +7,23 @@ import {
   TouchableOpacity,
   FlatList,
   SafeAreaView,
+  Alert,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import { useTranslation } from 'react-i18next';
 import {
   getReviewsByRecipeId,
-  getAverageRatingByRecipeId
+  getAverageRatingByRecipeId,
+  createNewReview
 } from '../../api/reviewApi';
+import { UserContext } from '../../context/UserContext';
 
 const ReviewScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useTranslation();
+  const { user } = useContext(UserContext);
   const recipeId = route.params?.recipeId;
   const [reviews, setReviews] = useState<any[]>([]);
   const [avgRating, setAvgRating] = useState<number | null>(null);
@@ -42,6 +46,27 @@ const ReviewScreen = () => {
     };
     fetchReviews();
   }, [recipeId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchReviews = async () => {
+        if (recipeId) {
+          try {
+            const [reviewList, avg] = await Promise.all([
+              getReviewsByRecipeId(recipeId),
+              getAverageRatingByRecipeId(recipeId)
+            ]);
+            setReviews(reviewList);
+            setAvgRating(avg);
+          } catch (e) {
+            setReviews([]);
+            setAvgRating(null);
+          }
+        }
+      };
+      fetchReviews();
+    }, [recipeId])
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -227,6 +252,21 @@ const styles = StyleSheet.create({
     color: '#222',
     fontSize: 14,
     marginTop: 2,
+  },
+  modalButton: {
+    backgroundColor: '#FF6600',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  modalButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

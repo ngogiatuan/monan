@@ -371,6 +371,7 @@ const TutorialCookingScreen = () => {
     const totalDuration = now - startTime - totalOffline;
     Tts.stop();
     navigation.navigate(nav.endCooking, {
+      recipeId: recipeId, // ✅ Thêm recipeId vào params
       startTime,
       cookedDuration: totalDuration > 0 ? totalDuration : 0,
       estimatedTime,
