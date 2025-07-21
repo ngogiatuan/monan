@@ -260,8 +260,9 @@ const EndCookingScreen = () => {
           style={styles.modalContainer}
         >
           <View style={styles.modalContent}>
+            {/* Drag handle */}
             <View style={{ alignItems: 'center', marginBottom: 8 }}>
-              <View style={styles.modalBar} />
+              <View style={styles.modalDragHandle} />
             </View>
             <Text style={styles.modalTitle}>{t('rate_recipe')}</Text>
             {renderStars()}
@@ -517,6 +518,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  modalDragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#CCCCCC',
+    borderRadius: 2.5,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 10,
   },
   dialogOverlay: {
     flex: 1,

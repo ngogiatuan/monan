@@ -50,7 +50,7 @@
   "related_recipes": "Các công thức khác",
   "start_cooking": "Vào bếp thôi!",
   "all": "Tất cả",
-  "step_title": "Bước ",
+  "step_title": "Bước {{step}}",
   "no_tutorial": "Không có hướng dẫn nấu ăn cho món này.",
   "back": "Quay lại",
   "continue": "Tiếp tục",

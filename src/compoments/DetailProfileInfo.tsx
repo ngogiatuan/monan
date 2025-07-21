@@ -59,9 +59,11 @@ const DetailProfileInfo = () => {
             <Text style={styles.memberTextAfterSeparator}>
               {isPremium ? labels.member_premium : labels.member_normal}
             </Text>
-            <Text style={styles.memberText}>
-              {isPremium ? premiumDate : user?.joined}
-            </Text>
+            {isPremium && (
+              <Text style={styles.memberText}>
+                {premiumDate}
+              </Text>
+            )}
           </View>
         </View>
       </View>

@@ -60,9 +60,11 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
           <Text style={styles.memberTextAfterSeparator}>
             {isPremium ? t('member_premium') : t('member_normal')}
           </Text>
-          <Text style={styles.memberText}>
-            {isPremium ? premiumDate : user.joined}
-          </Text>
+          {isPremium && (
+            <Text style={styles.memberText}>
+              {premiumDate}
+            </Text>
+          )}
         </>
       );
     } else {

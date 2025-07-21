@@ -12,6 +12,8 @@ import { getRecipeStatsByUser } from '../../api/recipeApi';
 import { nav } from '../../navigation/navigationName';
 import { uniqBy } from 'lodash'; // thêm thư viện lodash nếu chưa có
 import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
+import { getRecipeById } from '../../api/recipeApi';
+import { useState } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +37,7 @@ const DetailProfile = () => {
   const [totalTime, setTotalTime] = React.useState<number>(0);
   const [totalRecipes, setTotalRecipes] = React.useState<number>(0);
   const [recipeRatings, setRecipeRatings] = React.useState<{ [recipeId: string]: { avg: number, count: number } }>({});
+  const [fullRecipes, setFullRecipes] = useState<{ [id: string]: any }>({});
 
   React.useEffect(() => {
     const fetchFavorites = async () => {
@@ -90,6 +93,23 @@ const DetailProfile = () => {
       setRecipeRatings(ratingsObj);
     };
     if (favorites.length > 0) fetchRatings();
+  }, [favorites]);
+
+  React.useEffect(() => {
+    const fetchFullRecipes = async () => {
+      const newFullRecipes: { [id: string]: any } = {};
+      await Promise.all(
+        favorites.map(async (item) => {
+          const recipeId = item.recipeId?._id || item.recipeId?.id || item.recipeId;
+          if (recipeId) {
+            const fullRecipe = await getRecipeById(recipeId);
+            if (fullRecipe) newFullRecipes[recipeId] = fullRecipe;
+          }
+        })
+      );
+      setFullRecipes(newFullRecipes);
+    };
+    if (favorites.length > 0) fetchFullRecipes();
   }, [favorites]);
 
   const formatTotalTime = (seconds: number) => {
@@ -158,10 +178,13 @@ const DetailProfile = () => {
               {uniqBy(favorites, f => f.recipeId?._id || f.recipeId?.id).map((item, idx, arr) => {
                 const recipe = item.recipeId;
                 if (!recipe) return null;
-                // Map lại cho đồng bộ với HomeScreen
-                const isPremiumRecipe = !!recipe.isPrevailing;
-                const favoriteId = item._id;
-                console.log('Recipe in favorite:', recipe);
+                const recipeId = recipe._id || recipe.id || recipe.recipeId;
+                const fullRecipe = fullRecipes[recipeId];
+                // Lấy đúng trường phân loại premium từ fullRecipe
+                const isPremiumRecipe = fullRecipe?.isPrevailing === true || fullRecipe?.isPrevailing === 1;
+                // Lấy đúng id của bản ghi favorite
+                const favoriteId = item._id || item.id || item.favoriteId;
+                console.log('Favorite item:', item, 'favoriteId:', favoriteId);
                 return (
                   <TouchableOpacity
                     key={recipe._id || recipe.id}
@@ -182,8 +205,11 @@ const DetailProfile = () => {
                         style={styles.productMarkCircle}
                         onPress={async (e) => {
                           e.stopPropagation && e.stopPropagation();
-                          if (!favoriteId || !user?.token) return;
-                          // Optimistic update: loại bỏ ngay trên UI
+                          console.log('Remove favoriteId:', favoriteId);
+                          if (!favoriteId || !user?.token) {
+                            console.log('No favoriteId or token');
+                            return;
+                          }
                           setFavorites(prev => prev.filter(f => {
                             const rid = f.recipeId?._id || f.recipeId?.id || f.recipeId;
                             const currentId = recipe._id || recipe.id;
@@ -191,11 +217,11 @@ const DetailProfile = () => {
                           }));
                           try {
                             await removeFavorite(user.token, favoriteId);
-                            // Sau khi API xong, sync lại với server (nếu muốn)
                             const favs = await getFavorites(user.token);
                             setFavorites(favs);
+                            console.log('Removed favorite, new favorites:', favs);
                           } catch (err) {
-                            // Nếu lỗi, có thể revert lại hoặc báo lỗi
+                            console.log('Error removing favorite:', err);
                           }
                         }}
                         activeOpacity={0.7}
@@ -214,14 +240,29 @@ const DetailProfile = () => {
                       {recipe.name}
                     </Text>
                     <View style={styles.productInfoRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                        <View style={styles.ratingBox}>
-                          <Text style={styles.ratingText}>★ {recipeRatings[recipe._id || recipe.id]?.avg?.toFixed(1) ?? '0.0'}</Text>
-                        </View>
-                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
-                          {recipeRatings[recipe._id || recipe.id]?.count ?? 0} Reviews
+                      {/* Rating sát trái */}
+                      <View style={styles.ratingBox}>
+                        <Text style={styles.ratingText}>
+                          ★ {recipeRatings[recipe._id || recipe.id]?.avg?.toFixed(1) ?? '0.0'}
                         </Text>
                       </View>
+
+                      {/* Review count căn giữa tuyệt đối */}
+                      <Text
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          color: '#888',
+                          fontSize: 13,
+                          zIndex: 1,
+                        }}
+                      >
+                        {recipeRatings[recipe._id || recipe.id]?.count ?? 0} Reviews
+                      </Text>
+
+                      {/* Tag sát phải */}
                       <Text style={isPremiumRecipe ? styles.premiumTag : styles.freeTag}>
                         {isPremiumRecipe ? t('buyrecipe') : t('free')}
                       </Text>
@@ -386,6 +427,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 5,
     marginTop: 4,
+    position: 'relative', // Để review count absolute căn giữa
+    minHeight: 24, // Đảm bảo đủ cao cho text
   },
   ratingBox: {
     flexDirection: 'row',

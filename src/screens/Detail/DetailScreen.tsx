@@ -14,6 +14,7 @@ import {
     getAverageRatingByRecipeId,
     createNewReview
 } from '../../api/reviewApi';
+import { DeviceEventEmitter } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -175,6 +176,13 @@ const DetailScreen = () => {
         if (related.length > 0) fetchRelatedRatings();
     }, [related]);
 
+    useEffect(() => {
+        const sub = DeviceEventEmitter.addListener('favoriteChanged', () => {
+            fetchFavorites();
+        });
+        return () => sub.remove();
+    }, []);
+
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -333,14 +341,16 @@ const DetailScreen = () => {
                         </Text>
                     </View>
 
-                    <ScrollView showsHorizontalScrollIndicator={false}>
-                        {reviews.length === 0 ? (
-                            <Text style={{ color: '#888', fontStyle: 'italic' }}>{t('no_review')}</Text>
-                        ) : (
-                            reviews.slice(0, 2).map((item, index) => (
+                    {reviews.length > 0 && (
+                        <ScrollView showsHorizontalScrollIndicator={false}>
+                            {reviews.slice(0, 2).map((item, index) => (
                                 <View key={item?._id || index} style={styles.commentRow}>
                                     <Image
-                                        source={require('../../assert/image/user1.png')}
+                                        source={
+                                            item.userId?.avatar
+                                                ? { uri: item.userId.avatar }
+                                                : require('../../assert/image/user1.png')
+                                        }
                                         style={styles.commentAvatar}
                                     />
                                     <View style={{ flex: 1 }}>
@@ -365,9 +375,9 @@ const DetailScreen = () => {
                                         <Text style={styles.commentContent}>{item.comment}</Text>
                                     </View>
                                 </View>
-                            ))
-                        )}
-                    </ScrollView>
+                            ))}
+                        </ScrollView>
+                    )}
 
                     <TouchableOpacity onPress={() => navigation.navigate(nav.review, { recipeId })}>
                         <Text style={styles.seeMoreReview}>{t('see_more')}</Text>
@@ -443,16 +453,27 @@ const DetailScreen = () => {
                                         </View>
                                         <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
                                         <View style={styles.relatedInfoRow}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                <View style={styles.ratingBox}>
-                                                    <Text style={styles.ratingText}>
-                                                        ★ {relatedRatings[item._id || item.id]?.avg?.toFixed(1) ?? '0.0'}
-                                                    </Text>
-                                                </View>
-                                                <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
-                                                    {relatedRatings[item._id || item.id]?.count ?? 0} Reviews
+                                            {/* Rating sát trái */}
+                                            <View style={styles.ratingBox}>
+                                                <Text style={styles.ratingText}>
+                                                    ★ {relatedRatings[item._id || item.id]?.avg?.toFixed(1) ?? '0.0'}
                                                 </Text>
                                             </View>
+                                            {/* Review count căn giữa tuyệt đối */}
+                                            <Text
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    right: 0,
+                                                    textAlign: 'center',
+                                                    color: '#888',
+                                                    fontSize: 13,
+                                                    zIndex: 1,
+                                                }}
+                                            >
+                                                {relatedRatings[item._id || item.id]?.count ?? 0} Reviews
+                                            </Text>
+                                            {/* Tag sát phải */}
                                             <Text style={item.isPrevailing ? styles.premiumTag : styles.freeTag}>
                                                 {item.isPrevailing ? t('buyrecipe') : t('free')}
                                             </Text>
@@ -933,6 +954,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
+        position: 'relative', // Để review count absolute căn giữa
+        minHeight: 24,
     },
     relatedRatingBox: {
         flexDirection: 'row',

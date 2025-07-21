@@ -539,7 +539,7 @@ const HomeScreen = () => {
                         <View style={styles.ratingBox}>
                           <Text style={styles.ratingText}>★ {recipeRatings[recipeItem.id]?.avg?.toFixed(1) ?? '0.0'}</Text>
                         </View>
-                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>
+                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 16 }}>
                           {recipeRatings[recipeItem.id]?.count ?? 0} Reviews
                         </Text>
                       </View>
@@ -676,11 +676,11 @@ const HomeScreen = () => {
               <Text style={styles.seeMore}>{t('see_more')}</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryListContainer}>
+          <View style={[styles.categoryListContainer, { flexDirection: 'row', justifyContent: 'space-between' }]}>
             {(categories.length > 0 ? categories : categoriesCache).map(catItem => (
               <TouchableOpacity
                 key={catItem?.id || catItem.key}
-                style={styles.categoryItem}
+                style={[styles.categoryItem, { flex: 1, maxWidth: 90 }]} // mỗi cate chiếm đều 1 phần, maxWidth để không quá to
                 onPress={() => {
                   navigation.navigate(nav.discovery, { category: catItem });
                 }}
@@ -698,7 +698,7 @@ const HomeScreen = () => {
                 <Text style={styles.categoryText}>{catItem.name}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </View>
       </View>
 

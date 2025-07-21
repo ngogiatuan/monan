@@ -183,7 +183,7 @@ const StepCookingViewer = ({
       <View style={styles.contentAndTtsFixed}>
         <View style={styles.titleAndTtsRow}>
           {/* Đảm bảo step.title luôn là chuỗi */}
-          <Text style={styles.stepTitle}>{String(step.title || '')}</Text>
+          <Text style={styles.stepTitle}>{step.title}</Text>
           <TouchableOpacity
             style={styles.ttsButton}
             disabled={!isPremium}
@@ -315,12 +315,15 @@ const TutorialCookingScreen = () => {
       try {
         const res = await axios.get(`${API_URL}/api/steps/recipe/${recipeId}`);
         const data = Array.isArray(res.data) ? res.data : [];
-        let stepsData = data.map((stepObj: any, idx: number) => ({
-          imageUrls: stepObj.imageUrls && stepObj.imageUrls.length > 0 ? stepObj.imageUrls : [],
-          // Đảm bảo title và desc luôn là chuỗi hoặc có giá trị mặc định ngay khi fetch
-          title: String(t('step_title', { step: stepObj.step || (idx + 1) })),
-          desc: String(stepObj.tutorial || t('no_tutorial')),
-        }));
+        let stepsData = data.map((stepObj: any, idx: number) => {
+          const title = t('step_title', { step: stepObj.step || (idx + 1) });
+          console.log('title:', title, 'step:', stepObj.step, 'idx:', idx);
+          return {
+            imageUrls: stepObj.imageUrls && stepObj.imageUrls.length > 0 ? stepObj.imageUrls : [],
+            title: title,
+            desc: String(stepObj.tutorial || t('no_tutorial')),
+          };
+        });
         if (!stepsData.length) {
           stepsData = [
             {
@@ -523,6 +526,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
+  },
+  // Styles for related recipes in DetailScreen
+  relatedInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    position: 'relative', // Để review count absolute căn giữa
+    minHeight: 24,
+  },
+  ratingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 13,
+    color: '#FF6600',
+    fontWeight: 'bold',
+  },
+  premiumTag: {
+    fontSize: 13,
+    color: '#FF6600',
+    fontWeight: 'bold',
+  },
+  freeTag: {
+    fontSize: 13,
+    color: '#888',
+    fontWeight: 'bold',
   },
 });
 
