@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { countRecipe } from '../../api/recipeApi';
 import { UserContext } from '../../context/UserContext';
 import { isPre } from '../../api/userApi';
+import Video from 'react-native-video';
 const NetInfo = require('@react-native-community/netinfo');
 
 const { width } = Dimensions.get('window');
@@ -46,6 +47,7 @@ const StepCookingViewer = ({
 }: {
   steps: {
     imageUrls: string[];
+    videoUrl?: string;
     title: string;
     desc: string;
   }[];
@@ -73,6 +75,7 @@ const StepCookingViewer = ({
   const stepImages = step.imageUrls || [];
   const scrollViewRef = useRef<ScrollView>(null); // Ref cho ScrollView của ảnh
   const isPremium = isPre(user);
+  const showVideo = isPremium && typeof step.videoUrl === 'string' && step.videoUrl.trim() !== '';
 
   useEffect(() => {
     Tts.getInitStatus().then(
@@ -141,7 +144,16 @@ const StepCookingViewer = ({
 
       {/* Vùng ảnh chính có thể vuốt - CỐ ĐỊNH */}
       <View style={styles.stepImgContainer}>
-        {stepImages?.length > 0 ? (
+        {showVideo ? (
+          <Video
+            source={{ uri: step.videoUrl }}
+            style={styles.stepVideo}
+            controls
+            resizeMode="contain"
+            paused={false}
+            onError={e => console.log('Video error:', e)}
+          />
+        ) : stepImages?.length > 0 ? (
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -315,19 +327,21 @@ const TutorialCookingScreen = () => {
       try {
         const res = await axios.get(`${API_URL}/api/steps/recipe/${recipeId}`);
         const data = Array.isArray(res.data) ? res.data : [];
-        let stepsData = data.map((stepObj: any, idx: number) => {
-          const title = t('step_title', { step: stepObj.step || (idx + 1) });
-          console.log('title:', title, 'step:', stepObj.step, 'idx:', idx);
-          return {
+        console.log('API steps:', data); // Thêm dòng này để kiểm tra thứ tự
+        let stepsData = data
+          .slice()
+          .sort((a, b) => a.step - b.step)
+          .map((stepObj, idx) => ({
             imageUrls: stepObj.imageUrls && stepObj.imageUrls.length > 0 ? stepObj.imageUrls : [],
-            title: title,
+            videoUrl: stepObj.videoUrl || '',
+            title: t('step_title', { step: stepObj.step || (idx + 1) }),
             desc: String(stepObj.tutorial || t('no_tutorial')),
-          };
-        });
+          }));
         if (!stepsData.length) {
           stepsData = [
             {
               imageUrls: [],
+              videoUrl: '', // <-- Add this line
               title: String(t('step_title', { step: 1 })),
               desc: String(t('no_tutorial')),
             },
@@ -402,7 +416,7 @@ const TutorialCookingScreen = () => {
         setShowImageModal={setShowImageModal}
         currentImageIdx={currentImageIdx}
         setCurrentImageIdx={setCurrentImageIdx}
-        user={user}
+        user={user} // truyền user vào
       />
     </SafeAreaView>
   );
@@ -554,6 +568,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#888',
     fontWeight: 'bold',
+  },
+  stepVideo: {
+    width: width,
+    height: 220,
+    backgroundColor: '#000',
   },
 });
 

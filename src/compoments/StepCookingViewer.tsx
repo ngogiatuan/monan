@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import ButtonNavigation from './ButtonNavigation';
+import Video from 'react-native-video';
+import { isPre } from '../api/userApi';
 
 const { width } = Dimensions.get('window');
 
@@ -11,14 +13,27 @@ export interface StepCooking {
 }
 
 interface StepCookingViewerProps {
-  steps: StepCooking[];
+  steps: {
+    imageUrls: string[];
+    videoUrl?: string;
+    title: string;
+    desc: string;
+  }[];
   onFinish: () => void;
   onBack?: () => void;
+  user: any;
 }
 
-const StepCookingViewer = ({ steps, onFinish, onBack }: StepCookingViewerProps) => {
+const StepCookingViewer = ({ steps, onFinish, onBack, user }: StepCookingViewerProps) => {
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx];
+
+  console.log('Current stepIdx:', stepIdx, 'step:', step);
+
+  const isPremium = isPre(user);
+  const showVideo = isPremium && typeof step.videoUrl === 'string' && step.videoUrl.trim() !== '';
+
+  console.log('step:', step);
 
   return (
     <>
@@ -38,8 +53,27 @@ const StepCookingViewer = ({ steps, onFinish, onBack }: StepCookingViewerProps) 
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{`${stepIdx + 1}/${steps.length}`}</Text>
       </View>
-      {/* Image */}
-      <Image source={step.image} style={styles.stepImg} />
+      {/* Image/Video */}
+      <View style={styles.stepImgContainer}>
+        {showVideo ? (
+          <Video
+            source={{ uri: step.videoUrl }}
+            style={styles.stepVideo}
+            controls
+            resizeMode="contain"
+            paused={false}
+            onError={e => console.log('Video error:', e)}
+          />
+        ) : step.imageUrls?.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {step.imageUrls.map((imageUrl, imgIdx) => (
+              <Image key={imgIdx} source={{ uri: imageUrl }} style={styles.stepImg} />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.noImagePlaceholder} />
+        )}
+      </View>
       {/* Content */}
       <View style={styles.contentWrap}>
         <Text style={styles.stepTitle}>{step.title}</Text>
@@ -105,6 +139,11 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     backgroundColor: '#eee',
   },
+  stepVideo: {
+    width: width,
+    height: 220,
+    backgroundColor: '#000',
+  },
   contentWrap: {
     flex: 1,
     paddingHorizontal: 16,
@@ -131,6 +170,18 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 8,
     backgroundColor: '#fff',
+  },
+  noImagePlaceholder: {
+    width: width,
+    height: 220,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepImgContainer: {
+    width: width,
+    height: 220,
+    backgroundColor: '#eee',
   },
 });
 
