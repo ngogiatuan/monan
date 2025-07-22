@@ -7,13 +7,15 @@ import {
   ScrollView,
   FlatList,
   Dimensions,
-  Image
+  Image,
+  SectionList
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import BottomNavigation from '../../compoments/Bottomnavigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../../context/UserContext';
 import { useTranslation } from 'react-i18next';
+import { getPremiumHistory } from '../../api/userApi';
 
 const { height } = Dimensions.get('window');
 
@@ -27,12 +29,59 @@ interface NotificationItem {
 const NOTIFICATION_STORAGE_KEY = '@app_notifications';
 const HAS_UNREAD_NOTIFICATIONS_KEY = '@has_unread_notifications'; // Keep this key
 
+function groupPremiumHistoryByDate(history: any[]) {
+  const grouped: { [key: string]: any[] } = {};
+  const today = new Date();
+  const todayString = today.toDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = yesterday.toDateString();
+
+  history.forEach(item => {
+    const notifDate = new Date(item.createdAt);
+    const dateString = notifDate.toDateString();
+    let key = '';
+    if (dateString === todayString) {
+      key = 'Hôm nay';
+    } else if (dateString === yesterdayString) {
+      key = 'Hôm qua';
+    } else {
+      key = `${notifDate.getDate().toString().padStart(2, '0')}/${(notifDate.getMonth() + 1).toString().padStart(2, '0')}/${notifDate.getFullYear()}`;
+    }
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+
+  // Sắp xếp section theo thời gian mới nhất lên trên
+  const sortedKeys = Object.keys(grouped).sort((a, b) => {
+    if (a === 'Hôm nay') return -1;
+    if (b === 'Hôm nay') return 1;
+    if (a === 'Hôm qua' && b !== 'Hôm nay') return -1;
+    if (b === 'Hôm qua' && a !== 'Hôm nay') return 1;
+    // So sánh ngày
+    const parseDate = (dateStr: string) => {
+      const parts = dateStr.split('/');
+      return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    };
+    const dateA = parseDate(a);
+    const dateB = parseDate(b);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  return sortedKeys.map(key => ({
+    title: key,
+    data: grouped[key].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  }));
+}
+
 const NotificationScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const { user } = useContext(UserContext);
   const { t } = useTranslation();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [premiumHistory, setPremiumHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Hàm lấy ngày bắt đầu premium từ chuỗi ngày hết hạn (giả sử premium là ngày hết hạn, 1 tháng)
   function getPremiumStartDate(premiumEndDateStr: string): Date {
@@ -77,18 +126,21 @@ const NotificationScreen = () => {
 
   // Effect to mark notifications as read when NotificationScreen is focused
   useEffect(() => {
-    if (isFocused) {
-      loadNotifications();
-      // Mark notifications as read when this screen is focused by removing the flag
-      AsyncStorage.removeItem(HAS_UNREAD_NOTIFICATIONS_KEY)
-        .then(() => {
-          console.log('Unread notifications flag cleared by NotificationScreen.');
-        })
-        .catch(error => {
-          console.error('Failed to clear unread notifications flag from NotificationScreen:', error);
-        });
-    }
-  }, [isFocused, loadNotifications]);
+    const fetchHistory = async () => {
+      try {
+        setLoading(true);
+        if (user?.token) {
+          const result = await getPremiumHistory(user.token, 1, 20); // lấy 20 bản ghi đầu
+          setPremiumHistory(result.data || []);
+        }
+      } catch (e) {
+        setPremiumHistory([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [user?.token, isFocused]);
 
   const groupNotificationsByDate = () => {
     const grouped: { [key: string]: NotificationItem[] } = {};
@@ -198,6 +250,8 @@ const NotificationScreen = () => {
     );
   };
 
+  const groupedSections = groupPremiumHistoryByDate(premiumHistory);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -212,27 +266,55 @@ const NotificationScreen = () => {
       </View>
 
       <View style={styles.contentArea}>
-        {groupedNotifications.length > 0 ? (
-          <FlatList
-            data={groupedNotifications}
-            keyExtractor={(item) => item.title}
-            renderItem={({ item: section }) => (
-              <View style={styles.notificationBlock}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <FlatList
-                  data={section.data}
-                  keyExtractor={(notifItem) => notifItem.id}
-                  renderItem={({ item, index }) => renderNotificationItem({ item, index, section })}
-                  scrollEnabled={false}
-                />
+        {loading ? (
+          <View style={styles.emptyNotifications}>
+            <Text style={styles.emptyNotificationsText}>Đang tải dữ liệu...</Text>
+          </View>
+        ) : premiumHistory.length > 0 ? (
+          <SectionList
+            sections={groupedSections}
+            keyExtractor={item => item.id}
+            renderSectionHeader={({ section: { title } }) => (
+              <View style={styles.sectionBlock}>
+                <View style={styles.sectionHeaderWrap}>
+                  <Text style={styles.sectionTitle}>{title}</Text>
+                </View>
               </View>
             )}
-            showsVerticalScrollIndicator={false}
+            renderSectionFooter={({ section }) => {
+              const isLastSection = groupedSections[groupedSections.length - 1] === section;
+              if (!isLastSection) {
+                return <View style={styles.sectionSeparator} />;
+              }
+              return null;
+            }}
+            renderItem={({ item, section, index }) => (
+              <View style={styles.notificationItemWrap}>
+                <View style={styles.notificationItem}>
+                  <View style={[styles.loginIconContainer, { backgroundColor: 'rgba(21, 176, 151, 0.1)' }]}>
+                    <Image
+                      source={require('../../assert/image/updatepremium.png')}
+                      style={styles.loginIcon}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <View style={styles.notificationContent}>
+                    <Text style={styles.notificationTitle}>
+                      Nâng cấp Premium, hết hạn: {item.expired ? new Date(item.expired).toLocaleDateString() : ''}
+                    </Text>
+                    <Text style={styles.notificationTime}>
+                      Ngày mua: {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </Text>
+                  </View>
+                </View>
+                {index !== section.data.length - 1 && <View style={styles.itemSeparator} />}
+              </View>
+            )}
             contentContainerStyle={styles.flatListContentContainer}
           />
         ) : (
           <View style={styles.emptyNotifications}>
-            <Text style={styles.emptyNotificationsText}>Bạn chưa có thông báo nào.</Text>
+            <Text style={styles.emptyNotificationsText}>Bạn chưa có lịch sử mua premium.</Text>
           </View>
         )}
       </View>
@@ -280,31 +362,34 @@ const styles = StyleSheet.create({
   flatListContentContainer: {
     paddingBottom: 20,
     flexGrow: 1,
+    paddingHorizontal: 0,
   },
-  notificationBlock: {
+  sectionBlock: {
     backgroundColor: '#fff',
-    borderRadius: 0,
-    paddingVertical: 10,
-    marginBottom: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
+  },
+  sectionHeaderWrap: {
+    backgroundColor: '#fff',
+    paddingTop: 16,
+    paddingBottom: 4,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: 'bold',
     color: '#222',
     marginBottom: 8,
-    paddingHorizontal: 16,
+  },
+  sectionSeparator: {
+    height: 10,
+    backgroundColor: '#F6F6F6',
+    width: '100%',
   },
   notificationItem: {
     flexDirection: 'row',
-    alignItems: 'center', // This aligns items vertically in the center
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    backgroundColor: '#fff',
   },
   separator: {
     height: 1,
@@ -357,6 +442,16 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
   },
+  itemSeparator: {
+    height: 1,
+    backgroundColor: '#F3F3F3', // hoặc '#F6F6F6' nếu muốn cực nhạt
+    marginLeft: 40, // icon 30 + marginRight 10
+    marginRight: 16, // hoặc 20 nếu muốn ngắn hơn nữa
+    borderRadius: 1, // tuỳ, có thể thêm cho line bo nhẹ 2 đầu
+  },
+  notificationItemWrap: {
+    backgroundColor: '#fff',
+  }
 });
 
 export default NotificationScreen;

@@ -1,7 +1,38 @@
 import axios from 'axios';
 import { IUser } from '../context/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const API_URL = 'http://103.72.99.132:3000/api';
+
+const NOTIFICATION_STORAGE_KEY = '@app_notifications';
+const HAS_UNREAD_NOTIFICATIONS_KEY = '@has_unread_notifications';
+
+export type NotificationType = 'app_open' | 'user_login' | 'premium_upgrade' | 'save_recipe' | 'upload_recipe' | 'logout';
+
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  timestamp: number;
+  message?: string;
+}
+
+export const addNotification = async (type: NotificationType, message?: string) => {
+  try {
+    const stored = await AsyncStorage.getItem(NOTIFICATION_STORAGE_KEY);
+    let notifications: NotificationItem[] = stored ? JSON.parse(stored) : [];
+    notifications.unshift({
+      id: type + '_' + Date.now(),
+      type,
+      timestamp: Date.now(),
+      message,
+    });
+    await AsyncStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(notifications));
+    await AsyncStorage.setItem(HAS_UNREAD_NOTIFICATIONS_KEY, 'true');
+  } catch (e) {
+    console.log('addNotification error:', e);
+  }
+};
 
 export const isPre = (user: any): boolean => {
   // Premium nếu là một chuỗi ngày hợp lệ (không null, không undefined, không rỗng, không phải 'null')
@@ -95,14 +126,55 @@ export const registerUser = async (fullname: string, email: string, password: st
   }
 };
 
-export const deleteUserByEmail = async (email: string) => {
+/**
+ * Đăng ký premium cho user
+ * @param userId string
+ * @param token string (nếu cần xác thực)
+ * @returns object thông tin premium
+ */
+export const registerPremium = async (userId: string, token?: string) => {
   try {
-    await axios.post(`${API_URL}/user/delete`, { email });
-    return true;
+    const res = await axios.post(
+      `${API_URL}/premium/register-premium`,
+      { user_id: userId },
+      token
+        ? { headers: { Authorization: `Bearer ${token}` } }
+        : undefined
+    );
+    return res.data;
   } catch (e) {
-    return false;
+    console.log('registerPremium error:', e?.response?.data || e);
+    throw e;
   }
 };
 
-// ...các hàm khác nếu cần, ví dụ: đổi mật khẩu, lấy thông tin user, v.v.
-// ...các hàm khác nếu cần, ví dụ: đổi mật khẩu, lấy thông tin user, v.v.
+/**
+ * Lấy thông tin premium của user
+ * @param userId string
+ * @returns object thông tin premium
+ */
+export const getPremiumInfo = async (userId: string) => {
+  try {
+    const res = await axios.get(
+      `${API_URL}/premium/get-premium-info`,
+      { params: { user_id: userId } }
+    );
+    return res.data;
+  } catch (e) {
+    console.log('getPremiumInfo error:', e?.response?.data || e);
+    throw e;
+  }
+};
+
+export const getPremiumHistory = async (token: string, page = 1, limit = 10) => {
+  try {
+    const res = await axios.get(`${API_URL}/premium/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { page, limit }
+    });
+    return res.data; // { data: [...], pagination: {...} }
+  } catch (e) {
+    console.log('getPremiumHistory error:', e?.response?.data || e);
+    throw e;
+  }
+};

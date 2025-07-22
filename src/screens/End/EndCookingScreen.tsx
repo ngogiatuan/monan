@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { nav } from '../../navigation/navigationName';
 import ButtonNavigation from '../../compoments/ButtonNavigation';
 import { checkNetworkAndAlert } from '../../compoments/NetworkAlert';
 import { useTranslation } from 'react-i18next';
-import { createNewReview } from '../../api/reviewApi';
+import { createNewReview, getUserReview, updateReview } from '../../api/reviewApi';
 import { UserContext } from '../../context/UserContext';
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +42,8 @@ const EndCookingScreen = () => {
 
   // ✅ Lấy recipeId từ params
   const recipeId = route.params?.recipeId;
+
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   React.useEffect(() => {
     const unsubscribe = require('@react-native-community/netinfo').addEventListener(
@@ -137,12 +141,10 @@ const EndCookingScreen = () => {
       Alert.alert('Lỗi', 'Vui lòng đăng nhập để đánh giá');
       return;
     }
-
     if (!recipeId) {
       Alert.alert('Lỗi', 'Không tìm thấy thông tin công thức');
       return;
     }
-
     if (rating === 0) {
       Alert.alert('Lỗi', 'Vui lòng chọn số sao');
       return;
@@ -155,27 +157,41 @@ const EndCookingScreen = () => {
 
     try {
       const userId = user._id || user.id || user.userId;
-      
-      if (!userId) {
-        throw new Error('Không tìm thấy userId');
+      if (!userId) throw new Error('Không tìm thấy userId');
+
+      // Kiểm tra đã review chưa
+      const existingReview = await getUserReview(recipeId, user.token);
+      console.log('existingReview:', existingReview);
+
+      if (existingReview) {
+        // Đã review, gọi update
+        const reviewId = existingReview._id || existingReview.id;
+        if (!reviewId) throw new Error('Không tìm thấy review ID');
+        await updateReview(reviewId, { rating, comment: comment.trim() }, user.token);
+      } else {
+        // Chưa review, gọi create
+        try {
+          const reviewData = { userId, recipeId, rating, comment: comment.trim() };
+          await createNewReview(reviewData, user.token);
+        } catch (error: any) {
+          if (error?.response?.status === 409) {
+            Alert.alert('Bạn đã đánh giá món này rồi!', 'Vui lòng cập nhật đánh giá ở trang review.');
+            return;
+          }
+          throw error;
+        }
       }
 
-      const reviewData = {
-        userId: userId,
-        recipeId: recipeId,
-        rating: rating,
-        comment: comment.trim()
-      };
-
-      await createNewReview(reviewData, user.token);
+      // Emit event để các màn hình khác cập nhật review
+      DeviceEventEmitter.emit('reviewCountUpdated', { recipeId, increment: existingReview ? 0 : 1 });
 
       setShowRating(false);
-      setSuccessMessage('Đánh giá của bạn đã được gửi!');
+      setSuccessMessage(existingReview ? 'Đánh giá đã được cập nhật!' : 'Đánh giá của bạn đã được gửi!');
       setShowSuccessModal(true);
 
     } catch (error: any) {
-      console.error('❌ API Error:', error);
-      Alert.alert('Lỗi', 'Không thể gửi đánh giá. Vui lòng thử lại!');
+      console.error('❌ API Error:', error?.response?.data || error?.message || error);
+      Alert.alert('Lỗi', error?.response?.data?.error || error?.message || 'Không thể gửi/cập nhật đánh giá. Vui lòng thử lại!');
     } finally {
       setIsSubmitting(false);
     }
@@ -243,52 +259,46 @@ const EndCookingScreen = () => {
           onPress={async () => {
             const ok = await checkNetworkAndAlert(t('network_continue'));
             if (!ok) return;
-            setShowRating(true);
+            bottomSheetRef.current?.present();
           }}
           backgroundColor="#FF6600"
         />
       </View>
       {/* Dialog đánh giá */}
-      <Modal
-        visible={showRating}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRating(false)}
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        enablePanDownToClose
+        backdropComponent={props => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} opacity={0.5} appearsOnIndex={0} pressBehavior={'none'} />
+        )}
+        snapPoints={['45%']} // hoặc ['60%'] tùy UI
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalContainer}
-        >
-          <View style={styles.modalContent}>
-            {/* Drag handle */}
-            <View style={{ alignItems: 'center', marginBottom: 8 }}>
-              <View style={styles.modalDragHandle} />
-            </View>
-            <Text style={styles.modalTitle}>{t('rate_recipe')}</Text>
-            {renderStars()}
-            <Text style={styles.modalLabel}>{t('comment')}</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder={t('comment_recipe_placeholder')}
-              value={comment}
-              onChangeText={setComment}
-              multiline
-              numberOfLines={3}
-              placeholderTextColor="#BDBDBD"
-            />
-            <TouchableOpacity
-              style={[styles.modalButton, isSubmitting && styles.modalButtonDisabled]}
-              onPress={handleSubmitReview}
-              disabled={isSubmitting || rating === 0}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.modalButtonText}>
-                {isSubmitting ? 'Đang gửi...' : t('confirm')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        <BottomSheetView style={{ flex: 1, padding: 20 }}>
+          {/* Drag handle tự động có, hoặc custom nếu muốn */}
+          <Text style={styles.modalTitle}>{t('rate_recipe')}</Text>
+          {renderStars()}
+          <Text style={styles.modalLabel}>{t('comment')}</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder={t('comment_recipe_placeholder')}
+            value={comment}
+            onChangeText={setComment}
+            multiline
+            numberOfLines={3}
+            placeholderTextColor="#BDBDBD"
+          />
+          <TouchableOpacity
+            style={[styles.modalButton, isSubmitting && styles.modalButtonDisabled]}
+            onPress={handleSubmitReview}
+            disabled={isSubmitting || rating === 0}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.modalButtonText}>
+              {isSubmitting ? 'Đang gửi...' : t('confirm')}
+            </Text>
+          </TouchableOpacity>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       {/* Modal thành công */}
       <Modal
@@ -297,21 +307,20 @@ const EndCookingScreen = () => {
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
       >
-        <View style={styles.dialogOverlay}>
-          <View style={styles.errorDialogBox}>
-            <Text style={styles.errorDialogTitle}>Thành công</Text>
-            <Text style={styles.errorDialogMessage}>{successMessage}</Text>
-            <View style={styles.errorButtonContainer}>
-              <TouchableOpacity
-                style={[styles.errorOkButton, { flex: 1 }]}
-                onPress={() => {
-                  setShowSuccessModal(false);
-                  navigation.navigate(nav.home);
-                }}
-              >
-                <Text style={styles.errorOkButtonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.successOverlay}>
+          <View style={styles.successDialog}>
+            <Text style={styles.successTitle}>{t('success')}</Text>
+            <Text style={styles.successDesc}>{successMessage}</Text>
+            <ButtonNavigation
+              title={t('back')}
+              backgroundColor="#FF6600"
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.navigate(nav.home);
+              }}
+              style={styles.dialogButton}
+              textStyle={styles.dialogButtonText}
+            />
           </View>
         </View>
       </Modal>
@@ -570,6 +579,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorOkButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  successOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successDialog: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    width: '85%',
+    elevation: 4,
+    alignItems: 'center',
+  },
+  successTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  successDesc: {
+    fontSize: 15,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  successImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E6F8F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  successImage: {
+    width: 40,
+    height: 40,
+    tintColor: '#00C48C',
+  },
+  dialogButton: {
+    width: '100%',
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+  },
+  dialogButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,

@@ -180,8 +180,12 @@ const DetailProfile = () => {
                 if (!recipe) return null;
                 const recipeId = recipe._id || recipe.id || recipe.recipeId;
                 const fullRecipe = fullRecipes[recipeId];
-                // Lấy đúng trường phân loại premium từ fullRecipe
-                const isPremiumRecipe = fullRecipe?.isPrevailing === true || fullRecipe?.isPrevailing === 1;
+                // Ưu tiên lấy tag từ recipe, fallback sang fullRecipe
+                const isPremiumRecipe =
+                  recipe?.isPrevailing === true ||
+                  recipe?.isPrevailing === 1 ||
+                  fullRecipe?.isPrevailing === true ||
+                  fullRecipe?.isPrevailing === 1;
                 // Lấy đúng id của bản ghi favorite
                 const favoriteId = item._id || item.id || item.favoriteId;
                 console.log('Favorite item:', item, 'favoriteId:', favoriteId);
@@ -237,7 +241,7 @@ const DetailProfile = () => {
                       </View>
                     </View>
                     <Text style={styles.productTitle} numberOfLines={2}>
-                      {recipe.name}
+                      {fullRecipe?.name || recipe.name}
                     </Text>
                     <View style={styles.productInfoRow}>
                       {/* Rating sát trái */}

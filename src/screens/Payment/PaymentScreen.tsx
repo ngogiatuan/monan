@@ -55,6 +55,7 @@ const PaymentScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePaymentStatusZP = useCallback(async () => {
+    console.log('handlePaymentStatusZP', paymentProcessZP, user);
     if (!paymentProcessZP) return;
     try {
       const res = await getStatusPaymentZP(paymentProcessZP, user?.token);
@@ -93,6 +94,7 @@ const PaymentScreen = () => {
         } else {
           Alert.alert('Lỗi', 'Không thể khởi tạo thanh toán ZaloPay. Vui lòng thử lại.');
           setIsLoading(false);
+          setPaymentProcessZP('');
         }
       } else {
         // For other payment methods, simulate success or handle actual payment logic
@@ -104,6 +106,7 @@ const PaymentScreen = () => {
       console.log('payment err', err);
       Alert.alert('Lỗi', 'Đã xảy ra lỗi trong quá trình thanh toán. Vui lòng thử lại.');
       setIsLoading(false);
+      setPaymentProcessZP('');
     }
   }, [price, selectedPayment, user]);
 

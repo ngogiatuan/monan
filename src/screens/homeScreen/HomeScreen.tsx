@@ -28,6 +28,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isPre } from '../../api/userApi';
 import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 import { DeviceEventEmitter } from 'react-native';
+import { getPremiumHistory } from '../../api/userApi';
 
 const { width } = Dimensions.get('window');
 
@@ -222,20 +223,16 @@ const HomeScreen = () => {
   }, [user?.id, user?.token]); // Dependencies: user ID and token
 
   useEffect(() => {
-    const checkNotificationIconStatus = async () => {
-      if (isFocused) {
-        try {
-          const unreadStatus = await AsyncStorage.getItem(HAS_UNREAD_NOTIFICATIONS_KEY);
-          setHasNewNotifications(unreadStatus === 'true');
-          console.log('Notification icon status updated:', unreadStatus === 'true' ? 'new' : 'no new');
-        } catch (error) {
-          console.error('Failed to read unread notifications flag:', error);
-        }
+    const checkPremiumNotification = async () => {
+      if (user?.token) {
+        const result = await getPremiumHistory(user.token, 1, 1); // chỉ lấy bản ghi mới nhất
+        const latestId = result.data?.[0]?.id;
+        const lastSeenId = await AsyncStorage.getItem('@last_seen_premium_notification_id');
+        setHasNewNotifications(latestId && latestId !== lastSeenId);
       }
     };
-
-    checkNotificationIconStatus();
-  }, [isFocused]); // Depend only on isFocused to re-check when returning to screen
+    if (isFocused) checkPremiumNotification();
+  }, [user?.token, isFocused]);
 
   // ✅ Thêm function để update review count
   const updateReviewCount = (recipeId: string, increment: number = 1) => {
@@ -495,6 +492,7 @@ const HomeScreen = () => {
                               Alert.alert(t('loginrequiredtitle'), t('loginrequiredmessage'));
                               return;
                             }
+                            console.log('(recipeItem.isPremiumRecipe && !isPre(user))', recipeItem.isPremiumRecipe, user);
                             if (recipeItem.isPremiumRecipe && !isPre(user)) {
                               setPremiumTitle(t('premiumrequiredtitle'));
                               setPremiumMessage(t('premiumrequiredsavemessage')); // hoặc message phù hợp
@@ -891,7 +889,6 @@ const styles = StyleSheet.create({
   notificationIcon: {
     width: 22,
     height: 22,
-    tintColor: '#000',
   },
 
   sectionRow: {
