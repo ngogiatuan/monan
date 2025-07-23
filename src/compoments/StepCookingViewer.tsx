@@ -34,6 +34,10 @@ const StepCookingViewer = ({ steps, onFinish, onBack, user }: StepCookingViewerP
   const showVideo = isPremium && typeof step.videoUrl === 'string' && step.videoUrl.trim() !== '';
 
   console.log('step:', step);
+  console.log('stepIdx:', stepIdx);
+  console.log('isPremium:', isPremium);
+  console.log('step.videoUrl:', step.videoUrl);
+  console.log('showVideo:', showVideo);
 
   return (
     <>
@@ -57,12 +61,18 @@ const StepCookingViewer = ({ steps, onFinish, onBack, user }: StepCookingViewerP
       <View style={styles.stepImgContainer}>
         {showVideo ? (
           <Video
-            source={{ uri: step.videoUrl }}
+            source={{
+              uri: step.videoUrl,
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
+            }}
             style={styles.stepVideo}
             controls
             resizeMode="contain"
             paused={false}
             onError={e => console.log('Video error:', e)}
+            onLoad={e => console.log('Video loaded:', e)}
           />
         ) : step.imageUrls?.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>

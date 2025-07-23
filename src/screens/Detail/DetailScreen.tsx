@@ -239,6 +239,9 @@ const DetailScreen = () => {
                         />
                     </TouchableOpacity>
                     <View style={styles.overlayRight}>
+                        <TouchableOpacity style={styles.overlayBtn}>
+                            <Image source={require('../../assert/image/share.png')} style={styles.overlayIcon} />
+                        </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.overlayBtn}
                             onPress={async () => {
@@ -252,6 +255,7 @@ const DetailScreen = () => {
                                         await removeFavorite(user.token, favoriteId);
                                     }
                                     await fetchFavorites();
+                                    DeviceEventEmitter.emit('favoriteChanged');
                                 } catch (e) {
                                     Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
                                 }
@@ -261,13 +265,10 @@ const DetailScreen = () => {
                                 source={
                                     isFav
                                         ? require('../../assert/image/yellowmark.png')
-                                        : require('../../assert/image/mark.png')
+                                        : require('../../assert/image/whitemark.png')
                                 }
                                 style={styles.overlayIcon}
                             />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.overlayBtn}>
-                            <Image source={require('../../assert/image/share.png')} style={styles.overlayIcon} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -342,16 +343,14 @@ const DetailScreen = () => {
                                         source={
                                             item.userId?.avatar
                                                 ? { uri: item.userId.avatar }
-                                                : require('../../assert/image/user1.png')
+                                                : require('../../assert/image/avatar.png')
                                         }
                                         style={styles.commentAvatar}
                                     />
                                     <View style={{ flex: 1 }}>
                                         <View style={styles.commentNameRow}>
                                             <Text style={styles.commentName}>
-                                                {item.userId?.fullName?.trim()
-                                                    ? item.userId.fullName
-                                                    : t('anonymous')}
+                                                {item.userId?.fullName}
                                             </Text>
                                             <View style={{ flex: 1 }} />
                                             <View style={styles.commentStarBox}>
@@ -420,6 +419,7 @@ const DetailScreen = () => {
                                                             await removeFavorite(user.token, relatedFavoriteId);
                                                         }
                                                         await fetchFavorites();
+                                                        DeviceEventEmitter.emit('favoriteChanged');
                                                     } catch (e) {
                                                         Alert.alert('Lỗi', 'Không thể lưu công thức. Vui lòng thử lại!');
                                                     }
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         flex: 1,
         textAlign: 'center',
-        marginLeft: -24, 
+        marginLeft: -24,
     },
     headerRight: {
         flexDirection: 'row',
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     infoSection: {
         padding: 18,
         backgroundColor: '#fff',
-        marginBottom: 10, 
+        marginBottom: 10,
     },
     title: {
         fontWeight: 'bold',
@@ -640,9 +640,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginTop: 6,
         marginBottom: 8,
-        paddingTop: 8, 
-        borderTopWidth: 1, 
-        borderTopColor: '#F0F0F0', 
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
     },
     row: {
         flexDirection: 'row',
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
         backgroundColor: '#fff',
         paddingTop: 18,
-        marginBottom: 10, 
+        marginBottom: 10,
     },
     reviewHeaderRow: {
         flexDirection: 'row',
@@ -821,12 +821,12 @@ const styles = StyleSheet.create({
         fontSize: 17,
     },
     ingredientSection: {
-        marginTop: 0, 
+        marginTop: 0,
         marginBottom: 12,
         paddingBottom: 8,
-        paddingTop: 18, 
-        backgroundColor: '#fff', 
-        paddingHorizontal: 18, 
+        paddingTop: 18,
+        backgroundColor: '#fff',
+        paddingHorizontal: 18,
     },
     ingredientTitle: {
         fontWeight: 'bold',
@@ -835,14 +835,14 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     ingredientList: {
-        paddingLeft: 0, 
+        paddingLeft: 0,
     },
     ingredientItem: {
         color: '#222',
         fontSize: 14,
         marginBottom: 2,
         lineHeight: 20,
-        paddingLeft: 0, 
+        paddingLeft: 0,
     },
     relatedSection: {
         marginTop: 0,
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     relatedCard: {
-        width: 260, 
+        width: 260,
         marginRight: 12,
         backgroundColor: '#fff',
         borderRadius: 12,

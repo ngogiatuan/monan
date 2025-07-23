@@ -24,7 +24,7 @@ import { countRecipe } from '../../api/recipeApi';
 import { UserContext } from '../../context/UserContext';
 import { isPre } from '../../api/userApi';
 import Video from 'react-native-video';
-const NetInfo = require('@react-native-community/netinfo');
+import NetInfo from '@react-native-community/netinfo';
 
 const { width } = Dimensions.get('window');
 const API_URL = 'http://103.72.99.132:3000';
@@ -137,7 +137,11 @@ const StepCookingViewer = ({
           style={styles.backBtn}
           onPress={handleBack}
         >
-          <Text style={{ color: '#fff', fontSize: 28, fontWeight: 'bold' }}>{'<'}</Text>
+          <Image
+            source={require('../../assert/image/back.png')}
+            style={{ width: 30, height: 30, tintColor: '#fff' }}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{`${stepIdx + 1}/${steps.length}`}</Text>
       </View>
@@ -146,12 +150,18 @@ const StepCookingViewer = ({
       <View style={styles.stepImgContainer}>
         {showVideo ? (
           <Video
-            source={{ uri: step.videoUrl }}
+            source={{
+              uri: step.videoUrl,
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
+            }}
             style={styles.stepVideo}
             controls
             resizeMode="contain"
             paused={false}
             onError={e => console.log('Video error:', e)}
+            onLoad={e => console.log('Video loaded:', e)}
           />
         ) : stepImages?.length > 0 ? (
           <ScrollView
@@ -333,6 +343,7 @@ const TutorialCookingScreen = () => {
           .sort((a, b) => a.step - b.step)
           .map((stepObj, idx) => ({
             imageUrls: stepObj.imageUrls && stepObj.imageUrls.length > 0 ? stepObj.imageUrls : [],
+            // Lấy đúng videoUrl từ API
             videoUrl: stepObj.videoUrl || '',
             title: t('step_title', { step: stepObj.step || (idx + 1) }),
             desc: String(stepObj.tutorial || t('no_tutorial')),

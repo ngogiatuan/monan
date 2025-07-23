@@ -228,6 +228,7 @@ const HomeScreen = () => {
         const result = await getPremiumHistory(user.token, 1, 1); // chỉ lấy bản ghi mới nhất
         const latestId = result.data?.[0]?.id;
         const lastSeenId = await AsyncStorage.getItem('@last_seen_premium_notification_id');
+        console.log('[HomeScreen] latestId:', latestId, 'lastSeenId:', lastSeenId);
         setHasNewNotifications(latestId && latestId !== lastSeenId);
       }
     };
@@ -436,7 +437,13 @@ const HomeScreen = () => {
           <View style={styles.contentBlock}>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity onPress={goDiscovery}>
+              <TouchableOpacity onPress={() => {
+                console.log('Go Discovery:', { type: 'Hôm nay nấu gì?', category: mealCateObj });
+                navigation.navigate(nav.discovery, {
+                  type: 'Hôm nay nấu gì?',
+                  category: mealCateObj,
+                });
+              }}>
                 <Text style={styles.seeMore}>{t('see_more')}</Text>
               </TouchableOpacity>
             </View>
@@ -507,7 +514,7 @@ const HomeScreen = () => {
                               } else if (favoriteId) {
                                 await removeFavorite(user.token, favoriteId);
                               }
-                              await reloadFavorites();
+                              DeviceEventEmitter.emit('favoriteChanged');
                             } catch (e) {
                               Alert.alert('Lỗi', t('cannotsaverecipe'));
                             }
@@ -592,7 +599,10 @@ const HomeScreen = () => {
   };
 
   const goDiscovery = () => {
-    navigation.navigate(nav.discovery);
+    navigation.navigate(nav.discovery, {
+      type: 'Món ăn thịnh hành',
+      category: mealCateObj, // object hoặc id
+    });
   };
 
   const goSearchScreen = () => {
@@ -622,6 +632,13 @@ const HomeScreen = () => {
     });
 
     return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('favoriteChanged', () => {
+      reloadFavorites();
+    });
+    return () => sub.remove();
   }, []);
 
   return (

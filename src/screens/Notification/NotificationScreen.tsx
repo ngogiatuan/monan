@@ -142,6 +142,16 @@ const NotificationScreen = () => {
     fetchHistory();
   }, [user?.token, isFocused]);
 
+  useEffect(() => {
+    if (premiumHistory.length > 0) {
+      const latestId = premiumHistory[0]?.id;
+      if (latestId) {
+        AsyncStorage.setItem('@last_seen_premium_notification_id', latestId);
+        console.log('[NotificationScreen] Set last_seen_premium_notification_id:', latestId);
+      }
+    }
+  }, [premiumHistory]);
+
   const groupNotificationsByDate = () => {
     const grouped: { [key: string]: NotificationItem[] } = {};
     const today = new Date();

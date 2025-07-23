@@ -39,6 +39,7 @@ const EndCookingScreen = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showAlreadyReviewedModal, setShowAlreadyReviewedModal] = useState(false);
 
   // ✅ Lấy recipeId từ params
   const recipeId = route.params?.recipeId;
@@ -155,43 +156,35 @@ const EndCookingScreen = () => {
 
     setIsSubmitting(true);
 
+    const userId = user._id || user.id || user.userId;
+    if (!userId) {
+      Alert.alert('Lỗi', 'Không tìm thấy userId');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Kiểm tra đã review chưa
+    const existingReview = await getUserReview(recipeId, user.token);
+    if (existingReview) {
+      setShowAlreadyReviewedModal(true);
+      setShowRating(false);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Chưa review, gọi create
     try {
-      const userId = user._id || user.id || user.userId;
-      if (!userId) throw new Error('Không tìm thấy userId');
+      const reviewData = { userId, recipeId, rating, comment: comment.trim() };
+      await createNewReview(reviewData, user.token);
 
-      // Kiểm tra đã review chưa
-      const existingReview = await getUserReview(recipeId, user.token);
-      console.log('existingReview:', existingReview);
-
-      if (existingReview) {
-        // Đã review, gọi update
-        const reviewId = existingReview._id || existingReview.id;
-        if (!reviewId) throw new Error('Không tìm thấy review ID');
-        await updateReview(reviewId, { rating, comment: comment.trim() }, user.token);
-      } else {
-        // Chưa review, gọi create
-        try {
-          const reviewData = { userId, recipeId, rating, comment: comment.trim() };
-          await createNewReview(reviewData, user.token);
-        } catch (error: any) {
-          if (error?.response?.status === 409) {
-            Alert.alert('Bạn đã đánh giá món này rồi!', 'Vui lòng cập nhật đánh giá ở trang review.');
-            return;
-          }
-          throw error;
-        }
-      }
-
-      // Emit event để các màn hình khác cập nhật review
-      DeviceEventEmitter.emit('reviewCountUpdated', { recipeId, increment: existingReview ? 0 : 1 });
+      DeviceEventEmitter.emit('reviewCountUpdated', { recipeId, increment: 1 });
 
       setShowRating(false);
-      setSuccessMessage(existingReview ? 'Đánh giá đã được cập nhật!' : 'Đánh giá của bạn đã được gửi!');
+      setSuccessMessage('Đánh giá của bạn đã được gửi!');
       setShowSuccessModal(true);
-
     } catch (error: any) {
       console.error('❌ API Error:', error?.response?.data || error?.message || error);
-      Alert.alert('Lỗi', error?.response?.data?.error || error?.message || 'Không thể gửi/cập nhật đánh giá. Vui lòng thử lại!');
+      Alert.alert('Lỗi', error?.response?.data?.error || error?.message || 'Không thể gửi đánh giá. Vui lòng thử lại!');
     } finally {
       setIsSubmitting(false);
     }
@@ -318,6 +311,28 @@ const EndCookingScreen = () => {
                 setShowSuccessModal(false);
                 navigation.navigate(nav.home);
               }}
+              style={styles.dialogButton}
+              textStyle={styles.dialogButtonText}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal đã đánh giá */}
+      <Modal
+        visible={showAlreadyReviewedModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAlreadyReviewedModal(false)}
+      >
+        <View style={styles.successOverlay}>
+          <View style={styles.successDialog}>
+            <Text style={styles.successTitle}>Bạn đã đánh giá món này rồi!</Text>
+            <Text style={styles.successDesc}>Bạn chỉ có thể đánh giá một lần cho mỗi công thức.</Text>
+            <ButtonNavigation
+              title="OK"
+              backgroundColor="#FF6600"
+              onPress={() => setShowAlreadyReviewedModal(false)}
               style={styles.dialogButton}
               textStyle={styles.dialogButtonText}
             />

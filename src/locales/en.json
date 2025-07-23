@@ -27,7 +27,7 @@
   "good_noon": "Good noon",
   "good_afternoon": "Good afternoon",
   "good_evening": "Good evening",
-  "what_to_cook_today": "what do you want to cook today?",
+  "what_to_cook_today": "What to cook today?",
   "search_recipe_placeholder": "Search recipes/categories...",
   "ranking_point": "Ranking point",
   "categories": "Categories",
@@ -196,5 +196,8 @@
   "buynow": "Buy Now",
   "member_normal": "Normal Member",
   "premiumrequiredsavemessage": "You need to buy Premium to save this recipe.",
-  "no_matching_recipes_found": "No matching recipes found"
+  "no_matching_recipes_found": "No matching recipes found",
+  "good": "Good",
+  "bad": "Bad",
+  "no_review": "No review"
 }

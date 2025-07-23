@@ -34,6 +34,7 @@ type DiscoveryScreenRouteProp = RouteProp<{
     mealType?: string;
     categoryName?: string;
     category: any;
+    type?: string; // <-- Add this line
   };
 }, 'Discovery'>;
 
@@ -48,23 +49,23 @@ const MEAL_OPTIONS = [
 const TYPE_OPTIONS = [
   'Tất cả',
   'Món ăn thịnh hành',
-  'Hôm nay bạn nấu gì?',
+  'Hôm nay  nấu gì?',
   'Cảm hứng hàng ngày',
 ];
 
 const DiscoveryScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<DiscoveryScreenRouteProp>();
-  const { mealType, category } = route.params || {};
+  const { type: initialType, category } = route.params || {};
   const { t } = useTranslation();
   const { user } = useContext(UserContext);
 
-  const [type, setType] = useState('Món ăn thịnh hành');
+  const [type, setType] = useState(initialType || 'Món ăn thịnh hành');
   const [ingredients, setIngredients] = useState('');
   const [recipes, setRecipes] = useState<any[]>([]);
   const [pageTitle, setPageTitle] = useState(t('trending_recipes'));
   const [categories, setCategories] = useState<any[]>([]);
-  const [categorySelected, setCategorySelected] = useState<any | null>(null);
+  const [categorySelected, setCategorySelected] = useState(category || null);
   const [recipesFiltered, setRecipeFiltered] = useState<any[]>([]);
   const [recipeRatings, setRecipeRatings] = useState<{ [recipeId: string]: { avg: number, count: number } }>({});
 
@@ -108,41 +109,35 @@ const DiscoveryScreen = () => {
   }, [route.params, t]);
 
   useEffect(() => {
-    if (recipes.length > 0) {
-      let filtered = [...recipes];
-
-      // Filter by category
-      if (categorySelected && categorySelected.id) {
-        filtered = filtered.filter(itemRe => {
-          return itemRe?.categoryIds?.some((itemCa: any) => itemCa?._id === categorySelected.id);
-        });
-      }
-      if (type === 'Món ăn thịnh hành') {
-      } else if (type === 'Hôm nay bạn nấu gì?') {
-      } else if (type === 'Cảm hứng hàng ngày') {
-      }
-
-
-      // Filter by ingredients
-      if (ingredients) {
-        const searchTerms = ingredients.toLowerCase().split(' ').filter(term => term.length > 0);
-        filtered = filtered.filter(itemRe => {
-
-          const recipeIngredients = itemRe?.ingredients?.map((ing: any) => String(ing.name || '').toLowerCase()).join(' ') || '';
-          const recipeName = String(itemRe?.name || '').toLowerCase();
-
-          // Check if any search term is present in the recipe's ingredients or name
-          return searchTerms.some(term =>
-            recipeIngredients.includes(term) || recipeName.includes(term)
-          );
-        });
-      }
-
-      setRecipeFiltered(filtered);
-    } else {
-      setRecipeFiltered([]);
+    console.log('DiscoveryScreen params:', initialType, category);
+    if (initialType) {
+      setType(initialType);
     }
-  }, [recipes, categorySelected, type, ingredients]); // Add 'ingredients' to dependency array
+    if (category) {
+      setCategorySelected(category);
+    }
+  }, [initialType, category]);
+
+  useEffect(() => {
+    let filtered = [...recipes];
+
+    if (type === 'Món ăn thịnh hành') {
+      // Chỉ lấy món premium
+      filtered = filtered.filter(item => item.isPrevailing);
+    } else if (type === 'Hôm nay nấu gì?') {
+      // Lấy cả premium và free, filter theo category nếu có
+      if (categorySelected && categorySelected.id) {
+        filtered = filtered.filter(item =>
+          item.categoryIds?.some(cat => cat._id === categorySelected.id)
+        );
+      }
+      // Không filter isPrevailing
+    } else if (type === 'Cảm hứng hàng ngày') {
+      // Không filter gì cả, lấy hết
+    }
+
+    setRecipeFiltered(filtered);
+  }, [recipes, type, categorySelected]);
 
   useEffect(() => {
     const fetchRatings = async () => {
@@ -162,6 +157,18 @@ const DiscoveryScreen = () => {
     };
     if (recipesFiltered.length > 0) fetchRatings();
   }, [recipesFiltered]);
+
+  useEffect(() => {
+    if (type === 'Món ăn thịnh hành') {
+      setPageTitle(t('trending_recipes'));
+    } else if (type === 'Hôm nay nấu gì?') {
+      setPageTitle(t('what_to_cook_today'));
+    } else if (type === 'Cảm hứng hàng ngày') {
+      setPageTitle(t('daily_inspiration'));
+    } else {
+      setPageTitle(type); // fallback
+    }
+  }, [type, t]);
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity

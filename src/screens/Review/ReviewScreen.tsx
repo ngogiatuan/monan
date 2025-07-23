@@ -111,15 +111,7 @@ const ReviewScreen = () => {
     if (review.userId?.avatar) {
       return { uri: review.userId.avatar };
     }
-    return require('../../assert/image/user1.png');
-  };
-
-  // ✅ Cập nhật function để lấy tên user
-  const getUserName = (review: any) => {
-    if (review.userId?.fullName?.trim()) {
-      return review.userId.fullName;
-    }
-    return 'Ẩn danh';
+    return require('../../assert/image/avatar.png');
   };
 
   // ✅ Thêm function để lấy màu và label dựa trên rating
@@ -174,7 +166,7 @@ const ReviewScreen = () => {
               <View style={styles.reviewContent}>
                 <View style={styles.reviewHeader}>
                   <Text style={styles.reviewName}>
-                    {getUserName(item)}
+                    {item.userId?.fullName}
                   </Text>
                   <Text style={styles.reviewDate}>
                     {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}

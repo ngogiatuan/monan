@@ -35,8 +35,13 @@ export const addNotification = async (type: NotificationType, message?: string) 
 };
 
 export const isPre = (user: any): boolean => {
-  // Premium nếu là một chuỗi ngày hợp lệ (không null, không undefined, không rỗng, không phải 'null')
-  return !!(user && typeof user.premium === 'string' && user.premium !== '' && user.premium !== 'null');
+  return !!(
+    user &&
+    typeof user.premium === 'string' &&
+    user.premium !== '' &&
+    user.premium !== 'null' &&
+    new Date(user.premium) > new Date()
+  );
 };
 
 export const getUserByEmailAndPassword = async (email: string, password: string): Promise<IUser | null> => {
@@ -175,6 +180,16 @@ export const getPremiumHistory = async (token: string, page = 1, limit = 10) => 
     return res.data; // { data: [...], pagination: {...} }
   } catch (e) {
     console.log('getPremiumHistory error:', e?.response?.data || e);
+    throw e;
+  }
+};
+
+export const deleteUserByEmail = async (email: string) => {
+  try {
+    const res = await axios.delete(`${API_URL}/users/delete`, { data: { email } });
+    return res.data;
+  } catch (e) {
+    console.log('Error deleting user:', e);
     throw e;
   }
 };
