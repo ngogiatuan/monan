@@ -278,9 +278,12 @@ const DetailScreen = () => {
                 <View style={styles.infoSection}>
                     <Text style={styles.title}>{String(recipe.name || '')}</Text>
                     <View style={styles.authorRow}>
-                        <Image source={require('../../assert/image/author.png')} style={styles.authorAvatar} />
+                        <Image
+                            source={{ uri: recipe.idUser.avatar }}
+                            style={styles.authorAvatar}
+                        />
                         <Text style={styles.authorName}>
-                            {recipe.idUser?.full_name ? String(recipe.idUser.full_name) : 'Emily Harris'}
+                            {recipe.idUser?.fullName}
                         </Text>
                         <Text style={styles.authorLabel}>· {t('author')}</Text>
                     </View>
