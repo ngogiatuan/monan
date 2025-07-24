@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import InputNavigation from '../../compoments/InputNavigation';
 import { nav } from '../../navigation/navigationName';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { getRecipes } from '../../api/recipeApi'; // Import your getRecipes API
+import { getRecipes, createRecipe } from '../../api/recipeApi'; // Import your getRecipes API
 
 const AddRecipeScreen = () => {
   const navigation = useNavigation<any>();
@@ -66,23 +66,50 @@ const AddRecipeScreen = () => {
   };
 
   const handleContinue = async () => {
-    if (!validateInputs()) {
+    // Validate input
+    if (!name.trim()) {
+      showCustomError('Lỗi', 'Vui lòng nhập tên công thức.');
+      return;
+    }
+    if (!imageUrl) {
+      showCustomError('Lỗi', 'Vui lòng thêm hình ảnh cho công thức.');
+      return;
+    }
+    if (!desc.trim()) {
+      showCustomError('Lỗi', 'Vui lòng nhập mô tả công thức.');
+      return;
+    }
+    if (!servings || Number(servings) <= 0) {
+      showCustomError('Lỗi', 'Vui lòng nhập khẩu phần hợp lệ.');
+      return;
+    }
+    if (!time.trim() || isNaN(Number(time)) || Number(time) <= 0) {
+      showCustomError('Lỗi', 'Vui lòng nhập thời gian hợp lệ.');
       return;
     }
 
     setIsLoading(true);
-
-    const isDuplicate = await checkDuplicateRecipeName(name);
-
-    setIsLoading(false);
-
-    if (isDuplicate) {
-      showCustomError(
-        'Lỗi',
-        'Tên công thức này đã tồn tại. Vui lòng chọn một tên khác.'
-      );
-    } else {
-      navigation.navigate(nav.rank);
+    try {
+      const recipeData = {
+        name,
+        description: desc,
+        cookingTime: time,
+        servings,
+        instructions: ingredients, // hoặc trường khác nếu có
+        imageUrls: [imageUrl],
+        // step: "5 bước" // Có thể bỏ qua, backend tự tính sau khi thêm step
+      };
+      await createRecipe(recipeData);
+      // Thành công, chuyển sang màn hình tạo bước
+      navigation.navigate(nav.rank, { recipeName: name });
+    } catch (e: any) {
+      if (e.message === 'Tên món ăn đã tồn tại.') {
+        showCustomError('Lỗi', 'Tên công thức này đã tồn tại. Vui lòng chọn một tên khác.');
+      } else {
+        showCustomError('Lỗi', 'Không thể tạo công thức. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -521,18 +548,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 15,
   },
-  // Updated styles for custom error modal
+
   errorDialogBox: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    // Adjusted padding for a more horizontal rectangle look
     paddingHorizontal: 24,
     paddingVertical: 18,
-    width: '85%', // Wider
-    // Removed alignItems: 'center' from here
+    width: '85%', 
     elevation: 4,
   },
-  errorDialogTitle: { // New style for the title in error dialog
+  errorDialogTitle: {
     fontWeight: 'bold',
     fontSize: 16,
     color: '#222',
@@ -543,7 +568,7 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 20,
   },
-  errorButtonContainer: { // Container to align button to the right
+  errorButtonContainer: { 
     flexDirection: 'row',
     justifyContent: 'flex-end',
     width: '100%',
@@ -562,5 +587,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
-
 export default AddRecipeScreen;

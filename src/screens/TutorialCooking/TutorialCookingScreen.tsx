@@ -77,6 +77,11 @@ const StepCookingViewer = ({
   const isPremium = isPre(user);
   const showVideo = isPremium && typeof step.videoUrl === 'string' && step.videoUrl.trim() !== '';
 
+  console.log('Current stepIdx:', stepIdx, 'step:', step);
+  console.log('isPremium:', isPremium);
+  console.log('step.videoUrl:', step);
+  console.log('showVideo:', showVideo);
+
   useEffect(() => {
     Tts.getInitStatus().then(
       () => setIsVisibleTts(true),
@@ -315,6 +320,7 @@ const TutorialCookingScreen = () => {
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
 
   const estimatedTime = route.params?.estimatedTime || 40;
+  console.log('recipeId:', recipeId);
 
   React.useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state: any) => {
@@ -335,7 +341,8 @@ const TutorialCookingScreen = () => {
     const fetchSteps = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/api/steps/recipe/${recipeId}`);
+        const res = await axios.get(`${API_URL}/api/steps/recipe/${recipeId}`, { headers: { Authorization: `Bearer ${user?.token}` } });
+
         const data = Array.isArray(res.data) ? res.data : [];
         console.log('API steps:', data); // Thêm dòng này để kiểm tra thứ tự
         let stepsData = data

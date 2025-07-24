@@ -89,3 +89,16 @@ export const getRecipeStatsByUser = async (userId: string) => {
     return { totalTime: 0, totalRecipes: 0 };
   }
 };
+
+export const createRecipe = async (recipeData: any) => {
+  try {
+    const res = await axios.post(`${API_URL}/recipes`, recipeData);
+    return res.data;
+  } catch (e: any) {
+    // Nếu lỗi trùng tên, backend nên trả về status 409 hoặc message đặc biệt
+    if (e?.response?.status === 409) {
+      throw new Error('Tên món ăn đã tồn tại.');
+    }
+    throw e;
+  }
+};

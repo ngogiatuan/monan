@@ -33,11 +33,9 @@ const StepCookingViewer = ({ steps, onFinish, onBack, user }: StepCookingViewerP
   const isPremium = isPre(user);
   const showVideo = isPremium && typeof step.videoUrl === 'string' && step.videoUrl.trim() !== '';
 
-  console.log('step:', step);
-  console.log('stepIdx:', stepIdx);
   console.log('isPremium:', isPremium);
-  console.log('step.videoUrl:', step.videoUrl);
-  console.log('showVideo:', showVideo);
+  console.log('step.videoUrl:', step.videoUrl); 
+  console.log('showVideo:', showVideo); 
 
   return (
     <>
