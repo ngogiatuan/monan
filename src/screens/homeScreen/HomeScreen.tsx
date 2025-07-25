@@ -235,19 +235,12 @@ const HomeScreen = () => {
     if (isFocused) checkPremiumNotification();
   }, [user?.token, isFocused]);
 
-  // ✅ Thêm function để update review count
   const updateReviewCount = (recipeId: string, increment: number = 1) => {
     setReviewCountUpdates(prev => ({
       ...prev,
       [recipeId]: (prev[recipeId] || 0) + increment
     }));
   };
-
-  // ✅ Export function để các screen khác có thể gọi
-  // The useImperativeHandle approach is not needed here as DeviceEventEmitter is more appropriate.
-  // The original code had this line, but it was causing a type error.
-  // I will remove it as per the edit hint.
-
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -421,10 +414,13 @@ const HomeScreen = () => {
     Alert.alert('Khách hàng cần đăng nhập để xem chi tiết.');
   };
 
+  const isPremium = isPre(user);
+
   const scrollableSections = [
     { type: 'trending_recipes', title: t('trending_recipes'), data: trendingData },
     { type: 'today_recipes', title: t('today_recipes'), data: todayData },
-    { type: 'offers', title: t('offers'), data: offerData },
+    // Chỉ thêm offers nếu chưa premium
+    ...(!isPremium ? [{ type: 'offers', title: t('offers'), data: offerData }] : []),
     { type: 'daily_inspiration', title: t('daily_inspiration'), data: todayData },
   ];
 
@@ -575,7 +571,10 @@ const HomeScreen = () => {
                       >
                         {offerItem.title}
                       </Text>
-                      <TouchableOpacity style={styles.offerBtnFull}>
+                      <TouchableOpacity
+                        style={styles.offerBtnFull}
+                        onPress={() => navigation.navigate(nav.buy)}
+                      >
                         <Text style={styles.offerBtnTextFull}>{t('get_now', { defaultValue: offerItem.button })}</Text>
                       </TouchableOpacity>
                     </View>

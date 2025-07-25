@@ -15,7 +15,7 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
   const labels = {
     login: t('login'),
     no_account: t('noaccount'),
-    create_account: t('register'),
+    create_account: t('create_account'),
     profile: t('profile'),
     edit_profile: t('edit_profile'),
     member_normal: t('member_normal'),
@@ -74,7 +74,7 @@ const ProfileInfo = ({ onCreateAccount }: { onCreateAccount?: () => void }) => {
           <Text style={styles.memberText}>
             {labels.no_account}{' '}
             <Text
-              style={styles.createAccountTextNoHighlight}
+              style={[styles.createAccountTextNoHighlight, { color: '#1CB0F6' }]}
               onPress={onCreateAccount}
             >
               {labels.create_account}
@@ -189,8 +189,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   createAccountTextNoHighlight: {
-    color: '#007aff',
-    fontWeight: 'bold',
+    color: '#1CB0F6',
     // Không underline, không highlight
   },
   btnRow: {

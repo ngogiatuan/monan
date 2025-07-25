@@ -92,7 +92,7 @@
   "enteremail": "Nhập email",
   "enterpassword": "Nhập mật Khẩu",
   "forgotpassword": "Quên mật khẩu",
-  "noaccount": "Bạn chưa có tài khoản?",
+  "noaccount": "Chưa có tài khoản?",
   "register": "Đăng ký",
   "enterfullname": "Nhập họ và tên",
   "fullname": "Tên",
@@ -191,5 +191,6 @@
   "no_matching_recipes_found": "Không tìm thấy công thức phù hợp",
   "good": "Tốt",
   "bad": "Kém",
-  "no_review": "Không có đánh giá"
+  "no_review": "Không có đánh giá",
+  "create_account": "Tạo tài khoản"
 }

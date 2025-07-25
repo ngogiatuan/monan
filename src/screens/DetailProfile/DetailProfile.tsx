@@ -14,6 +14,8 @@ import { uniqBy } from 'lodash'; // thêm thư viện lodash nếu chưa có
 import { getReviewsByRecipeId, getAverageRatingByRecipeId } from '../../api/reviewApi';
 import { getRecipeById } from '../../api/recipeApi';
 import { useState } from 'react';
+import { getMyInfo } from '../../api/userApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +40,8 @@ const DetailProfile = () => {
   const [totalRecipes, setTotalRecipes] = React.useState<number>(0);
   const [recipeRatings, setRecipeRatings] = React.useState<{ [recipeId: string]: { avg: number, count: number } }>({});
   const [fullRecipes, setFullRecipes] = useState<{ [id: string]: any }>({});
+  const [myInfo, setMyInfo] = useState<any>(null);
+  const [totalCookRecipe, setTotalCookRecipe] = useState(0);
 
   React.useEffect(() => {
     const fetchFavorites = async () => {
@@ -112,6 +116,36 @@ const DetailProfile = () => {
     if (favorites.length > 0) fetchFullRecipes();
   }, [favorites]);
 
+  React.useEffect(() => {
+    const fetchMyInfo = async () => {
+      if (user?.token) {
+        try {
+          const info = await getMyInfo(user.token);
+          setMyInfo(info);
+          // Log giá trị BE trả về
+          console.log('[DetailProfile] BE total_cook_recipe (API):', info?.total_cook_recipe);
+        } catch (e) {
+          setMyInfo(null);
+        }
+      }
+    };
+    fetchMyInfo();
+  }, [user?.token]);
+
+  React.useEffect(() => {
+    const fetchTotalCookRecipe = async () => {
+      if (user?.id || user?._id) {
+        const key = `@total_cook_recipe_${user.id || user._id}`;
+        const value = await AsyncStorage.getItem(key);
+        const total = parseInt(value || '0', 10) || 0;
+        setTotalCookRecipe(total);
+        // Log giá trị FE lưu
+        console.log('[DetailProfile] FE totalCookRecipe (AsyncStorage):', total);
+      }
+    };
+    fetchTotalCookRecipe();
+  }, [user?.id, user?._id]);
+
   const formatTotalTime = (seconds: number) => {
     if (!seconds || seconds <= 0) return '0';
     const h = Math.floor(seconds / 3600);
@@ -132,7 +166,7 @@ const DetailProfile = () => {
       id: '2',
       icon: require('../../assert/image/total.png'),
       label: 'Tổng số món đã nấu',
-      value: totalRecipes.toString(),
+      value: totalCookRecipe,
       valueColor: '#1a73e8',
     },
   ];

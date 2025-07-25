@@ -50,21 +50,6 @@ const AddRecipeScreen = () => {
     return true;
   };
 
-  const checkDuplicateRecipeName = async (recipeName: string) => {
-    try {
-      const allRecipes = await getRecipes(1, 1000);
-      const lowerCaseNewName = recipeName.trim().toLowerCase();
-      const isDuplicate = allRecipes.some(
-        (recipe: any) => recipe.name.toLowerCase() === lowerCaseNewName
-      );
-      return isDuplicate;
-    } catch (error) {
-      console.error('Error checking duplicate recipe name:', error);
-      showCustomError('Lỗi', 'Không thể kiểm tra trùng lặp tên món ăn. Vui lòng thử lại.');
-      return true;
-    }
-  };
-
   const handleContinue = async () => {
     // Validate input
     if (!name.trim()) {
@@ -103,11 +88,7 @@ const AddRecipeScreen = () => {
       // Thành công, chuyển sang màn hình tạo bước
       navigation.navigate(nav.rank, { recipeName: name });
     } catch (e: any) {
-      if (e.message === 'Tên món ăn đã tồn tại.') {
-        showCustomError('Lỗi', 'Tên công thức này đã tồn tại. Vui lòng chọn một tên khác.');
-      } else {
-        showCustomError('Lỗi', 'Không thể tạo công thức. Vui lòng thử lại.');
-      }
+      showCustomError('Lỗi', 'Không thể tạo công thức. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -554,7 +535,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 18,
-    width: '85%', 
+    width: '85%',
     elevation: 4,
   },
   errorDialogTitle: {
@@ -568,7 +549,7 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 20,
   },
-  errorButtonContainer: { 
+  errorButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     width: '100%',

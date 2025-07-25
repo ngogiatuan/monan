@@ -104,7 +104,7 @@
   "enteremail": "Enter email",
   "enterpassword": "Enter password",
   "forgotpassword": "Forgot password",
-  "noaccount": "Don't have an account?",
+  "noaccount": "No account yet?",
   "register": "Register",
   "enterfullname": "Enter full name",
   "enterrepassword": "Re-enter password",
@@ -199,5 +199,6 @@
   "no_matching_recipes_found": "No matching recipes found",
   "good": "Good",
   "bad": "Bad",
-  "no_review": "No review"
+  "no_review": "No review",
+  "create_account": "Create account"
 }

@@ -12,6 +12,7 @@ import { nav } from '../../navigation/navigationName'; // Đảm bảo đường
 // Nếu bạn đã có trong StepCookingViewer.ts/tsx thì có thể import từ đó
 export interface StepCooking {
     image: { uri: string } | any; // 'any' để chấp nhận require() hoặc {uri: string}
+    video?: { uri: string } | null; // <-- Thêm trường này
     title: string;
     desc: string;
 }
@@ -22,6 +23,7 @@ const AddStepScreen = () => {
     const navigation = useNavigation();
     // State cho dữ liệu của bước HIỆN TẠI đang được chỉnh sửa/thêm vào
     const [currentStepImageUrl, setCurrentStepImageUrl] = useState<string | null>(null);
+    const [currentStepVideoUrl, setCurrentStepVideoUrl] = useState<string | null>(null);
     const [currentStepTitle, setCurrentStepTitle] = useState('');
     const [currentStepContent, setCurrentStepContent] = useState('');
     const [showImagePickerModal, setShowImagePickerModal] = useState(false);
@@ -38,12 +40,14 @@ const AddStepScreen = () => {
             // Đang chỉnh sửa một bước đã tồn tại
             const stepToEdit = allSteps[currentStepIndex];
             setCurrentStepImageUrl(stepToEdit.image.uri || null);
+            setCurrentStepVideoUrl(stepToEdit.video?.uri || null);
             setCurrentStepTitle(stepToEdit.title);
             setCurrentStepContent(stepToEdit.desc);
         } else {
             // Đang thêm một bước mới (currentStepIndex === allSteps.length)
             // Hoặc là lần đầu vào màn hình
             setCurrentStepImageUrl(null);
+            setCurrentStepVideoUrl(null);
             setCurrentStepTitle('');
             setCurrentStepContent('');
         }
@@ -126,10 +130,20 @@ const AddStepScreen = () => {
                     finalStepsArray.push(finalStepData);
                 }
                 console.log('Final steps to be passed:', finalStepsArray);
-                Alert.alert('Hoàn tất', 'Các bước đã được thêm! (Kiểm tra console log để xem dữ liệu)');
-                // Đây là nơi bạn sẽ điều hướng hoặc gửi dữ liệu đi
-                // Ví dụ: navigation.navigate(nav.RecipeDetailScreen, { steps: finalStepsArray });
-                navigation.goBack(); // Hoặc navigate đến màn hình chi tiết món ăn
+                Alert.alert(
+                    'Thành công',
+                    'Công thức của bạn đang chờ admin duyệt!',
+                    [
+                        {
+                            text: 'Về trang chủ',
+                            onPress: () => navigation.navigate(nav.home as never),
+                        },
+                        {
+                            text: 'Xem công thức của tôi',
+                            onPress: () => navigation.navigate(nav.recipe as never),
+                        },
+                    ] as never // hoặc as any đều được
+                );
                 return finalStepsArray;
             });
         } else {
@@ -186,8 +200,8 @@ const AddStepScreen = () => {
                     content={currentStepContent}
                     setTitle={setCurrentStepTitle}
                     setContent={setCurrentStepContent}
-                    setImageUrl={setCurrentStepImageUrl} // Truyền setter để AddStepView có thể reset ảnh
-                    onShowImagePicker={() => setShowImagePickerModal(true)} // Mở modal từ màn hình cha
+                    setImageUrl={setCurrentStepImageUrl}
+                    onShowImagePicker={() => setShowImagePickerModal(true)}
                 />
             </ScrollView>
 

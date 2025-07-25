@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { createNewReview, getUserReview, updateReview } from '../../api/reviewApi';
 import { UserContext } from '../../context/UserContext';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -189,6 +190,22 @@ const EndCookingScreen = () => {
       setIsSubmitting(false);
     }
   };
+
+  const increaseCookedRecipeCount = async (userId: string) => {
+    try {
+      const key = `@total_cook_recipe_${userId}`;
+      const current = await AsyncStorage.getItem(key);
+      const newTotal = (parseInt(current || '0', 10) || 0) + 1;
+      await AsyncStorage.setItem(key, newTotal.toString());
+    } catch (e) {
+      console.log('Error updating total_cook_recipe:', e);
+    }
+  };
+
+  // Gọi hàm này khi nấu xong:
+  if (user?.id || user?._id) {
+    increaseCookedRecipeCount(user.id || user._id);
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>

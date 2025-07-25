@@ -193,3 +193,15 @@ export const deleteUserByEmail = async (email: string) => {
     throw e;
   }
 };
+
+export const getMyInfo = async (token: string) => {
+  try {
+    const res = await axios.get(`${API_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (e) {
+    console.log('Error fetching my info:', e);
+    throw e;
+  }
+};

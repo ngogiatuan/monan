@@ -203,7 +203,7 @@ const NotificationScreen = () => {
 
   const groupedNotifications = groupNotificationsByDate();
 
-  const renderNotificationItem = ({ item, index, section }: { item: NotificationItem, index: number, section: any }) => {
+  const renderNotificationItem = ({ item, index, section }: { item: any, index: number, section: any }) => {
     const notificationTime = new Date(item.timestamp);
     const hours = notificationTime.getHours();
     const minutes = notificationTime.getMinutes();
@@ -248,11 +248,11 @@ const NotificationScreen = () => {
           )}
           <View style={styles.notificationContent}>
             <Text style={styles.notificationTitle}>
-              {item.type === 'app_open'
-                ? t('notification_app_open', 'Bạn đã truy cập ứng dụng.')
-                : message || t('notification_login', 'Bạn đã đăng nhập.')}
+              Nâng cấp Premium, hết hạn: {item.expired ? new Date(item.expired).toLocaleDateString() : ''}
             </Text>
-            <Text style={styles.notificationTime}>{timeString}</Text>
+            <Text style={styles.notificationTime}>
+              Ngày mua: {item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+            </Text>
           </View>
         </View>
         {!isLastItemInSection && <View style={styles.separator} />}
@@ -282,7 +282,7 @@ const NotificationScreen = () => {
           </View>
         ) : premiumHistory.length > 0 ? (
           <SectionList
-            sections={groupedSections}
+            sections={groupPremiumHistoryByDate(premiumHistory)}
             keyExtractor={item => item.id}
             renderSectionHeader={({ section: { title } }) => (
               <View style={styles.sectionBlock}>
